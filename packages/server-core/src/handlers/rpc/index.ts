@@ -52,5 +52,5 @@ export function registerCoreRpcHandlers(
   registerTransferHandlers(server)
   registerWorkspaceCoreHandlers(server, deps)
   registerMessagingHandlers(server, deps)
-  registerDomainStubHandlers(server)
+  registerDomainStubHandlers(server, deps)
 }

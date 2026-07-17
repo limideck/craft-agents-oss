@@ -1,30 +1,40 @@
 import { atom } from 'jotai'
-import { MOCK_ARTICLES } from './mock/data'
-import type { RssFeedFilterId } from './mock/types'
+import type {
+  CraftModulesRssArticle,
+  CraftModulesRssFeed,
+  CraftModulesRssListMode,
+  CraftModulesRssView,
+} from '@craft-agent/shared/craft-modules'
 
-/** Selected sidebar filter: all / unread / feed id. */
-export const rssSelectedFeedIdAtom = atom<RssFeedFilterId>('all')
+/** Sidebar selection — smart views or a concrete feed id. */
+export type RssSidebarSelection =
+  | { kind: 'view'; view: Exclude<CraftModulesRssView, 'feed' | 'search'> }
+  | { kind: 'feed'; feedId: string }
 
-/** Selected article id in the list / reader. */
-export const rssSelectedArticleIdAtom = atom<string | null>(MOCK_ARTICLES[0]?.id ?? null)
+export const rssSidebarSelectionAtom = atom<RssSidebarSelection>({ kind: 'view', view: 'today' })
 
-/** List search query (client filter only). */
+export const rssSelectedArticleIdAtom = atom<string | null>(null)
+
 export const rssSearchQueryAtom = atom('')
 
-/**
- * Local read-state overrides keyed by article id.
- * `true` = force read, `false` = force unread, missing = use mock default.
- */
-export const rssReadOverridesAtom = atom<Record<string, boolean>>({})
+export const rssListModeAtom = atom<CraftModulesRssListMode>('latest')
 
-/** Simulated initial load flag — panels can show a short skeleton. */
-export const rssMockReadyAtom = atom(false)
+export const rssFeedsAtom = atom<CraftModulesRssFeed[]>([])
 
-export function isArticleUnread(
-  articleId: string,
-  defaultUnread: boolean,
-  overrides: Record<string, boolean>,
-): boolean {
-  if (articleId in overrides) return !overrides[articleId]
-  return defaultUnread
+export const rssArticlesAtom = atom<CraftModulesRssArticle[]>([])
+
+export const rssStarredCountAtom = atom(0)
+
+export const rssLoadingAtom = atom(true)
+
+export const rssErrorAtom = atom<string | null>(null)
+
+export const rssAddFeedOpenAtom = atom(false)
+
+export function selectionToQuery(sel: RssSidebarSelection): {
+  view: CraftModulesRssView
+  feedId?: string
+} {
+  if (sel.kind === 'feed') return { view: 'feed', feedId: sel.feedId }
+  return { view: sel.view }
 }

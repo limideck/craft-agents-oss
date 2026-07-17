@@ -137,6 +137,19 @@ printSection(
 );
 printAnnotation('Shows whether local MCP stdio servers are enabled for the workspace');
 
+// 4b. Craft modules prefer-builtin catalog
+const exampleCraftModules = `<craft_modules>
+Prefer builtin Craft modules over creating new API/MCP Sources when user intent matches.
+Source slug: craft-modules
+…
+</craft_modules>`;
+printSection(
+  '4b. CRAFT MODULES - formatCraftModulesContext() [STABLE]',
+  exampleCraftModules,
+  colors.magenta
+);
+printAnnotation('Registry catalog + prefer-builtin rules; active module line is volatile');
+
 // 5. Working Directory Context
 const workingDirContext = getWorkingDirectoryContext(
   '/Users/example/projects/my-app',
@@ -221,6 +234,8 @@ ${colors.bold}Dynamic User Message Components (per message):${colors.reset}
   2. Session State                       ${colors.dim}// formatSessionState()         [VOLATILE]${colors.reset}
   3. Source State                        ${colors.dim}// formatSourceState()          [VOLATILE]${colors.reset}
   4. Workspace Capabilities              ${colors.dim}// formatWorkspaceCapabilities()  [STABLE]${colors.reset}
+  4b. Craft Modules catalog              ${colors.dim}// formatCraftModulesContext()      [STABLE]${colors.reset}
+  4c. Craft Modules active (when set)    ${colors.dim}// formatCraftModulesActiveLine()   [VOLATILE]${colors.reset}
   5. Working Directory + project_context_file  ${colors.dim}// getWorkingDirectoryContext()  [STABLE]${colors.reset}
   6. Recovery Context (on resume only)   ${colors.dim}// buildRecoveryContext()${colors.reset}
   7. File Attachments                    ${colors.dim}// Inline paths or base64${colors.reset}

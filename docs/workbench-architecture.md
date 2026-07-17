@@ -22,12 +22,41 @@ location.reload()
 
 Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShell` / `isWorkbenchShellEnabled()`.
 
+## Modules (this sprint)
+
+| Module | Status |
+|--------|--------|
+| Agents | Session nav in ActivityBar + chat dock |
+| Sources | List + detail (API / MCP / Local filters) |
+| Skills | List + detail |
+| Connectors | Open Connector console (Overview/Providers/Actions/Runs/Access) |
+| Settings | ActivityBar footer |
+| RSS | UI mock (no RPC) — [workbench-rss-ui.md](./workbench-rss-ui.md) |
+| Knowledge | Placeholder only |
+| Workflows | UI mock (no RPC) — [workbench-workflows-ui.md](./workbench-workflows-ui.md); Phase 2 contract — [workbench-workflows-contract.md](./workbench-workflows-contract.md) |
+
+## Open Connector preview
+
+```bash
+# Optional: clone + build nested sidecar runtime
+bun run setup:open-connector
+
+# Or attach to an already-running instance
+CRAFT_OPENCONNECTOR_URL=http://127.0.0.1:PORT CRAFT_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+```
+
+With the workbench flag on, open the **Connectors** ActivityBar icon. Sidecar start failures are non-fatal; when ready, workspaces get an `open-connector` MCP source automatically.
+
+See also: [docs/open-connector.md](./open-connector.md).
+
 ## Directory map
 
 ```
 apps/electron/src/renderer/workbench/
-  shell/WorkbenchShell.tsx     # ActivityBar + DockviewHost
-  shell/ActivityBar.tsx        # Module switcher (no module-specific branches)
+  shell/WorkbenchShell.tsx     # TopBar + ActivityBar + DockviewHost
+  shell/WorkbenchTopBar.tsx    # Workspace switcher + AppMenu
+  shell/ActivityBar.tsx        # Module switcher (footer = Settings)
+  providers/WorkspaceDataProvider.tsx  # sources/skills → jotai atoms
   dock/
     DockviewHost.tsx           # DockviewReact + portal host
     panel-portal-*.ts(x)       # Persist panel React trees across fromJSON
@@ -39,8 +68,12 @@ apps/electron/src/renderer/workbench/
     module-registry.ts
     panel-registry.ts
   modules/
-    agents/                    # Chat + session-list + files shell
-    rss/ | knowledge/ | workflows/   # Placeholders
+    agents/                    # Chat + session activityView
+    sources/ | skills/ | settings/
+    connectors/                # Open Connector console
+    rss/                             # UI mock (no RPC)
+    knowledge/                       # Placeholder
+    workflows/                       # UI mock (no RPC)
   store/workbench-store.ts     # Jotai: active module + dock API
 ```
 
@@ -51,6 +84,8 @@ Domain packages (backend skeletons):
 - `packages/domain-workflows`
 
 Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping` / `knowledge:ping` / `workflows:ping`).
+
+Phase 3+ backend direction: a single Go sidecar (`craft-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [craft-modules-sidecar.md](./craft-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<craft_modules>` context) — see [craft-modules-agent-routing.md](./craft-modules-agent-routing.md).
 
 Workspace data (future):
 
@@ -118,4 +153,4 @@ Heavy panels (chat, future browser/canvas/editors) render through `PanelPortalHo
 | 0 Scaffold (dockview, theme, portals, registries) | Done |
 | 1 Dock shell + Agents + feature flag | Done |
 | 2 Contracts + placeholder modules + domain skeletons | Done |
-| 3+ RSS / KB / workflows business logic | Not in scope |
+| 3+ RSS / KB / workflows business logic | UI mocks: [workbench-rss-ui.md](./workbench-rss-ui.md), [workbench-workflows-ui.md](./workbench-workflows-ui.md); workflows graph/HTTP/MCP freeze: [workbench-workflows-contract.md](./workbench-workflows-contract.md); backend design: [craft-modules-sidecar.md](./craft-modules-sidecar.md); agent prefer-builtin: [craft-modules-agent-routing.md](./craft-modules-agent-routing.md) |

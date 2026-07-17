@@ -2,7 +2,7 @@
   "name": "@craft-agent/domain-workflows",
   "version": "0.11.1",
   "license": "Apache-2.0",
-  "description": "Workflows domain package (skeleton)",
+  "description": "Workflows domain package — RPC proxy to craft-modules Go sidecar",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

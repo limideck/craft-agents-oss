@@ -44,7 +44,7 @@ describe('PromptBuilder volatile/stable context split (issue #862)', () => {
     expect(combined).toEqual(composed)
   })
 
-  it('routes session_state + sources to volatile and workspace capabilities to stable', () => {
+  it('routes session_state + sources to volatile and workspace capabilities + craft_modules to stable', () => {
     cleanupModeState(SESSION_ID)
     const builder = makeBuilder()
     const volatileText = builder.buildVolatileContextParts(OPTS, SOURCE_BLOCK).join('\n')
@@ -53,12 +53,29 @@ describe('PromptBuilder volatile/stable context split (issue #862)', () => {
     // session_state + source ride the volatile tail
     expect(volatileText).toContain('permissionMode:')
     expect(volatileText).toContain(SOURCE_BLOCK)
-    // workspace capabilities is stable
+    // workspace capabilities + craft_modules catalog are stable
     expect(stableText).toContain('<workspace_capabilities>')
+    expect(stableText).toContain('<craft_modules>')
+    expect(stableText).toContain('Prefer builtin Craft modules')
+    expect(stableText).not.toContain('Active workbench module:')
 
     // The halves must not bleed into each other
     expect(volatileText).not.toContain('<workspace_capabilities>')
+    expect(volatileText).not.toContain('<craft_modules>')
     expect(stableText).not.toContain('permissionMode:')
+  })
+
+  it('puts active craft module line in volatile when set', () => {
+    cleanupModeState(SESSION_ID)
+    const builder = makeBuilder()
+    builder.setActiveCraftModuleId('rss')
+    const volatileText = builder.buildVolatileContextParts(OPTS, SOURCE_BLOCK).join('\n')
+    const stableText = builder.buildStableContextParts().join('\n')
+
+    expect(volatileText).toContain('<craft_modules_active>')
+    expect(volatileText).toContain('Active workbench module: rss')
+    expect(stableText).toContain('<craft_modules>')
+    expect(stableText).not.toContain('Active workbench module:')
   })
 
   it('consumes the one-shot mode-change signal exactly once, only on the volatile path', () => {

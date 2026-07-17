@@ -127,19 +127,15 @@ export function toSerializedDockview(
 
   const columnNodes = state.columns.map((col, i) => serializeColumn(col, widths[i], h))
 
-  let gridRoot: SerializedGridNode
-  if (columnNodes.length === 1) {
-    gridRoot = columnNodes[0]
-  } else {
-    gridRoot = {
-      type: 'branch',
-      data: columnNodes,
-      size: w,
-    }
+  // Dockview fromJSON requires root.type === 'branch' (even for a single column).
+  // Emitting a leaf root clears the layout then throws — blank dock for Settings/Sources/etc.
+  const gridRoot: SerializedBranchNode = {
+    type: 'branch',
+    data: columnNodes,
+    size: h,
   }
 
   const panels = collectPanels(state)
-  const firstPanelId = Object.keys(panels)[0]
 
   return {
     grid: {
@@ -150,7 +146,6 @@ export function toSerializedDockview(
     },
     panels,
     activeGroup: state.columns[0]?.groups[0]?.id,
-    activePanel: firstPanelId,
   } as unknown as SerializedDockview
 }
 
@@ -180,6 +175,8 @@ export function applyLayout(
   }
 }
 
+export type PanelPlacement = 'right' | 'left' | 'active-group'
+
 export function focusOrAddPanel(
   api: DockviewApi,
   options: {
@@ -189,31 +186,67 @@ export function focusOrAddPanel(
     params?: Record<string, unknown>
     /** Prefer opening beside this group; defaults to center. */
     referenceGroupId?: string
+    /**
+     * `active-group` — tab within the reference/active group (default).
+     * `right` / `left` — new split beside the active panel (or reference group).
+     */
+    placement?: PanelPlacement
   },
 ): void {
   const existing = api.getPanel(options.id)
   if (existing) {
+    if (options.params) {
+      existing.api.updateParameters(options.params)
+    }
+    if (options.title) {
+      existing.api.setTitle(options.title)
+    }
     existing.api.setActive()
     return
   }
 
-  const refGroupId = options.referenceGroupId ?? CENTER_GROUP
-  const refGroup = api.getGroup(refGroupId) ?? api.groups[0]
-  if (!refGroup) {
-    api.addPanel({
-      id: options.id,
-      component: options.component,
-      title: options.title,
-      params: options.params,
-    })
-    return
-  }
-
-  api.addPanel({
+  const placement = options.placement ?? 'active-group'
+  const base = {
     id: options.id,
     component: options.component,
     title: options.title,
     params: options.params,
+  }
+
+  if (placement === 'right' || placement === 'left') {
+    const activePanel = api.activePanel
+    if (activePanel) {
+      api.addPanel({
+        ...base,
+        position: { referencePanel: activePanel.id, direction: placement },
+      })
+      return
+    }
+    const refGroupId = options.referenceGroupId ?? CENTER_GROUP
+    const refGroup = api.getGroup(refGroupId) ?? api.groups[api.groups.length - 1] ?? api.groups[0]
+    if (refGroup) {
+      api.addPanel({
+        ...base,
+        position: { referenceGroup: refGroup.id, direction: placement },
+      })
+      return
+    }
+    api.addPanel(base)
+    return
+  }
+
+  const refGroupId = options.referenceGroupId ?? CENTER_GROUP
+  const refGroup =
+    api.getGroup(refGroupId) ??
+    api.activePanel?.group ??
+    api.groups[0]
+  if (!refGroup) {
+    api.addPanel(base)
+    return
+  }
+
+  api.addPanel({
+    ...base,
     position: { referenceGroup: refGroup.id, direction: 'within' },
   })
 }

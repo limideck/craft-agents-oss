@@ -1637,5 +1637,14 @@
   "workspace.selectWorkspaceDesc": "このサーバー上のWorkspaceを選択するか、新規作成してください。",
   "workspace.selectWorkspacePlaceholder": "Workspaceを選択...",
   "workspace.serverAuthToken": "サーバー認証トークン",
-  "workspace.underDefaultFolder": ".craft-agentフォルダ内"
+  "workspace.underDefaultFolder": ".craft-agentフォルダ内",
+  "sidebar.openConnector": "OpenConnector",
+  "sidebar.openConnectorAccess": "アクセスとドキュメント",
+  "sidebar.openConnectorActions": "アクション",
+  "sidebar.openConnectorOverview": "概要",
+  "sidebar.openConnectorProviders": "プロバイダー",
+  "sidebar.openConnectorRuns": "実行履歴",
+  "sidebar.openConnectorRuntimeOffline": "ランタイムオフライン",
+  "sidebar.openConnectorRuntimeReady": "ランタイム準備完了",
+  "sidebar.openConnectorRuntimeStarting": "ランタイム起動中…"
 }

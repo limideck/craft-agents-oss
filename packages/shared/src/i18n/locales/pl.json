@@ -1637,5 +1637,14 @@
   "workspace.selectWorkspaceDesc": "Wybierz Workspace na tym serwerze lub utwórz nowy.",
   "workspace.selectWorkspacePlaceholder": "Wybierz Workspace...",
   "workspace.serverAuthToken": "Token uwierzytelniający serwera",
-  "workspace.underDefaultFolder": "w folderze .craft-agent"
+  "workspace.underDefaultFolder": "w folderze .craft-agent",
+  "sidebar.openConnector": "OpenConnector",
+  "sidebar.openConnectorAccess": "Dostęp i docs",
+  "sidebar.openConnectorActions": "Akcje",
+  "sidebar.openConnectorOverview": "Przegląd",
+  "sidebar.openConnectorProviders": "Dostawcy",
+  "sidebar.openConnectorRuns": "Uruchomienia",
+  "sidebar.openConnectorRuntimeOffline": "Runtime offline",
+  "sidebar.openConnectorRuntimeReady": "Runtime gotowy",
+  "sidebar.openConnectorRuntimeStarting": "Runtime uruchamia się…"
 }

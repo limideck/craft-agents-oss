@@ -5,36 +5,72 @@ import { KEYS } from '@/lib/local-storage'
 const LAYOUT_KEY = KEYS.panelLayout
 const LAYOUT_SUFFIX_PREFIX = 'workbench'
 
-export function workbenchLayoutSuffix(workspaceId: string): string {
+/** Per workspace + module so chat kept open in RSS survives leaving/returning. */
+export function workbenchLayoutSuffix(workspaceId: string, moduleId: string): string {
+  return `${LAYOUT_SUFFIX_PREFIX}:${workspaceId}:${moduleId}`
+}
+
+/** Pre-module-scoped key (agents-only era). */
+export function workbenchLayoutSuffixLegacy(workspaceId: string): string {
   return `${LAYOUT_SUFFIX_PREFIX}:${workspaceId}`
 }
 
-export function loadPersistedLayout(workspaceId: string): SerializedDockview | null {
+export function loadPersistedLayout(
+  workspaceId: string,
+  moduleId: string,
+): SerializedDockview | null {
   try {
     const raw = storage.get<SerializedDockview | null>(
       LAYOUT_KEY,
       null,
-      workbenchLayoutSuffix(workspaceId),
+      workbenchLayoutSuffix(workspaceId, moduleId),
     )
-    if (!raw || typeof raw !== 'object') return null
-    if (!('grid' in raw) || !('panels' in raw)) return null
-    return raw
+    if (isValidLayout(raw)) return raw
+
+    // Migrate: first agents open may still have the old workspace-only key.
+    if (moduleId === 'agents') {
+      const legacy = storage.get<SerializedDockview | null>(
+        LAYOUT_KEY,
+        null,
+        workbenchLayoutSuffixLegacy(workspaceId),
+      )
+      if (isValidLayout(legacy)) return legacy
+    }
+    return null
   } catch {
     return null
   }
 }
 
-export function savePersistedLayout(workspaceId: string, layout: SerializedDockview): void {
-  storage.set(LAYOUT_KEY, layout, workbenchLayoutSuffix(workspaceId))
+function isValidLayout(raw: unknown): raw is SerializedDockview {
+  return (
+    !!raw &&
+    typeof raw === 'object' &&
+    'grid' in raw &&
+    'panels' in raw
+  )
 }
 
-export function clearPersistedLayout(workspaceId: string): void {
-  storage.remove(LAYOUT_KEY, workbenchLayoutSuffix(workspaceId))
+export function savePersistedLayout(
+  workspaceId: string,
+  moduleId: string,
+  layout: SerializedDockview,
+): void {
+  storage.set(LAYOUT_KEY, layout, workbenchLayoutSuffix(workspaceId, moduleId))
+}
+
+export function clearPersistedLayout(workspaceId: string, moduleId?: string): void {
+  if (moduleId) {
+    storage.remove(LAYOUT_KEY, workbenchLayoutSuffix(workspaceId, moduleId))
+    return
+  }
+  storage.remove(LAYOUT_KEY, workbenchLayoutSuffixLegacy(workspaceId))
 }
 
 /** Debounced layout persistence wired to dockview layout-changed events. */
 export function createLayoutPersistence(
   workspaceId: string,
+  getModuleId: () => string,
   debounceMs = 400,
 ): {
   attach: (api: DockviewApi) => () => void
@@ -44,7 +80,7 @@ export function createLayoutPersistence(
 
   const flush = (api: DockviewApi) => {
     try {
-      savePersistedLayout(workspaceId, api.toJSON())
+      savePersistedLayout(workspaceId, getModuleId(), api.toJSON())
     } catch (err) {
       console.warn('[workbench] failed to persist layout', err)
     }

@@ -96,6 +96,11 @@ export interface PromptBuilderConfig {
   isHeadless?: boolean;
   /** Optional pre-resolved project snapshot for prompt injection (lets tests pin a value) */
   project?: import('../../projects/types.ts').ProjectPromptContext;
+  /**
+   * Workbench ActivityBar module id (rss | knowledge | workflows | …).
+   * Injected into volatile craft-modules context when set.
+   */
+  activeCraftModuleId?: string | null;
 }
 
 /**
@@ -114,6 +119,8 @@ export interface ContextBlockOptions {
   inactiveSources?: LoadedSource[];
   /** Whether local MCP is enabled */
   localMcpEnabled?: boolean;
+  /** Workbench active module id for prefer-builtin context (overrides PromptBuilder config when set) */
+  activeModuleId?: string | null;
 }
 
 /**

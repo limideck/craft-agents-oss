@@ -22,6 +22,7 @@ import type { McpClientPool } from '../../mcp/mcp-pool.ts';
 import type { Workspace } from '../../config/storage.ts';
 import type { SessionConfig as Session } from '../../sessions/storage.ts';
 import type { SourceManager } from '../core/source-manager.ts';
+import type { PromptBuilder } from '../core/prompt-builder.ts';
 
 // Import AbortReason and RecoveryMessage from core module (single source of truth)
 import { AbortReason, type RecoveryMessage } from '../core/index.ts';
@@ -581,6 +582,9 @@ export interface AgentBackend {
 
   /** Get SourceManager for advanced queries */
   getSourceManager(): SourceManager;
+
+  /** Get PromptBuilder for per-turn context (craft modules, sources, etc.) */
+  getPromptBuilder(): PromptBuilder;
 
   /** Generate a session title from user message */
   generateTitle(message: string, options?: { language?: string }): Promise<string | null>;

@@ -121,10 +121,12 @@ mac:
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
-  # Exclude binaries for other platforms
-  files:
-    - "!**/resources/bin/win32-*/**"
-    - "!**/resources/bin/linux-*/**"
+    # craft-modules Go sidecar (RSS). Staged by `bun run scripts/build-craft-modules.ts`.
+    - from: resources/craft-modules
+      to: craft-modules
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
   # Use predictable naming for macOS packages (applies to zip; dmg uses its own config below)
   artifactName: "Craft-Agents-${arch}.${ext}"
   # Code signing & notarization (disabled by default for local builds)
@@ -186,6 +188,12 @@ win:
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
+    # craft-modules Go sidecar (RSS)
+    - from: resources/craft-modules
+      to: craft-modules
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
 
 nsis:
   oneClick: true
@@ -213,6 +221,12 @@ linux:
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
+    # craft-modules Go sidecar (RSS)
+    - from: resources/craft-modules
+      to: craft-modules
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
   # Exclude binaries for other platforms
   files:
     - "!**/resources/bin/darwin-*/**"

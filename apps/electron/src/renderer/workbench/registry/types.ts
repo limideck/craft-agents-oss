@@ -66,6 +66,11 @@ export type WorkbenchModule = {
   title: string
   icon: ReactNode
   order: number
+  /**
+   * Where the module icon appears in the ActivityBar.
+   * `footer` modules render below a spacer (e.g. Settings).
+   */
+  placement?: 'default' | 'footer'
   defaultLayout?: LayoutPresetId | LayoutState
   panels: PanelContribution[]
   /** Optional ActivityBar side content (list/tree), not a dock panel. */

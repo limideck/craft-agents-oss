@@ -7,7 +7,21 @@ export const knowledgeModule: WorkbenchModule = {
   id: 'knowledge',
   title: 'Knowledge',
   icon: <BookOpen className="h-4 w-4" />,
-  order: 30,
+  order: 60,
+  defaultLayout: {
+    columns: [
+      {
+        id: 'center',
+        width: 1,
+        groups: [
+          {
+            id: 'group-kb',
+            panels: [{ id: 'kb-browse', component: 'kb-browse', title: 'Knowledge' }],
+          },
+        ],
+      },
+    ],
+  },
   panels: [
     {
       component: 'kb-browse',

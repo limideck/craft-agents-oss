@@ -1,45 +1,36 @@
 import { Workflow } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
-import { PlaceholderPanel } from '../agents/panels/placeholder-panel'
+import { WorkflowListView } from './activity/workflow-list-view'
+import { CanvasPanel } from './panels/canvas-panel'
+import { LogsPanel } from './panels/logs-panel'
+import { RightPanel } from './panels/right-panel'
 
-/** Placeholder Workflows module — no business logic yet. */
+/** Workflows workbench module — @xyflow/react canvas; graph CRUD via craft-modules RPC. */
 export const workflowsModule: WorkbenchModule = {
   id: 'workflows',
   title: 'Workflows',
   icon: <Workflow className="h-4 w-4" />,
-  order: 40,
+  order: 70,
+  defaultLayout: 'workflow-edit',
   panels: [
-    {
-      component: 'wf-list',
-      title: 'Workflows',
-      singleton: true,
-      render: () => (
-        <PlaceholderPanel
-          title="Workflows"
-          description="Workflows module placeholder — Phase 3+."
-        />
-      ),
-    },
     {
       component: 'wf-canvas',
       title: 'Canvas',
-      render: () => (
-        <PlaceholderPanel title="Workflow Canvas" description="Canvas placeholder." />
-      ),
+      singleton: true,
+      render: () => <CanvasPanel />,
     },
     {
-      component: 'wf-run',
-      title: 'Run',
-      render: () => (
-        <PlaceholderPanel title="Workflow Run" description="Run view placeholder." />
-      ),
+      component: 'wf-logs',
+      title: 'Logs',
+      singleton: true,
+      render: () => <LogsPanel />,
+    },
+    {
+      component: 'wf-right',
+      title: 'Workflow',
+      singleton: true,
+      render: () => <RightPanel />,
     },
   ],
-  activityView: function WorkflowsActivity() {
-    return (
-      <div className="p-3 text-xs text-muted-foreground">
-        Workflows will appear here.
-      </div>
-    )
-  },
+  activityView: WorkflowListView,
 }

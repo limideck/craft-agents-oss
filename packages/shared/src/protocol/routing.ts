@@ -474,10 +474,39 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.messaging.ALLOW_PENDING_SENDER,
   RPC_CHANNELS.messaging.SET_BINDING_ACCESS,
 
-  // Domain stubs (Phase 2) — mount points for future modules
+  // RSS domain (craft-modules HTTP proxy)
   RPC_CHANNELS.rss.PING,
+  RPC_CHANNELS.rss.LIST_FEEDS,
+  RPC_CHANNELS.rss.ADD_FEED,
+  RPC_CHANNELS.rss.RENAME_FEED,
+  RPC_CHANNELS.rss.DELETE_FEED,
+  RPC_CHANNELS.rss.IMPORT_OPML,
+  RPC_CHANNELS.rss.LIST_ARTICLES,
+  RPC_CHANNELS.rss.GET_ARTICLE,
+  RPC_CHANNELS.rss.TOGGLE_STAR,
+  RPC_CHANNELS.rss.STARRED_COUNT,
+  RPC_CHANNELS.rss.REFRESH,
+  RPC_CHANNELS.rss.GET_SETTINGS,
+  RPC_CHANNELS.rss.PATCH_SETTINGS,
   RPC_CHANNELS.knowledge.PING,
   RPC_CHANNELS.workflows.PING,
+  RPC_CHANNELS.workflows.LIST,
+  RPC_CHANNELS.workflows.GET,
+  RPC_CHANNELS.workflows.CREATE,
+  RPC_CHANNELS.workflows.UPDATE,
+  RPC_CHANNELS.workflows.DELETE,
+  RPC_CHANNELS.workflows.RUN,
+
+  // openConnector — local sidecar lifecycle (spawned by Electron main)
+  RPC_CHANNELS.openConnector.GET_STATUS,
+  RPC_CHANNELS.openConnector.GET_CONFIG,
+  RPC_CHANNELS.openConnector.RESTART,
+  RPC_CHANNELS.openConnector.FETCH,
+
+  // craft-modules sidecar lifecycle
+  RPC_CHANNELS.craftModules.GET_STATUS,
+  RPC_CHANNELS.craftModules.GET_CONFIG,
+  RPC_CHANNELS.craftModules.RESTART,
 ])
 
 // ---------------------------------------------------------------------------

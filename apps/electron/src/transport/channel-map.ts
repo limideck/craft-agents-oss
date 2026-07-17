@@ -441,4 +441,39 @@ export const CHANNEL_MAP = {
   allowMessagingPendingSender: invoke(RPC_CHANNELS.messaging.ALLOW_PENDING_SENDER),
   setMessagingBindingAccess: invoke(RPC_CHANNELS.messaging.SET_BINDING_ACCESS),
   onMessagingPendingChanged: listener(RPC_CHANNELS.messaging.PENDING_CHANGED),
+
+  // OpenConnector sidecar
+  getOpenConnectorStatus: invoke(RPC_CHANNELS.openConnector.GET_STATUS),
+  getOpenConnectorConfig: invoke(RPC_CHANNELS.openConnector.GET_CONFIG),
+  restartOpenConnector: invoke(RPC_CHANNELS.openConnector.RESTART),
+  openConnectorFetch: invoke(RPC_CHANNELS.openConnector.FETCH),
+
+  // craft-modules sidecar
+  getCraftModulesStatus: invoke(RPC_CHANNELS.craftModules.GET_STATUS),
+  getCraftModulesConfig: invoke(RPC_CHANNELS.craftModules.GET_CONFIG),
+  restartCraftModules: invoke(RPC_CHANNELS.craftModules.RESTART),
+
+  // RSS domain
+  rssPing: invoke(RPC_CHANNELS.rss.PING),
+  rssListFeeds: invoke(RPC_CHANNELS.rss.LIST_FEEDS),
+  rssAddFeed: invoke(RPC_CHANNELS.rss.ADD_FEED),
+  rssRenameFeed: invoke(RPC_CHANNELS.rss.RENAME_FEED),
+  rssDeleteFeed: invoke(RPC_CHANNELS.rss.DELETE_FEED),
+  rssImportOpml: invoke(RPC_CHANNELS.rss.IMPORT_OPML),
+  rssListArticles: invoke(RPC_CHANNELS.rss.LIST_ARTICLES),
+  rssGetArticle: invoke(RPC_CHANNELS.rss.GET_ARTICLE),
+  rssToggleStar: invoke(RPC_CHANNELS.rss.TOGGLE_STAR),
+  rssStarredCount: invoke(RPC_CHANNELS.rss.STARRED_COUNT),
+  rssRefresh: invoke(RPC_CHANNELS.rss.REFRESH),
+  rssGetSettings: invoke(RPC_CHANNELS.rss.GET_SETTINGS),
+  rssPatchSettings: invoke(RPC_CHANNELS.rss.PATCH_SETTINGS),
+
+  // Workflows domain
+  workflowsPing: invoke(RPC_CHANNELS.workflows.PING),
+  workflowsList: invoke(RPC_CHANNELS.workflows.LIST),
+  workflowsGet: invoke(RPC_CHANNELS.workflows.GET),
+  workflowsCreate: invoke(RPC_CHANNELS.workflows.CREATE),
+  workflowsUpdate: invoke(RPC_CHANNELS.workflows.UPDATE),
+  workflowsDelete: invoke(RPC_CHANNELS.workflows.DELETE),
+  workflowsRun: invoke(RPC_CHANNELS.workflows.RUN),
 } satisfies ChannelMap

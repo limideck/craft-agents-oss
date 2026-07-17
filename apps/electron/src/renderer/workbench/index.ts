@@ -11,3 +11,12 @@ export type {
 } from './registry/types'
 export { registerModule, getModule, getAllModules } from './registry/module-registry'
 export { registerPanel, getPanel, getAllPanels } from './registry/panel-registry'
+export {
+  openAgentChat,
+  useOpenAgentChat,
+  type AgentChatContext,
+  type AgentChatPlacement,
+  type OpenAgentChatOptions,
+  type OpenAgentChatResult,
+} from './chat'
+export { focusOrAddWorkbenchPanel, activeModuleIdAtom, dockviewApiAtom } from './store/workbench-store'

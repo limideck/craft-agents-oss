@@ -10,14 +10,16 @@ import { themeCraft } from './dockview-theme'
 import { PanelPortalHost, usePortalSlot } from './panel-portal-host'
 import { panelPortalManager } from './panel-portal-manager'
 import { renderRegisteredPanel, getAllPanels } from '../registry/panel-registry'
+import { getModule } from '../registry/module-registry'
 import {
   applyLayout,
   agentsDefaultLayout,
   loadPersistedLayout,
   createLayoutPersistence,
+  resolveModuleLayout,
 } from './layout-manager'
-import { useSetAtom } from 'jotai'
-import { dockviewApiAtom } from '../store/workbench-store'
+import { useAtomValue, useSetAtom, useStore } from 'jotai'
+import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
 
 function PortalSlot(props: IDockviewPanelProps) {
   const containerRef = usePortalSlot(props)
@@ -30,11 +32,17 @@ type DockviewHostProps = {
 
 /**
  * Dockview host + portal sibling.
- * Restores workspace-scoped layout from localStorage, else agents-default preset.
+ * Restores workspace+module-scoped layout from localStorage, else module default.
  */
 export function DockviewHost({ workspaceId }: DockviewHostProps) {
+  const store = useStore()
   const setApi = useSetAtom(dockviewApiAtom)
+  const activeModuleId = useAtomValue(activeModuleIdAtom)
   const detachRef = useRef<(() => void) | null>(null)
+  const moduleIdRef = useRef(activeModuleId)
+  moduleIdRef.current = activeModuleId
+  const storeRef = useRef(store)
+  storeRef.current = store
 
   const components = useMemo(() => {
     const map: Record<string, FunctionComponent<IDockviewPanelProps>> = {}
@@ -72,22 +80,26 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
 
       detachRef.current?.()
 
-      const saved = loadPersistedLayout(workspaceId)
+      const moduleId = storeRef.current.get(activeModuleIdAtom)
+      const mod = getModule(moduleId)
+      const saved = loadPersistedLayout(workspaceId, moduleId)
       try {
         if (saved) {
           api.fromJSON(saved)
         } else {
-          applyLayout(api, agentsDefaultLayout(), api.width || 1200, api.height || 800)
+          const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsDefaultLayout()
+          applyLayout(api, layout, api.width || 1200, api.height || 800)
         }
       } catch (err) {
         console.warn('[workbench] layout restore failed — applying default', err)
-        applyLayout(api, agentsDefaultLayout(), api.width || 1200, api.height || 800)
+        const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsDefaultLayout()
+        applyLayout(api, layout, api.width || 1200, api.height || 800)
       }
 
       const removeDisposable = api.onDidRemovePanel((panel) => {
         panelPortalManager.release(panel.id)
       })
-      const unsubPersist = createLayoutPersistence(workspaceId).attach(api)
+      const unsubPersist = createLayoutPersistence(workspaceId, () => moduleIdRef.current).attach(api)
 
       detachRef.current = () => {
         removeDisposable.dispose()

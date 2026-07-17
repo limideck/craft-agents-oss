@@ -11,7 +11,7 @@ import { generateMessageId } from '../shared/types'
 import { useEventProcessor } from './event-processor'
 import type { AgentEvent, Effect } from './event-processor'
 import { AppShell } from '@/components/app-shell/AppShell'
-import { WorkbenchShell, isWorkbenchShellEnabled } from '@/workbench'
+import { WorkbenchShell, isWorkbenchShellEnabled, activeModuleIdAtom } from '@/workbench'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { OnboardingWizard, ReauthScreen } from '@/components/onboarding'
 import { WorkspacePicker } from '@/components/workspace'
@@ -1407,11 +1407,17 @@ export default function App() {
         lastMessageAt: Date.now()
       }))
 
-      // Step 6: Send to Claude with processed attachments + stored attachments for persistence
+      // Step 6: Send to Claude with processed attachments + stored attachments for persistence.
+      // Read activeModuleId at send time so ActivityBar switches update the next turn
+      // without recreating the chat panel (panel params are only a snapshot at open).
+      const activeModuleId = isWorkbenchShellEnabled()
+        ? store.get(activeModuleIdAtom)
+        : undefined
       await window.electronAPI.sendMessage(sessionId, message, processedAttachments, storedAttachments, {
         skillSlugs,
         badges: badges.length > 0 ? badges : undefined,
         optimisticMessageId: userMessage.id,
+        ...(activeModuleId ? { activeModuleId } : {}),
       })
     } catch (error) {
       console.error('Failed to send message:', error)

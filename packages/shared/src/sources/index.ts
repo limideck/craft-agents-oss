@@ -95,6 +95,7 @@ export {
   getDocsSource,
   getBuiltinSources,
   isBuiltinSource,
+  isPreferredBuiltinSource,
 } from './builtin-sources.ts';
 
 // API Tools (types)
@@ -108,4 +109,16 @@ export {
 export type {
   TokenRefreshResult,
   RefreshManagerOptions,
-} from './token-refresh-manager.ts';
+} from './token-refresh-manager.ts'
+
+// Open Connector MCP source (auto-registered when sidecar is ready)
+export {
+  ensureOpenConnectorMcpSource,
+  OPEN_CONNECTOR_SOURCE_SLUG,
+  OPEN_CONNECTOR_SOURCE_NAME,
+  OPEN_CONNECTOR_PROVIDER,
+} from './open-connector-source.ts'
+export type {
+  EnsureOpenConnectorSourceInput,
+  EnsureOpenConnectorSourceResult,
+} from './open-connector-source.ts'

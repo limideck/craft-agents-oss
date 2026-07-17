@@ -1,6 +1,6 @@
 import { atom } from 'jotai'
 import type { DockviewApi } from 'dockview-react'
-import { focusOrAddPanel } from '../dock/layout-manager'
+import { focusOrAddPanel, type PanelPlacement } from '../dock/layout-manager'
 
 /** Active workbench module id (ActivityBar selection). */
 export const activeModuleIdAtom = atom<string>('agents')
@@ -15,6 +15,8 @@ export function focusOrAddWorkbenchPanel(options: {
   component: string
   title: string
   params?: Record<string, unknown>
+  referenceGroupId?: string
+  placement?: PanelPlacement
 }): void {
   if (!options.api) return
   focusOrAddPanel(options.api, options)

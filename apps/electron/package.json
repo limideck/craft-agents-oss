@@ -38,6 +38,7 @@
   "dependencies": {
     "@craft-agent/core": "workspace:*",
     "@craft-agent/messaging-gateway": "workspace:*",
+    "@craft-agent/open-connector-client": "workspace:*",
     "@craft-agent/server-core": "workspace:*",
     "@craft-agent/shared": "workspace:*",
     "@craft-agent/ui": "workspace:*",
@@ -53,6 +54,7 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-switch": "^1.2.6",
     "@tanstack/react-table": "^8.21.3",
+    "@xyflow/react": "^12.11.2",
     "chrono-node": "^2.9.0",
     "cmdk": "^1.1.1",
     "dockview-react": "^4.13.1",

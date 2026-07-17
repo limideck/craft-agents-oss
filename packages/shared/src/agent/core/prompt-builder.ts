@@ -17,6 +17,10 @@ import { formatPreferencesForPrompt } from '../../config/preferences.ts';
 import { formatSessionState } from '../mode-manager.ts';
 import { getDateTimeContext, getWorkingDirectoryContext } from '../../prompts/system.ts';
 import { getSessionPlansPath, getSessionDataPath, getSessionPath } from '../../sessions/storage.ts';
+import {
+  formatCraftModulesActiveLine,
+  formatCraftModulesContextBlock,
+} from '../../craft-modules/registry.ts';
 import type {
   PromptBuilderConfig,
   ContextBlockOptions,
@@ -61,12 +65,12 @@ export class PromptBuilder {
    * user message.
    *
    * This is the Claude path: it composes {@link buildVolatileContextParts} and
-   * {@link buildStableContextParts} so the output is byte-identical to the
-   * pre-split version (same 5 blocks, same order) AND the one-shot mode-change
-   * signal is consumed exactly once per turn (only the volatile builder consumes
-   * it). Callers that place volatile vs stable context in different locations
-   * (e.g. the Pi adapter, to preserve prompt caching — issue #862) should call
-   * the two halves directly instead of this method.
+   * {@link buildStableContextParts} so the output matches the pre-split order
+   * (volatile then stable) AND the one-shot mode-change signal is consumed
+   * exactly once per turn (only the volatile builder consumes it). Callers that
+   * place volatile vs stable context in different locations (e.g. the Pi
+   * adapter, to preserve prompt caching — issue #862) should call the two
+   * halves directly instead of this method.
    *
    * @param options - Context building options
    * @param sourceStateBlock - Pre-formatted source state (from SourceManager)
@@ -94,6 +98,7 @@ export class PromptBuilder {
    *     modeChangedAt/modeVersion and **consumes** the one-shot mode-change user
    *     signal — see {@link formatSessionState})
    *  3. source state (auth/connection status), when provided
+   *  4. craft-modules active workbench module line, when known
    *
    * MUST be called exactly once per turn, because it consumes one-shot mode
    * state. Never call it a second time to compute a cache-debug hash — hash the
@@ -129,6 +134,16 @@ export class PromptBuilder {
       parts.push(sourceStateBlock);
     }
 
+    // Active workbench module (volatile; catalog lives in stable craft_modules)
+    const activeModuleId =
+      options.activeModuleId !== undefined
+        ? options.activeModuleId
+        : this.config.activeCraftModuleId;
+    const activeLine = formatCraftModulesActiveLine(activeModuleId);
+    if (activeLine) {
+      parts.push(activeLine);
+    }
+
     return parts;
   }
 
@@ -138,7 +153,8 @@ export class PromptBuilder {
    *
    * Blocks (in order):
    *  1. workspace capabilities
-   *  2. working directory, when available
+   *  2. craft-modules prefer-builtin catalog (stable; active line is volatile)
+   *  3. working directory, when available
    *
    * Pure and idempotent: holds no one-shot state, so it is safe to call any
    * number of times per turn.
@@ -148,6 +164,9 @@ export class PromptBuilder {
 
     // Workspace capabilities
     parts.push(this.formatWorkspaceCapabilities());
+
+    // Prefer-builtin craft-modules catalog (active module line is volatile)
+    parts.push(this.formatCraftModulesContext());
 
     // Working directory context
     const workingDirContext = this.getWorkingDirectoryContext();
@@ -174,6 +193,22 @@ export class PromptBuilder {
     }
 
     return `<workspace_capabilities>\n${capabilities.join('\n')}\n</workspace_capabilities>`;
+  }
+
+  /**
+   * Prefer-builtin craft modules catalog (stable half of the split).
+   * Active workbench module is injected separately in volatile context.
+   * See docs/craft-modules-agent-routing.md.
+   */
+  formatCraftModulesContext(): string {
+    return formatCraftModulesContextBlock({ omitActiveLine: true });
+  }
+
+  /**
+   * Update the workbench active module id used for volatile craft_modules context.
+   */
+  setActiveCraftModuleId(activeCraftModuleId: string | null | undefined): void {
+    this.config.activeCraftModuleId = activeCraftModuleId ?? null;
   }
 
   /**

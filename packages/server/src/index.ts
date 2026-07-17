@@ -310,6 +310,29 @@ const healthServer = await startHealthHttpServer({
   platform: instance.platform,
 })
 
+// craft-modules Go sidecar (RSS) — failures non-fatal
+try {
+  const {
+    startCraftModulesSidecar,
+    ensureCraftModulesMcpSource,
+  } = await import('@craft-agent/shared/craft-modules')
+  const cmConfig = await startCraftModulesSidecar()
+  console.log(`[craft-modules] sidecar ready at ${cmConfig.baseUrl}`)
+  for (const ws of getWorkspaces().filter((w) => !w.remoteServer)) {
+    try {
+      await ensureCraftModulesMcpSource({
+        workspaceRootPath: ws.rootPath,
+        baseUrl: cmConfig.baseUrl,
+        token: cmConfig.token,
+      })
+    } catch (err) {
+      console.warn('[craft-modules] ensure MCP source failed', ws.id, err)
+    }
+  }
+} catch (err) {
+  console.warn('[craft-modules] sidecar start skipped/failed:', err)
+}
+
 const serverProto = instance.protocol === 'wss' ? 'https' : 'http'
 console.log(`CRAFT_SERVER_URL=${instance.protocol}://${instance.host}:${instance.port}`)
 console.log(`CRAFT_SERVER_TOKEN=${instance.token}`)
@@ -343,6 +366,12 @@ if (!isLocalBind && instance.protocol === 'ws') {
 const shutdown = async () => {
   webuiHandler?.dispose()
   healthServer?.stop()
+  try {
+    const { stopCraftModulesSidecar } = await import('@craft-agent/shared/craft-modules')
+    await stopCraftModulesSidecar()
+  } catch (error) {
+    console.error('[craft-modules] stop failed:', error)
+  }
   if (messagingHandle) {
     try {
       await messagingHandle.dispose()

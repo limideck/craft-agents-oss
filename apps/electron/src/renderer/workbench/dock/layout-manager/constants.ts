@@ -19,6 +19,12 @@ export const RSS_READING_RATIOS = {
   reader: 0.5,
 } as const
 
+/** Workflow edit: canvas+logs | right tools (~62 / 38). */
+export const WORKFLOW_EDIT_RATIOS = {
+  center: 0.62,
+  right: 0.38,
+} as const
+
 export const PANEL_DEFS: Record<string, Omit<LayoutPanel, 'id'>> = {
   'session-list': { component: 'session-list', title: 'Sessions' },
   chat: { component: 'chat', title: 'Agent' },
@@ -28,6 +34,9 @@ export const PANEL_DEFS: Record<string, Omit<LayoutPanel, 'id'>> = {
   'rss-feeds': { component: 'rss-feeds', title: 'Feeds' },
   'rss-article-list': { component: 'rss-article-list', title: 'Articles' },
   'rss-reader': { component: 'rss-reader', title: 'Reader' },
+  'wf-canvas': { component: 'wf-canvas', title: 'Canvas' },
+  'wf-logs': { component: 'wf-logs', title: 'Logs' },
+  'wf-right': { component: 'wf-right', title: 'Workflow' },
 }
 
 export function panel(id: keyof typeof PANEL_DEFS | string): LayoutPanel {

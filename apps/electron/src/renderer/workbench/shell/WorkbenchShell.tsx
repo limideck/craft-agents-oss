@@ -1,15 +1,20 @@
 import { useEffect, useRef } from 'react'
 import { useAtomValue } from 'jotai'
 import type { AppShellContextType } from '@/context/AppShellContext'
-import { AppShellProvider } from '@/context/AppShellContext'
 import { EscapeInterruptProvider } from '@/context/EscapeInterruptContext'
 import { ensureWorkbenchModulesRegistered } from '../modules'
 import { getModule } from '../registry/module-registry'
 import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
+import { WorkspaceDataProvider } from '../providers/WorkspaceDataProvider'
 import { ActivityBar } from './ActivityBar'
+import { WorkbenchTopBar } from './WorkbenchTopBar'
 import { DockviewHost } from '../dock/DockviewHost'
-import { applyLayout, getLayoutPreset } from '../dock/layout-manager'
-import type { LayoutPresetId, LayoutState } from '../registry/types'
+import {
+  applyLayout,
+  loadPersistedLayout,
+  resolveModuleLayout,
+  savePersistedLayout,
+} from '../dock/layout-manager'
 
 type WorkbenchShellProps = {
   contextValue: AppShellContextType
@@ -19,7 +24,7 @@ type WorkbenchShellProps = {
 }
 
 /**
- * Feature-flagged workbench shell: ActivityBar + dockview layout.
+ * Feature-flagged workbench shell: TopBar + ActivityBar + dockview layout.
  * Dual-shell parallel with AppShell — enable via CRAFT_FEATURE_WORKBENCH_SHELL.
  */
 export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
@@ -27,19 +32,16 @@ export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
 
   return (
     <EscapeInterruptProvider>
-      <AppShellProvider value={contextValue}>
-        <WorkbenchShellInner workspaceId={contextValue.activeWorkspaceId} />
-      </AppShellProvider>
+      <WorkspaceDataProvider contextValue={contextValue}>
+        <div className="h-full flex flex-col min-h-0">
+          <WorkbenchTopBar />
+          <div className="flex-1 min-h-0">
+            <WorkbenchShellInner workspaceId={contextValue.activeWorkspaceId} />
+          </div>
+        </div>
+      </WorkspaceDataProvider>
     </EscapeInterruptProvider>
   )
-}
-
-function resolveModuleLayout(
-  defaultLayout: LayoutPresetId | LayoutState | undefined,
-): LayoutState | null {
-  if (!defaultLayout) return null
-  if (typeof defaultLayout === 'string') return getLayoutPreset(defaultLayout)
-  return defaultLayout
 }
 
 function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
@@ -54,23 +56,45 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
     prevModuleRef.current = null
   }, [workspaceId])
 
-  // Apply module default layout on ActivityBar switch (not on first agents paint —
-  // DockviewHost already restores persisted / agents-default).
+  // Persist outgoing module layout; restore incoming (or apply default).
+  // Skip first paint — DockviewHost already restored for the active module.
   useEffect(() => {
-    if (!api || !mod) return
+    if (!api || !mod || !workspaceId) return
     const prev = prevModuleRef.current
     if (prev === mod.id) return
-    prevModuleRef.current = mod.id
-    if (prev === null && mod.id === 'agents') return
 
-    const layout = resolveModuleLayout(mod.defaultLayout)
-    if (!layout) return
+    if (prev !== null) {
+      try {
+        savePersistedLayout(workspaceId, prev, api.toJSON())
+      } catch (err) {
+        console.warn(`[workbench] failed to save layout for module "${prev}"`, err)
+      }
+    }
+
+    prevModuleRef.current = mod.id
+    if (prev === null) return
+
+    const saved = loadPersistedLayout(workspaceId, mod.id)
     try {
+      if (saved) {
+        api.fromJSON(saved)
+        return
+      }
+      const layout = resolveModuleLayout(mod.defaultLayout)
+      if (!layout) return
       applyLayout(api, layout, api.width || 1200, api.height || 800)
     } catch (err) {
       console.warn(`[workbench] failed to apply layout for module "${mod.id}"`, err)
+      const layout = resolveModuleLayout(mod.defaultLayout)
+      if (layout) {
+        try {
+          applyLayout(api, layout, api.width || 1200, api.height || 800)
+        } catch {
+          /* already logged */
+        }
+      }
     }
-  }, [api, mod])
+  }, [api, mod, workspaceId])
 
   if (!workspaceId) {
     return (

@@ -1637,5 +1637,14 @@
   "workspace.selectWorkspaceDesc": "Válassz egy munkaterületet ezen a szerveren, vagy hozz létre újat.",
   "workspace.selectWorkspacePlaceholder": "Válassz munkaterületet...",
   "workspace.serverAuthToken": "Szerver hitelesítési token",
-  "workspace.underDefaultFolder": "a .craft-agent mappában"
+  "workspace.underDefaultFolder": "a .craft-agent mappában",
+  "sidebar.openConnector": "OpenConnector",
+  "sidebar.openConnectorAccess": "Hozzáférés és docs",
+  "sidebar.openConnectorActions": "Műveletek",
+  "sidebar.openConnectorOverview": "Áttekintés",
+  "sidebar.openConnectorProviders": "Szolgáltatók",
+  "sidebar.openConnectorRuns": "Futtatások",
+  "sidebar.openConnectorRuntimeOffline": "Runtime offline",
+  "sidebar.openConnectorRuntimeReady": "Runtime kész",
+  "sidebar.openConnectorRuntimeStarting": "Runtime indul…"
 }

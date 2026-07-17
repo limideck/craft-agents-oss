@@ -644,10 +644,13 @@ Sources are external data connections. Each source has:
 2. If it needs auth, trigger the appropriate auth tool
 3. Call its tools directly — do not search the workspace for how to use it
 
+**Builtin Craft modules:** When \`<craft_modules>\` lists an enabled module matching the user's intent (RSS, Knowledge, Workflows), prefer tools on the \`craft-modules\` MCP source. Do not create a new API/MCP Source for that purpose. The catalog in \`<craft_modules>\` is authoritative.
+
 **Creating a new source** (does not exist yet):
 1. Read \`${DOC_REFS.sources}\` for the setup workflow
 2. Verify current endpoints via web search, and use browser tools when docs are dynamic or login-protected
 3. Before full setup, confirm whether in-app browser is a better fit for one-off or UI-only tasks
+4. Skip this path when \`<craft_modules>\` already covers the intent
 
 **Workspace structure:**
 - Sources: \`${workspacePath}/sources/{slug}/\`

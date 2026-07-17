@@ -737,6 +737,96 @@ export interface ElectronAPI {
   ): Promise<{ owners: MessagingPlatformOwnerInfo[]; bindingId?: string }>
   setMessagingBindingAccess(bindingId: string, access: { mode: MessagingBindingAccessMode; allowedSenderIds?: string[] }): Promise<{ success: boolean }>
   onMessagingPendingChanged(callback: (workspaceId: string) => void): () => void
+
+  // OpenConnector sidecar (local HTTP MCP runtime)
+  getOpenConnectorStatus(): Promise<import('./open-connector').OpenConnectorSidecarStatus>
+  getOpenConnectorConfig(): Promise<import('./open-connector').OpenConnectorSidecarConfig>
+  restartOpenConnector(): Promise<import('./open-connector').OpenConnectorSidecarConfig>
+  openConnectorFetch(
+    request: import('./open-connector').OpenConnectorFetchRequest,
+  ): Promise<import('./open-connector').OpenConnectorFetchResponse>
+
+  // craft-modules Go sidecar (RSS)
+  getCraftModulesStatus(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarStatus>
+  getCraftModulesConfig(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarConfig>
+  restartCraftModules(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarConfig>
+
+  // RSS domain (proxied to craft-modules)
+  rssPing(): Promise<{ ok: boolean; domain: 'rss'; version?: string }>
+  rssListFeeds(workspaceId: string): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssFeed[]>
+  rssAddFeed(
+    workspaceId: string,
+    input: { url: string; name?: string },
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssFeed>
+  rssRenameFeed(workspaceId: string, feedId: string, name: string): Promise<{ ok: true }>
+  rssDeleteFeed(workspaceId: string, feedId: string): Promise<{ ok: true }>
+  rssImportOpml(
+    workspaceId: string,
+    opml: string,
+  ): Promise<{
+    imported: number
+    skipped: number
+    feeds: import('@craft-agent/shared/craft-modules').CraftModulesRssFeed[]
+  }>
+  rssListArticles(
+    workspaceId: string,
+    input?: {
+      view?: import('@craft-agent/shared/craft-modules').CraftModulesRssView
+      feedId?: string
+      mode?: import('@craft-agent/shared/craft-modules').CraftModulesRssListMode
+      q?: string
+      limit?: number
+    },
+  ): Promise<{
+    articles: import('@craft-agent/shared/craft-modules').CraftModulesRssArticle[]
+    cacheReady?: boolean
+    query?: string
+  }>
+  rssGetArticle(
+    workspaceId: string,
+    articleId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssArticle>
+  rssToggleStar(
+    workspaceId: string,
+    article: import('@craft-agent/shared/craft-modules').CraftModulesRssArticle,
+    starred: boolean,
+  ): Promise<{ ok: true; isStarred: boolean }>
+  rssStarredCount(workspaceId: string): Promise<{ count: number }>
+  rssRefresh(workspaceId: string, feedId?: string): Promise<{ ok: true }>
+  rssGetSettings(workspaceId: string): Promise<{ rsshub_base_url: string }>
+  rssPatchSettings(
+    workspaceId: string,
+    input: { rsshub_base_url: string },
+  ): Promise<{ ok: true }>
+
+  // Workflows domain (proxied to craft-modules)
+  workflowsPing(): Promise<{
+    ok: boolean
+    domain: 'workflows'
+    version?: string
+    modules?: string[]
+  }>
+  workflowsList(
+    workspaceId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow[]>
+  workflowsGet(
+    workspaceId: string,
+    workflowId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+  workflowsCreate(
+    workspaceId: string,
+    input: import('@craft-agent/shared/craft-modules').CraftModulesWorkflowCreateInput,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+  workflowsUpdate(
+    workspaceId: string,
+    workflowId: string,
+    input: import('@craft-agent/shared/craft-modules').CraftModulesWorkflowUpdateInput,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+  workflowsDelete(workspaceId: string, workflowId: string): Promise<{ ok: true }>
+  workflowsRun(
+    workspaceId: string,
+    workflowId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowRunResult>
 }
 
 export interface MessagingPlatformRuntimeInfo {

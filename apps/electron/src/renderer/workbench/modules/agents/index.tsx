@@ -1,27 +1,54 @@
 import { Bot } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { SessionListPanel } from './panels/session-list-panel'
-import { ChatPanel } from './panels/chat-panel'
 import { FilesPanel } from './panels/files-panel'
 import { PlaceholderPanel } from './panels/placeholder-panel'
+
+/** Session nav in ActivityBar side rail (classic Sessions upper half). */
+function AgentsActivityView() {
+  return <SessionListPanel />
+}
 
 export const agentsModule: WorkbenchModule = {
   id: 'agents',
   title: 'Agents',
   icon: <Bot className="h-4 w-4" />,
   order: 10,
-  defaultLayout: 'agents-default',
+  // Session list lives in activityView; dock is chat + tools.
+  // `chat` panel is registered globally via registerSharedWorkbenchPanels.
+  defaultLayout: {
+    columns: [
+      {
+        id: 'center',
+        width: 0.55,
+        groups: [{ id: 'group-chat', panels: [{ id: 'chat', component: 'chat', title: 'Agent' }] }],
+      },
+      {
+        id: 'right',
+        width: 0.45,
+        groups: [
+          {
+            id: 'group-right-top',
+            panels: [
+              { id: 'files', component: 'files', title: 'Files' },
+              { id: 'changes', component: 'changes', title: 'Changes' },
+            ],
+          },
+          {
+            id: 'group-right-bottom',
+            panels: [{ id: 'terminal', component: 'terminal', title: 'Terminal' }],
+          },
+        ],
+      },
+    ],
+  },
+  activityView: AgentsActivityView,
   panels: [
     {
       component: 'session-list',
       title: 'Sessions',
       singleton: true,
       render: () => <SessionListPanel />,
-    },
-    {
-      component: 'chat',
-      title: 'Agent',
-      render: (params) => <ChatPanel params={params} />,
     },
     {
       component: 'files',

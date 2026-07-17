@@ -4,12 +4,12 @@ import { FeedsPanel } from './panels/feeds-panel'
 import { ArticleListPanel } from './panels/article-list-panel'
 import { ReaderPanel } from './panels/reader-panel'
 
-/** RSS workbench module — mock UI only (no RPC / network). */
+/** RSS workbench module — live data via craft-modules Go sidecar. */
 export const rssModule: WorkbenchModule = {
   id: 'rss',
   title: 'RSS',
   icon: <Rss className="h-4 w-4" />,
-  order: 20,
+  order: 50,
   defaultLayout: 'rss-reading',
   panels: [
     {

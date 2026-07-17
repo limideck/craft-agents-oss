@@ -86,6 +86,16 @@ import { existsSync, readFileSync } from 'fs'
 import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
 import { SessionManager, setSessionPlatform, setSessionRuntimeHooks } from '@craft-agent/server-core/sessions'
 import { registerAllRpcHandlers } from './handlers/index'
+import {
+  startOpenConnectorSidecar,
+  stopOpenConnectorSidecar,
+} from './open-connector-sidecar'
+import { ensureOpenConnectorMcpSource } from '@craft-agent/shared/sources'
+import {
+  startCraftModulesSidecar,
+  stopCraftModulesSidecar,
+  ensureCraftModulesMcpSource,
+} from '@craft-agent/shared/craft-modules'
 import { registerCoreRpcHandlers, cleanupSessionFileWatchForClient } from '@craft-agent/server-core/handlers/rpc'
 import type { PlatformServices } from '../runtime/platform'
 import { createElectronPlatform } from './platform'
@@ -763,6 +773,70 @@ app.whenReady().then(async () => {
         mainLog.error('[messaging] Gateway initialization failed:', err)
       }
 
+      // OpenConnector sidecar — local HTTP MCP runtime (failures are non-fatal)
+      void (async () => {
+        try {
+          const ocConfig = await startOpenConnectorSidecar()
+          mainLog.info('[open-connector] sidecar ready', { baseUrl: ocConfig.baseUrl })
+          const localWorkspaces = getWorkspaces().filter((ws) => !ws.remoteServer)
+          for (const ws of localWorkspaces) {
+            try {
+              const result = await ensureOpenConnectorMcpSource({
+                workspaceRootPath: ws.rootPath,
+                baseUrl: ocConfig.baseUrl,
+                runtimeToken: ocConfig.runtimeToken,
+              })
+              mainLog.info('[open-connector] MCP source ensured', {
+                workspaceId: ws.id,
+                slug: result.slug,
+                created: result.created,
+                updated: result.updated,
+                mcpUrl: result.mcpUrl,
+              })
+            } catch (err) {
+              mainLog.error('[open-connector] failed to ensure MCP source', {
+                workspaceId: ws.id,
+                error: err,
+              })
+            }
+          }
+        } catch (err) {
+          mainLog.warn('[open-connector] sidecar start skipped/failed:', err)
+        }
+      })()
+
+      // craft-modules Go sidecar — RSS (+ future modules); failures non-fatal
+      void (async () => {
+        try {
+          const cmConfig = await startCraftModulesSidecar()
+          mainLog.info('[craft-modules] sidecar ready', { baseUrl: cmConfig.baseUrl })
+          const localWorkspaces = getWorkspaces().filter((ws) => !ws.remoteServer)
+          for (const ws of localWorkspaces) {
+            try {
+              const result = await ensureCraftModulesMcpSource({
+                workspaceRootPath: ws.rootPath,
+                baseUrl: cmConfig.baseUrl,
+                token: cmConfig.token,
+              })
+              mainLog.info('[craft-modules] MCP source ensured', {
+                workspaceId: ws.id,
+                slug: result.slug,
+                created: result.created,
+                updated: result.updated,
+                mcpUrl: result.mcpUrl,
+              })
+            } catch (err) {
+              mainLog.error('[craft-modules] failed to ensure MCP source', {
+                workspaceId: ws.id,
+                error: err,
+              })
+            }
+          }
+        } catch (err) {
+          mainLog.warn('[craft-modules] sidecar start skipped/failed:', err)
+        }
+      })()
+
       // IPC handlers — preload uses sendSync to get WS connection details
 
       // Remove workspace from config (cleanup stale entries)
@@ -1229,6 +1303,21 @@ app.on('before-quit', async (event) => {
 
     // Stop all model refresh timers
     getModelRefreshService().stopAll()
+
+    // Stop OpenConnector sidecar before messaging teardown
+    try {
+      await stopOpenConnectorSidecar()
+      mainLog.info('[open-connector] sidecar stopped')
+    } catch (err) {
+      mainLog.error('[open-connector] stop failed:', err)
+    }
+
+    try {
+      await stopCraftModulesSidecar()
+      mainLog.info('[craft-modules] sidecar stopped')
+    } catch (err) {
+      mainLog.error('[craft-modules] stop failed:', err)
+    }
 
     // Stop messaging gateways so the WhatsApp worker subprocess exits cleanly.
     if (messagingHandle) {

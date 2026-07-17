@@ -425,6 +425,13 @@ export interface SendMessageOptions {
   badges?: ContentBadge[]
   optimisticMessageId?: string
   /**
+   * Workbench ActivityBar module id for this turn (e.g. `rss`, `knowledge`).
+   * SessionManager applies it to PromptBuilder before `agent.chat` so the
+   * volatile `<craft_modules_active>` line reaches the model. Omitted/cleared
+   * on non-workbench sends so a prior turn's id does not stick.
+   */
+  activeModuleId?: string
+  /**
    * When true, the message drives a turn (reaches the model) but is marked
    * `hidden` on the persisted `Message` so it never renders as a transcript
    * bubble. Used for system-generated nudges (e.g. WS2 background-task-completion

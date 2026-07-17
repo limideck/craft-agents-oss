@@ -1,58 +1,50 @@
-# Workbench RSS reader (UI mock)
+# Workbench RSS reader
 
-Mock-only RSS reader module for the Craft workbench shell. No network, XML parsing, or `domain-rss` RPC.
+Live RSS module for the Craft workbench shell. Backend is the **craft-modules** Go sidecar; UI follows feedoverflow’s 3-pane pattern (Today / All / Starred / Podcasts + flat feeds).
+
+See [craft-modules-sidecar.md](./craft-modules-sidecar.md) for process / API / MCP boundaries.
+
+## Packaging (A5)
+
+```bash
+# Host arch → services/craft-modules/bin + apps/electron/resources/craft-modules/
+bun run build:craft-modules
+
+# All Electron targets (darwin/linux/windows × amd64/arm64)
+bun run build:craft-modules:all
+```
+
+`electron:build` / `electron:dist*` run `build:craft-modules` first and ship the binary via `extraResources` → `Craft Agents.app/.../Resources/craft-modules/`.
 
 ## How to open
 
-1. Enable the workbench shell:
-   - DevTools console: `localStorage.setItem('craft-feature-workbench-shell', '1')` then reload, **or**
+1. Build once: `bun run build:craft-modules`
+2. Enable the workbench shell:
+   - DevTools: `localStorage.setItem('craft-feature-workbench-shell', '1')` then reload, **or**
    - Env: `CRAFT_FEATURE_WORKBENCH_SHELL=1`
-2. Start Electron (`apps/electron` → `bun run dev` / usual app entry).
-3. In the ActivityBar (far left), click **RSS**.
-4. Dock applies the `rss-reading` preset: **Feeds | Articles | Reader**.
+3. Start Electron (`bun run electron:dev`). Main process spawns `craft-modules` (or attach with `CRAFT_MODULES_URL`).
+4. ActivityBar → **RSS**. Dock preset: **Feeds | Articles | Reader**.
+
+If you previously hit `database is locked`, quit Craft and kill stale sidecars (`pkill -f craft-modules`) then restart so only one process holds the SQLite file.
 
 ## Regions
 
-| Region | Panel / component | Role |
-|--------|-------------------|------|
-| Feeds | `rss-feeds` → `FeedsPanel` | Subscriptions, folders, unread counts, Add feed (UI only) |
-| Article list | `rss-article-list` → `ArticleListPanel` | Title, source, relative time, unread dot; search filter |
-| Reader | `rss-reader` → `ReaderPanel` | Title, meta, static HTML body; mark read / unread |
+| Region | Panel | Role |
+|--------|--------|------|
+| Feeds | `rss-feeds` | Smart views + subscriptions; add / refresh |
+| Articles | `rss-article-list` | List with Latest/Digest for Today/All; search |
+| Reader | `rss-reader` | HTML body, star, open original, Ask AI |
 
-Selecting a feed filters the list. Selecting an article opens it in the reader and marks it read in local state. Mark read/unread toggles are Jotai-only overrides over mock defaults.
+Article state is **star-only** (no unread), matching feedoverflow.
 
-## Interactions (mock)
+## Data path
 
-- **Add feed** — button present; no network.
-- **Open original** — button present; no navigation.
-- **Search** — client-side filter on title / summary / feed name.
-- **Loading** — ~450ms skeleton on first paint (`rssMockReadyAtom`).
+`~/.craft-agent/workspaces/{workspaceId}/modules/rss/rss.db`
 
-## Mock data shape
+## Dev attach (optional)
 
-```ts
-RssFolder { id, name, feedIds[] }
-RssFeed   { id, title, url, siteUrl?, folderId?, description? }
-RssArticle {
-  id, feedId, title, author?, publishedAt (ISO),
-  summary, contentHtml (static sanitized HTML), url, unread
-}
+```bash
+cd services/craft-modules
+PORT=4711 CRAFT_MODULES_TOKEN=dev make run
+CRAFT_MODULES_URL=http://127.0.0.1:4711 CRAFT_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
 ```
-
-Sample content mixes English and Chinese. Source: `workbench/modules/rss/mock/`.
-
-## UI state (Jotai)
-
-- `rssSelectedFeedIdAtom` — `'all' | 'unread' | feedId`
-- `rssSelectedArticleIdAtom`
-- `rssSearchQueryAtom`
-- `rssReadOverridesAtom` — `Record<articleId, forceRead>`
-- `rssMockReadyAtom`
-
-## Craft styling
-
-Uses existing electron / Craft tokens (`bg-card`, `border-border`, `text-muted-foreground`, `foreground-5/10`, panel primitives). Does **not** use frontend `--ide-*` tokens.
-
-## Out of scope
-
-Phase 3+ backend: real fetch, persistence, `packages/domain-rss`, RPC channels.

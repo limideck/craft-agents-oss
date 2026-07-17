@@ -6,6 +6,7 @@ import {
   RIGHT_TOP_GROUP,
   RSS_READING_RATIOS,
   SIDEBAR_GROUP,
+  WORKFLOW_EDIT_RATIOS,
   panel,
 } from './constants'
 
@@ -71,14 +72,25 @@ export function rssReadingLayout(): LayoutState {
   }
 }
 
-/** Minimal workflow canvas placeholder layout. */
+/**
+ * Workflow edit: canvas (top) + logs (bottom) | right tools panel.
+ * Workflow list lives in ActivityBar `activityView`, not the dock.
+ */
 export function workflowEditLayout(): LayoutState {
   return {
     columns: [
       {
         id: 'center',
-        width: 1,
-        groups: [{ id: CENTER_GROUP, panels: [panel('wf-canvas')] }],
+        width: WORKFLOW_EDIT_RATIOS.center,
+        groups: [
+          { id: 'group-wf-canvas', panels: [panel('wf-canvas')] },
+          { id: 'group-wf-logs', panels: [panel('wf-logs')] },
+        ],
+      },
+      {
+        id: 'right',
+        width: WORKFLOW_EDIT_RATIOS.right,
+        groups: [{ id: 'group-wf-right', panels: [panel('wf-right')] }],
       },
     ],
   }

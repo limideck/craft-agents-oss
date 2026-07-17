@@ -2,7 +2,7 @@
   "name": "@craft-agent/domain-rss",
   "version": "0.11.1",
   "license": "Apache-2.0",
-  "description": "RSS domain package (skeleton) — subscriptions, fetch, item storage",
+  "description": "RSS domain package — RPC proxy to craft-modules Go sidecar",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

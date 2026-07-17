@@ -456,17 +456,47 @@ export const RPC_CHANNELS = {
     SET_BINDING_ACCESS: 'messaging:access:setBindingAccess',
   },
   /**
-   * Domain stubs (Phase 2) — empty mount points for future RSS / KB / workflows.
-   * Handlers currently no-op ping only; business logic lands in Phase 3+.
+   * RSS domain — proxies to craft-modules Go sidecar (see docs/craft-modules-sidecar.md).
    */
   rss: {
     PING: 'rss:ping',
+    LIST_FEEDS: 'rss:listFeeds',
+    ADD_FEED: 'rss:addFeed',
+    RENAME_FEED: 'rss:renameFeed',
+    DELETE_FEED: 'rss:deleteFeed',
+    IMPORT_OPML: 'rss:importOpml',
+    LIST_ARTICLES: 'rss:listArticles',
+    GET_ARTICLE: 'rss:getArticle',
+    TOGGLE_STAR: 'rss:toggleStar',
+    STARRED_COUNT: 'rss:starredCount',
+    REFRESH: 'rss:refresh',
+    GET_SETTINGS: 'rss:getSettings',
+    PATCH_SETTINGS: 'rss:patchSettings',
   },
   knowledge: {
     PING: 'knowledge:ping',
   },
   workflows: {
     PING: 'workflows:ping',
+    LIST: 'workflows:list',
+    GET: 'workflows:get',
+    CREATE: 'workflows:create',
+    UPDATE: 'workflows:update',
+    DELETE: 'workflows:delete',
+    RUN: 'workflows:run',
+  },
+  /** OpenConnector local sidecar (Electron main only). */
+  openConnector: {
+    GET_STATUS: 'openConnector:getStatus',
+    GET_CONFIG: 'openConnector:getConfig',
+    RESTART: 'openConnector:restart',
+    FETCH: 'openConnector:fetch',
+  },
+  /** craft-modules Go sidecar lifecycle (Electron main / status). */
+  craftModules: {
+    GET_STATUS: 'craftModules:getStatus',
+    GET_CONFIG: 'craftModules:getConfig',
+    RESTART: 'craftModules:restart',
   },
 } as const
 
