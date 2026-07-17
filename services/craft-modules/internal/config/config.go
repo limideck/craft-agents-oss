@@ -19,15 +19,12 @@ type Config struct {
 
 func Load() Config {
 	port := flag.Int("port", envInt("PORT", 0), "listen port (127.0.0.1 only)")
-	dbRoot := flag.String("db-root", os.Getenv("CRAFT_MODULES_DB_ROOT"), "legacy parent of per-workspace module dirs")
+	_ = flag.String("db-root", os.Getenv("CRAFT_MODULES_DB_ROOT"), "deprecated; ignored (use registry rootPath)")
 	logDir := flag.String("log-dir", os.Getenv("CRAFT_MODULES_LOG_DIR"), "optional log directory")
 	token := flag.String("token", os.Getenv("CRAFT_MODULES_TOKEN"), "optional bearer token for /api and /mcp")
 	flag.Parse()
 
 	workspacesRoot := os.Getenv("CRAFT_WORKSPACES_ROOT")
-	if workspacesRoot == "" && *dbRoot != "" {
-		workspacesRoot = *dbRoot
-	}
 	if workspacesRoot == "" {
 		home, err := os.UserHomeDir()
 		if err == nil {

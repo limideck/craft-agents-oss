@@ -3,7 +3,7 @@
  */
 
 import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import { getWorkspaces } from '@craft-agent/shared/config'
+import { getActiveWorkspace, getWorkspaces } from '@craft-agent/shared/config'
 import {
   ensureCraftModulesMcpSource,
   ensureCraftModulesSidecar,
@@ -19,6 +19,10 @@ export const GUI_HANDLED_CHANNELS = [
   RPC_CHANNELS.craftModules.GET_CONFIG,
   RPC_CHANNELS.craftModules.RESTART,
 ] as const
+
+function defaultWorkspaceId(): string | undefined {
+  return getActiveWorkspace()?.id
+}
 
 async function ensureSourcesForLocalWorkspaces(config: CraftModulesSidecarConfig): Promise<void> {
   const localWorkspaces = getWorkspaces().filter((ws) => !ws.remoteServer)
@@ -41,13 +45,13 @@ export function registerCraftModulesHandlers(server: RpcServer, _deps: HandlerDe
   })
 
   server.handle(RPC_CHANNELS.craftModules.GET_CONFIG, async () => {
-    const config = await ensureCraftModulesSidecar()
+    const config = await ensureCraftModulesSidecar({ defaultWorkspaceId: defaultWorkspaceId() })
     await ensureSourcesForLocalWorkspaces(config)
     return config
   })
 
   server.handle(RPC_CHANNELS.craftModules.RESTART, async () => {
-    const config = await restartCraftModulesSidecar()
+    const config = await restartCraftModulesSidecar({ defaultWorkspaceId: defaultWorkspaceId() })
     await ensureSourcesForLocalWorkspaces(config)
     return config
   })

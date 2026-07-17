@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useAppShellContext } from '@/context/AppShellContext'
+import { activeModuleIdAtom } from '../../store/workbench-store'
 import {
   rssArticlesAtom,
   rssErrorAtom,
@@ -31,6 +32,7 @@ type Options = {
 export function useRssWorkspaceData(options: Options = {}) {
   const bootstrap = options.bootstrap ?? false
   const { activeWorkspaceId } = useAppShellContext()
+  const activeModuleId = useAtomValue(activeModuleIdAtom)
   const selection = useAtomValue(rssSidebarSelectionAtom)
   const query = useAtomValue(rssSearchQueryAtom)
   const listMode = useAtomValue(rssListModeAtom)
@@ -105,6 +107,12 @@ export function useRssWorkspaceData(options: Options = {}) {
     if (!bootstrap) return
     void refresh()
   }, [bootstrap, refresh])
+
+  // Re-fetch when returning to the RSS module so MCP-added feeds appear without a manual refresh.
+  useEffect(() => {
+    if (!bootstrap || activeModuleId !== 'rss') return
+    void refresh()
+  }, [bootstrap, activeModuleId, refresh])
 
   return { refresh, workspaceId: activeWorkspaceId }
 }

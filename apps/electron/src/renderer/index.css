@@ -14,6 +14,7 @@
 @source "../renderer/config/**/*.{ts,tsx,jsx}";
 @source "../../../../packages/ui/src/components/**/*.{ts,tsx,jsx}";
 @source "../../../../packages/ui/src/lib/**/*.{ts,tsx,jsx}";
+@source "../../../../packages/datagrid/src/**/*.{ts,tsx}";
 
 /* CSS Custom Highlight API styles are injected at runtime via ChatDisplay.tsx
    to avoid LightningCSS warnings (::highlight is not yet recognized by the optimizer) */

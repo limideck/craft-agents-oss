@@ -13,7 +13,7 @@ export type DomainRpcServer = {
 
 /**
  * RSS domain RPC — thin proxy to craft-modules Go sidecar.
- * Workspace data: ~/.craft-agent/workspaces/{id}/modules/rss/
+ * Workspace data: `{rootPath}/modules/rss/` (see docs/workspace-storage.md).
  */
 export function registerRssRpcHandlers(server: DomainRpcServer): void {
   server.handle(RPC_CHANNELS.rss.PING, async () => {
@@ -56,6 +56,10 @@ export function registerRssRpcHandlers(server: DomainRpcServer): void {
     },
   )
 
+  server.handle(RPC_CHANNELS.rss.EXPORT_OPML, async (_ctx: unknown, workspaceId: string) => {
+    return rss.exportOpml(workspaceId)
+  })
+
   server.handle(
     RPC_CHANNELS.rss.LIST_ARTICLES,
     async (
@@ -77,6 +81,13 @@ export function registerRssRpcHandlers(server: DomainRpcServer): void {
     RPC_CHANNELS.rss.GET_ARTICLE,
     async (_ctx: unknown, workspaceId: string, articleId: string) => {
       return rss.getArticle(workspaceId, articleId)
+    },
+  )
+
+  server.handle(
+    RPC_CHANNELS.rss.FETCH_ARTICLE_CONTENT,
+    async (_ctx: unknown, workspaceId: string, articleUrl: string) => {
+      return rss.fetchArticleContent(workspaceId, articleUrl)
     },
   )
 

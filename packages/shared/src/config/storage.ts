@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync, readdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync, statSync, readdirSync, copyFileSync } from 'fs';
 import { join, dirname, basename } from 'path';
 import { getCredentialManager } from '../credentials/index.ts';
 import { getOrCreateLatestSession, type SessionConfig } from '../sessions/index.ts';
@@ -293,7 +293,7 @@ export function loadStoredConfig(): StoredConfig | null {
     for (const workspace of config.workspaces) {
       if (!isValidWorkspace(workspace.rootPath)) {
         try {
-          createWorkspaceAtPath(workspace.rootPath, workspace.name);
+          createWorkspaceAtPath(workspace.rootPath, workspace.name, undefined, workspace.id);
         } catch (wsError) {
           debug('[config] Failed to create workspace at', workspace.rootPath, ':', wsError instanceof Error ? wsError.message : wsError);
         }
@@ -720,6 +720,19 @@ export function getActiveWorkspace(): Workspace | null {
 }
 
 /**
+ * Resolve absolute workspace disk root from the global registry.
+ * Persistence for modules/sources/sessions must use this path — never
+ * `join(workspacesDir, workspaceId)` when the folder is slug-named.
+ */
+export function resolveWorkspaceRootPath(workspaceId: string): string | null {
+  const id = workspaceId?.trim();
+  if (!id) return null;
+  const workspace = getWorkspaces().find((w) => w.id === id);
+  if (!workspace?.rootPath) return null;
+  return expandPath(workspace.rootPath);
+}
+
+/**
  * Find a workspace by name (case-insensitive) or ID.
  * Useful for CLI -w flag to specify workspace.
  */
@@ -808,16 +821,28 @@ export function addWorkspace(workspace: Omit<Workspace, 'id' | 'createdAt' | 'sl
     return updated;
   }
 
+  // Prefer an existing folder's config.id so registry and local config stay aligned.
+  // Otherwise mint one id and pass it into createWorkspaceAtPath (avoids dual-id bug
+  // where global UUID ≠ local ws_* — agents must pass registry id; persistence uses rootPath).
+  const existingLocal = isValidWorkspace(workspace.rootPath)
+    ? loadWorkspaceConfig(workspace.rootPath)
+    : null;
+  const workspaceId = existingLocal?.id?.trim() || generateWorkspaceId();
+
   const newWorkspace: Workspace = {
     ...workspace,
     slug,
-    id: generateWorkspaceId(),
+    id: workspaceId,
     createdAt: Date.now(),
   };
 
   // Create workspace folder structure if it doesn't exist
   if (!isValidWorkspace(newWorkspace.rootPath)) {
-    createWorkspaceAtPath(newWorkspace.rootPath, newWorkspace.name);
+    createWorkspaceAtPath(newWorkspace.rootPath, newWorkspace.name, undefined, newWorkspace.id);
+  } else if (existingLocal && existingLocal.id !== newWorkspace.id) {
+    existingLocal.id = newWorkspace.id;
+    existingLocal.updatedAt = Date.now();
+    saveWorkspaceConfig(newWorkspace.rootPath, existingLocal);
   }
 
   config.workspaces.push(newWorkspace);
@@ -869,6 +894,37 @@ export function syncWorkspaces(): void {
       config.activeWorkspaceId = config.workspaces[0]!.id;
     }
     saveConfig(config);
+  }
+}
+
+/**
+ * Align local workspace config.json `id` with the global registry id used by the
+ * Workbench UI / domain RPC / craft-modules MCP. When they diverge, agents that
+ * invent ids from the wrong config confuse routing — but persistence always
+ * resolves `id → rootPath` from the registry (see docs/workspace-storage.md).
+ *
+ * No module-data migration: wipe stale `~/.craft-agent/workspaces/{id}/modules`
+ * if leftover from older builds.
+ * Call on app startup.
+ */
+export function reconcileWorkspaceIds(): void {
+  const config = loadStoredConfig();
+  if (!config?.workspaces?.length) return;
+
+  for (const workspace of config.workspaces) {
+    if (workspace.remoteServer) continue;
+    const wsConfig = loadWorkspaceConfig(workspace.rootPath);
+    if (!wsConfig?.id || !workspace.id) continue;
+    if (wsConfig.id === workspace.id) continue;
+
+    const oldId = wsConfig.id;
+    debug(
+      `[config] Reconciling workspace id mismatch for ${workspace.rootPath}: ` +
+        `local=${oldId} → registry=${workspace.id}`,
+    );
+    wsConfig.id = workspace.id;
+    wsConfig.updatedAt = Date.now();
+    saveWorkspaceConfig(workspace.rootPath, wsConfig);
   }
 }
 
@@ -2962,8 +3018,6 @@ export function setSetupDeferred(deferred: boolean): void {
 // ============================================
 // Tool Icons (CLI tool icons for turn card display)
 // ============================================
-
-import { copyFileSync } from 'fs';
 
 const TOOL_ICONS_DIR_NAME = 'tool-icons';
 

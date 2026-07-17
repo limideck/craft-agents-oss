@@ -10,7 +10,7 @@ import (
 func registerWorkflowTools(server *sdkmcp.Server, c *client) {
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "wf_list",
-		Description: "List all workflows in the workspace (id, name, nodes, edges, updatedAt).",
+		Description: "List all workflows in the workspace (id, name, nodes, edges, updatedAt, status, version, deployedAt).",
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in workspaceInput) (*sdkmcp.CallToolResult, any, error) {
 		res, err := c.get(ctx, "/api/workflows", c.ws(in))
 		if err != nil {
@@ -115,6 +115,30 @@ func registerWorkflowTools(server *sdkmcp.Server, c *client) {
 		Description: "Enqueue a workflow run (stub — accepted only; no graph execution yet).",
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in wfIDInput) (*sdkmcp.CallToolResult, any, error) {
 		res, err := c.post(ctx, "/api/workflows/"+url.PathEscape(in.ID)+"/run", c.ws(in.workspaceInput), map[string]any{})
+		if err != nil {
+			return nil, nil, err
+		}
+		return textResult(res)
+	})
+
+	sdkmcp.AddTool(server, &sdkmcp.Tool{
+		Name: "wf_deploy",
+		Description: "Publish the current draft graph as the live deployed version. " +
+			"Schedule/webhook nodes are recorded as armed (runners remain stub). " +
+			"Returns { id, version, deployedAt, status, triggersArmed? }.",
+	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in wfIDInput) (*sdkmcp.CallToolResult, any, error) {
+		res, err := c.post(ctx, "/api/workflows/"+url.PathEscape(in.ID)+"/deploy", c.ws(in.workspaceInput), map[string]any{})
+		if err != nil {
+			return nil, nil, err
+		}
+		return textResult(res)
+	})
+
+	sdkmcp.AddTool(server, &sdkmcp.Tool{
+		Name:        "wf_undeploy",
+		Description: "Clear live deploy status (draft again). Keeps last version number; does not delete the workflow.",
+	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in wfIDInput) (*sdkmcp.CallToolResult, any, error) {
+		res, err := c.post(ctx, "/api/workflows/"+url.PathEscape(in.ID)+"/undeploy", c.ws(in.workspaceInput), map[string]any{})
 		if err != nil {
 			return nil, nil, err
 		}

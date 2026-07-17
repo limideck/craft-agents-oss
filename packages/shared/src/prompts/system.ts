@@ -558,8 +558,8 @@ function getCraftAgentEnvironmentMarker(): string {
  * @param includeCoAuthoredBy - Whether to include the Co-Authored-By git trailer instruction (default: true)
  */
 function getCraftAssistantPrompt(workspaceRootPath?: string, backendName: string = 'Claude Code', includeCoAuthoredBy: boolean = true): string {
-  // Default to ${APP_ROOT}/workspaces/{id} if no path provided
-  const workspacePath = workspaceRootPath || `${APP_ROOT}/workspaces/{id}`;
+  // Prefer the real workspace rootPath from the registry; never invent workspaces/{id}.
+  const workspacePath = workspaceRootPath || `${APP_ROOT}/workspaces/{slug}`;
 
   // Read the SDK plugin name from .claude-plugin/plugin.json — this is what the SDK
   // uses to resolve skills. Falls back to basename for backwards compatibility.

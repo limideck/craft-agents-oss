@@ -21,6 +21,14 @@ import type { LoadedSource, FolderSourceConfig } from './types.ts';
 const PREFERRED_BUILTIN_SOURCE_SLUGS = new Set(['craft-modules']);
 
 /**
+ * Preferred builtin source slugs that sessions should enable by default
+ * (when the on-disk Source exists and is usable).
+ */
+export function listPreferredBuiltinSourceSlugs(): string[] {
+  return [...PREFERRED_BUILTIN_SOURCE_SLUGS];
+}
+
+/**
  * Get all built-in sources for a workspace.
  *
  * Currently returns empty array - craft-agents-docs has been moved to

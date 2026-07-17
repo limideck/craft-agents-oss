@@ -465,8 +465,10 @@ export const RPC_CHANNELS = {
     RENAME_FEED: 'rss:renameFeed',
     DELETE_FEED: 'rss:deleteFeed',
     IMPORT_OPML: 'rss:importOpml',
+    EXPORT_OPML: 'rss:exportOpml',
     LIST_ARTICLES: 'rss:listArticles',
     GET_ARTICLE: 'rss:getArticle',
+    FETCH_ARTICLE_CONTENT: 'rss:fetchArticleContent',
     TOGGLE_STAR: 'rss:toggleStar',
     STARRED_COUNT: 'rss:starredCount',
     REFRESH: 'rss:refresh',
@@ -484,6 +486,8 @@ export const RPC_CHANNELS = {
     UPDATE: 'workflows:update',
     DELETE: 'workflows:delete',
     RUN: 'workflows:run',
+    DEPLOY: 'workflows:deploy',
+    UNDEPLOY: 'workflows:undeploy',
   },
   /** OpenConnector local sidecar (Electron main only). */
   openConnector: {
@@ -497,6 +501,13 @@ export const RPC_CHANNELS = {
     GET_STATUS: 'craftModules:getStatus',
     GET_CONFIG: 'craftModules:getConfig',
     RESTART: 'craftModules:restart',
+  },
+  /** Tables (plydb fork) sidecar lifecycle + admin HTTP proxy. */
+  tables: {
+    GET_STATUS: 'tables:getStatus',
+    GET_CONFIG: 'tables:getConfig',
+    RESTART: 'tables:restart',
+    FETCH: 'tables:fetch',
   },
 } as const
 

@@ -26,6 +26,11 @@ export type FormatCraftModulesContextOptions = {
   /** Workbench ActivityBar module id when known (e.g. rss, knowledge, workflows) */
   activeModuleId?: string | null
   /**
+   * Canonical Craft workspace id (global registry / UI activeWorkspaceId).
+   * Agents must pass this as workspace_id on craft-modules MCP tools.
+   */
+  workspaceId?: string | null
+  /**
    * When true, omit the Active workbench module line (stable catalog only).
    * Used so PromptBuilder can put the active line in volatile context.
    */
@@ -43,6 +48,8 @@ const CRAFT_BUILTIN_MODULES: readonly CraftBuiltinModule[] = [
       'read articles',
       'star or unstar articles',
       'import OPML',
+      'export OPML',
+      'fetch full article text',
       'manage RSS subscriptions',
     ],
     toolPrefix: 'rss_',
@@ -104,6 +111,9 @@ export function formatCraftModulesContextBlock(
     `- When intent matches an enabled module below, call tools on ${CRAFT_MODULES_SOURCE_SLUG} (prefixes listed).`,
     '- Do NOT create new API or MCP Sources for RSS, Knowledge, or Workflows when craft-modules covers the need.',
     '- Optional skills (if listed) are for deep multi-step workflows only; still require craft-modules.',
+    '- Always pass workspace_id from this block (never invent ids or read a different config.json id).',
+    '- Module data lives under the workspace folder (rootPath/modules/…), not ~/.craft-agent/tables or workspaces/{uuid}/modules.',
+    '- Before claiming feeds/workflows "already added", call the list tool (rss_list_feeds / wf_list) for this workspace_id.',
     '',
     'Modules:',
   ]
@@ -114,6 +124,15 @@ export function formatCraftModulesContextBlock(
     const intents = mod.intents.join(', ')
     lines.push(
       `- ${mod.id} (${status}): ${mod.title} — tools ${mod.toolPrefix}*${skill} — intents: ${intents}`,
+    )
+  }
+
+  const workspaceId = opts?.workspaceId?.trim()
+  if (workspaceId) {
+    lines.push('')
+    lines.push(`workspace_id: ${workspaceId}`)
+    lines.push(
+      `Pass workspace_id: "${workspaceId}" on every rss_*/wf_*/kb_* tool call (matches Workbench UI).`,
     )
   }
 

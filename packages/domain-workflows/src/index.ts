@@ -20,7 +20,7 @@ export type RegisterWorkflowsRpcOptions = {
 
 /**
  * Workflows domain RPC — thin proxy to craft-modules Go sidecar.
- * Workspace data: ~/.craft-agent/workspaces/{id}/modules/workflows/
+ * Workspace data: `{rootPath}/modules/workflows/` (see docs/workspace-storage.md).
  *
  * `workflows:run` may be owned by server-core (Craft agent execution). Pass
  * `skipRun: true` when registering from domain-stubs alongside that handler.
@@ -83,4 +83,19 @@ export function registerWorkflowsRpcHandlers(
       },
     )
   }
+
+  // Deploy is always Go-owned (unlike RUN which Craft may own).
+  server.handle(
+    RPC_CHANNELS.workflows.DEPLOY,
+    async (_ctx: unknown, workspaceId: string, workflowId: string) => {
+      return craftModules.deployWorkflow(workspaceId, workflowId)
+    },
+  )
+
+  server.handle(
+    RPC_CHANNELS.workflows.UNDEPLOY,
+    async (_ctx: unknown, workspaceId: string, workflowId: string) => {
+      return craftModules.undeployWorkflow(workspaceId, workflowId)
+    },
+  )
 }

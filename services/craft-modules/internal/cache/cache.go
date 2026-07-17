@@ -153,13 +153,13 @@ func NewWorkspaceCaches(mgr *db.Manager) *WorkspaceCaches {
 	return &WorkspaceCaches{caches: map[string]*Cache{}, dbMgr: mgr}
 }
 
-func (w *WorkspaceCaches) For(workspaceID string) (*Cache, error) {
+func (w *WorkspaceCaches) For(workspaceID, rootPath string) (*Cache, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if c, ok := w.caches[workspaceID]; ok {
 		return c, nil
 	}
-	handle, err := w.dbMgr.Get(workspaceID)
+	handle, err := w.dbMgr.Get(workspaceID, rootPath)
 	if err != nil {
 		return nil, err
 	}
@@ -174,12 +174,12 @@ func (w *WorkspaceCaches) Each(fn func(workspaceID string, c *Cache) error) {
 	for id := range w.caches {
 		ids = append(ids, id)
 	}
+	caches := make([]*Cache, len(ids))
+	for i, id := range ids {
+		caches[i] = w.caches[id]
+	}
 	w.mu.Unlock()
-	for _, id := range ids {
-		c, err := w.For(id)
-		if err != nil {
-			continue
-		}
-		_ = fn(id, c)
+	for i, id := range ids {
+		_ = fn(id, caches[i])
 	}
 }

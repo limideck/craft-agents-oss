@@ -37,7 +37,7 @@ import {
   workflowRunStepsAtom,
   workflowsAtom,
 } from '../store'
-import { runWorkflowViaRpc, scheduleWorkflowPersist, flushPendingWorkflowPersists } from '../use-workflow-data'
+import { runWorkflowViaRpc, scheduleWorkflowPersist, flushPendingWorkflowPersists, deployWorkflowViaRpc } from '../use-workflow-data'
 import { normalizeRunSteps } from '../utils/synthesize-run-steps'
 import { getNodeById, getWorkflowById } from '../utils/lookup'
 
@@ -58,7 +58,7 @@ const CATEGORY_ITEMS: Record<BlockCategory, BlockConfig[]> = {
 /**
  * Right column — Chat | Toolbar | Editor (CSS hide/show).
  * Run calls `workflows:run` (Craft executes agent nodes; other nodes stay lightweight).
- * Deploy stays UI-only until a deploy RPC exists.
+ * Deploy flushes pending saves then calls `workflows:deploy` (Go publishes live snapshot).
  */
 export function RightPanel() {
   const { activeWorkspaceId } = useAppShellContext()
@@ -74,12 +74,43 @@ export function RightPanel() {
   const workflow = getWorkflowById(workflows, selectedWorkflowId)
   const node = getNodeById(workflow, selectedNodeId)
 
-  const onDeploy = () => {
-    const name = workflow?.name ?? 'workflow'
-    setLogs((prev) =>
-      appendLogLine(prev, `Deploy: “${name}” — no deploy RPC yet (UI stub).`, 'warn'),
-    )
-    toast.message('Deploy not wired yet')
+  const onDeploy = async () => {
+    if (!activeWorkspaceId || !selectedWorkflowId || !workflow) {
+      toast.message('Select a workflow first')
+      return
+    }
+    const name = workflow.name
+    try {
+      await flushPendingWorkflowPersists(selectedWorkflowId)
+      const result = await deployWorkflowViaRpc(activeWorkspaceId, selectedWorkflowId)
+      setWorkflows((prev) =>
+        prev.map((w) =>
+          w.id === selectedWorkflowId
+            ? {
+                ...w,
+                status: result.status,
+                version: result.version,
+                ...(result.deployedAt ? { deployedAt: result.deployedAt } : {}),
+              }
+            : w,
+        ),
+      )
+      const armed = result.triggersArmed?.armed
+        ? ` · ${result.triggersArmed.triggers.length} trigger${result.triggersArmed.triggers.length === 1 ? '' : 's'} armed (stub)`
+        : ''
+      setLogs((prev) =>
+        appendLogLine(
+          prev,
+          `Deployed: “${name}” · v${result.version}${armed}`,
+          'success',
+        ),
+      )
+      toast.success(`Deployed · v${result.version}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      setLogs((prev) => appendLogLine(prev, `Deploy failed: ${message}`, 'warn'))
+      toast.error(message)
+    }
   }
 
   const onRun = async () => {
@@ -179,8 +210,13 @@ export function RightPanel() {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs gap-1"
-              title="Deploy (not wired)"
-              onClick={onDeploy}
+              title={
+                workflow?.status === 'deployed'
+                  ? `Redeploy live snapshot (currently v${workflow.version})`
+                  : 'Publish current graph as live version'
+              }
+              disabled={!selectedWorkflowId || !activeWorkspaceId}
+              onClick={() => void onDeploy()}
             >
               <Rocket className="h-3.5 w-3.5" />
               Deploy
@@ -190,7 +226,7 @@ export function RightPanel() {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs gap-1"
-              title="Run (stub via craft-modules)"
+              title="Run (agent nodes via Craft)"
               disabled={!selectedWorkflowId || !activeWorkspaceId}
               onClick={() => void onRun()}
             >

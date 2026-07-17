@@ -1,5 +1,5 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { CalendarDays, Headphones, Inbox, Plus, RefreshCw, Rss, Star } from 'lucide-react'
+import { CalendarDays, Headphones, Inbox, Plus, RefreshCw, Rss, Settings2, Star } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
 import { Button } from '@/components/ui/button'
@@ -9,12 +9,14 @@ import {
   rssErrorAtom,
   rssFeedsAtom,
   rssLoadingAtom,
+  rssManageFeedsOpenAtom,
   rssSidebarSelectionAtom,
   rssStarredCountAtom,
   type RssSidebarSelection,
 } from '../store'
 import { useRssWorkspaceData } from '../use-rss-data'
 import { AddFeedDialog } from '../components/add-feed-dialog'
+import { ManageFeedsDialog } from '../components/manage-feeds-dialog'
 import { RssSkeletonRows } from '../components/rss-skeleton'
 
 function FeedRow({
@@ -69,6 +71,7 @@ export function FeedsPanel() {
   const starredCount = useAtomValue(rssStarredCountAtom)
   const [selected, setSelected] = useAtom(rssSidebarSelectionAtom)
   const setAddOpen = useSetAtom(rssAddFeedOpenAtom)
+  const setManageOpen = useSetAtom(rssManageFeedsOpenAtom)
 
   const refreshAll = async () => {
     if (!workspaceId) return
@@ -85,6 +88,17 @@ export function FeedsPanel() {
       <PanelHeaderBar className="justify-between">
         <span className="font-medium truncate">Feeds</span>
         <div className="flex items-center gap-0.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title="Manage feeds"
+            disabled={!workspaceId}
+            onClick={() => setManageOpen(true)}
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+          </Button>
           <Button
             type="button"
             variant="ghost"
@@ -167,7 +181,12 @@ export function FeedsPanel() {
           </div>
         )}
       </PanelBody>
-      {workspaceId ? <AddFeedDialog workspaceId={workspaceId} onAdded={() => void refresh()} /> : null}
+      {workspaceId ? (
+        <>
+          <AddFeedDialog workspaceId={workspaceId} onAdded={() => void refresh()} />
+          <ManageFeedsDialog workspaceId={workspaceId} />
+        </>
+      ) : null}
     </PanelRoot>
   )
 }

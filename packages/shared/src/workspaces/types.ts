@@ -1,14 +1,16 @@
 /**
  * Workspace Types
  *
- * Workspaces are the top-level organizational unit. Everything (sources, sessions)
- * is scoped to a workspace.
+ * Workspaces are the top-level organizational unit. Everything (sources, sessions,
+ * skills, projects, automations, modules) is scoped to a workspace disk root
+ * (`Workspace.rootPath` from the global registry). Never assume
+ * `basename(rootPath) === workspaceId`.
  *
- * Directory structure:
- * ~/.craft-agent/workspaces/{slug}/
- *   ├── config.json      - Workspace settings
- *   ├── sources/         - Data sources (MCP, API, local)
- *   └── sessions/        - Conversation sessions
+ * Directory structure under `{rootPath}/` (see docs/workspace-storage.md):
+ *   ├── config.json, sources/, sessions/, skills/, projects/, …
+ *   ├── automations.json, permissions.json, statuses/, labels/, …
+ *   └── modules/
+ *       ├── rss/, tables/, workflows/, knowledge/
  */
 
 import type { PermissionMode } from '../agent/mode-manager.ts';

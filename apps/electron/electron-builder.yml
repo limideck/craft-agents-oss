@@ -127,6 +127,12 @@ mac:
       filter:
         - "**/*"
         - "!**/.gitkeep"
+    # Tables sidecar (plydb fork). Staged by `bun run scripts/build-tables.ts`.
+    - from: resources/tables
+      to: tables
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
   # Use predictable naming for macOS packages (applies to zip; dmg uses its own config below)
   artifactName: "Craft-Agents-${arch}.${ext}"
   # Code signing & notarization (disabled by default for local builds)
@@ -194,6 +200,12 @@ win:
       filter:
         - "**/*"
         - "!**/.gitkeep"
+    # Tables sidecar (plydb fork)
+    - from: resources/tables
+      to: tables
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
 
 nsis:
   oneClick: true
@@ -224,6 +236,12 @@ linux:
     # craft-modules Go sidecar (RSS)
     - from: resources/craft-modules
       to: craft-modules
+      filter:
+        - "**/*"
+        - "!**/.gitkeep"
+    # Tables sidecar (plydb fork)
+    - from: resources/tables
+      to: tables
       filter:
         - "**/*"
         - "!**/.gitkeep"

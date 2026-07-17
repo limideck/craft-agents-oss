@@ -1,6 +1,8 @@
 # Workbench Workflows editor (UI)
 
-Phase 2 Workflows module for the Craft workbench shell. Canvas uses `@xyflow/react`; graph CRUD is persisted through **craft-modules** via `domain-workflows` RPC (`workflows:*`). Shapes align with [workbench-workflows-contract.md](./workbench-workflows-contract.md).
+Phase 2 Flows editor for the Craft workbench shell (under **Automations → Flows**). Canvas uses `@xyflow/react`; graph CRUD is persisted through **craft-modules** via `domain-workflows` RPC (`workflows:*`). Shapes align with [workbench-workflows-contract.md](./workbench-workflows-contract.md).
+
+Product entry and Rules vs Flows IA: [workbench-automations-ui.md](./workbench-automations-ui.md).
 
 ## How to open
 
@@ -9,8 +11,8 @@ Phase 2 Workflows module for the Craft workbench shell. Canvas uses `@xyflow/rea
    - DevTools console: `localStorage.setItem('craft-feature-workbench-shell', '1')` then reload, **or**
    - Env: `CRAFT_FEATURE_WORKBENCH_SHELL=1`
 3. Start Electron (`bun run electron:dev` / usual app entry). Main spawns `craft-modules` (or attach with `CRAFT_MODULES_URL`).
-4. In the ActivityBar (far left), click **Workflows**.
-5. Left aside shows the workflow list; dock applies the `workflow-edit` preset.
+4. In the ActivityBar (far left), click **Automations**, then the **Flows** segment.
+5. Left aside shows the flow list; dock applies the `workflow-edit` preset.
 
 If you previously opened an older Workflows layout, clear the saved dock layout for that workspace (or wipe `craft-panel-layout:workbench:*` keys in localStorage) so the preset applies.
 
@@ -19,15 +21,15 @@ If the list shows a sidecar / connection error, build/start craft-modules or set
 ## Locked layout (tabs on the right)
 
 ```
-[ActivityBar] [Workflow List] [Canvas ↑ + Logs ↓] [Chat | Toolbar | Editor + Deploy/Run]
+[ActivityBar] [Automations: Flows list] [Canvas ↑ + Logs ↓] [Chat | Toolbar | Editor + Deploy/Run]
 ```
 
 | Region | Panel / component | Role |
 |--------|-------------------|------|
-| Workflow list | `activityView` → `WorkflowListView` | Create / delete via RPC, select / open; highlight selected — **not** a dock center panel |
+| Flow list | Automations activityView → Flows → `WorkflowListView` | Create / delete via RPC, select / open; highlight selected — **not** a dock center panel |
 | Canvas | `wf-canvas` → `CanvasPanel` | `@xyflow/react` nodes/edges, pan/zoom, connect; edits debounce-persist |
 | Logs | `wf-logs` → `LogsPanel` | Per-node run steps (list + Output \| Input JSON); session lines when idle |
-| Right tools | `wf-right` → `RightPanel` | Internal tabs Chat \| Toolbar \| Editor; Deploy (UI stub) / Run (`workflows:run`) |
+| Right tools | `wf-right` → `RightPanel` | Internal tabs Chat \| Toolbar \| Editor; Deploy (`workflows:deploy`) / Run (`workflows:run`) |
 
 Dock preset `workflow-edit`: center column ~0.62 (canvas / logs vertical split) + right ~0.38 (single panel). Right tab bodies stay mounted (CSS `hidden`); they are not three separate dock tabs.
 
@@ -37,7 +39,7 @@ Dock preset `workflow-edit`: center column ~0.62 (canvas / logs vertical split) 
 UI (Jotai cache) → electronAPI.workflows* → domain-workflows RPC → craft-modules HTTP /api/workflows
 ```
 
-Workspace store: `~/.craft-agent/workspaces/{workspaceId}/modules/workflows/`
+Workspace store: `{rootPath}/modules/workflows/` (see [workspace-storage.md](./workspace-storage.md)). Definitions currently live in `workflows.db`; `definitions/` is reserved for a future file SoT.
 
 | UI action | RPC channel |
 |-----------|-------------|
@@ -46,10 +48,11 @@ Workspace store: `~/.craft-agent/workspaces/{workspaceId}/modules/workflows/`
 | Graph edits (nodes, edges, config, positions) | `workflows:update` (debounced) |
 | Delete workflow | `workflows:delete` |
 | Run | `workflows:run` (Go accepts; Craft executes `agent` nodes → real Logs output) |
+| Deploy | `workflows:deploy` (flush pending save → Go publishes live snapshot) |
 
 Hook: `use-workflow-data.ts` (same pattern as RSS `use-rss-data.ts`). Optimistic local updates; authority is the Go store.
 
-Sample graphs in `mock/data.ts` are **not** seeded into the store (dev/docs only). An empty sidecar list shows “No workflows yet.”
+Sample graphs in `mock/data.ts` are **not** seeded into the store (dev/docs only). An empty sidecar list shows the Flows empty-state copy (use Rules for simple schedules).
 
 ## Interactions
 
@@ -65,13 +68,13 @@ Sample graphs in `mock/data.ts` are **not** seeded into the store (dev/docs only
 - **Editor** — writable form from `BlockConfig.fields` → writes `name` / `config` → persist.
 - **Run** — flushes pending persists, calls `workflows:run`. Craft runs `agent` nodes via a real session; Logs show per-node Input / Output (agent Output is model text). Selecting a step highlights the canvas node.
 - **Logs** — left: step list (icon, name, duration, error); right: **Output** \| **Input** tabs with expandable JSON tree (type tags). Resizable split inside the panel.
-- **Deploy** — UI stub only (no deploy RPC yet).
+- **Deploy** — flushes pending persists, calls `workflows:deploy`. Canvas header + list show **Deployed · vN**. Logs line on success. Schedule/webhook nodes are armed in metadata only (runners stub).
 - **Chat** — placeholder copy only.
 
 ## Graph data shape (contract-aligned)
 
 ```ts
-WorkflowSummary { id, name, description?, updatedAt, nodes[], edges[] }
+WorkflowSummary { id, name, description?, updatedAt, status, version, deployedAt?, nodes[], edges[] }
 WorkflowNode    { id, type, name, position: { x, y }, config: Record<string, unknown> }
 WorkflowEdge    { id, source, target, sourceHandle?, targetHandle? }
 WorkflowNodeType =
@@ -117,6 +120,6 @@ Uses existing electron / Craft tokens (`bg-card`, `border-border`, `text-muted-f
 
 ## Out of scope (this phase)
 
-Graph executor, Loop/Parallel, Tools integration catalog, real Deploy / Chat, undo stack.
+Graph executor for all node types, Loop/Parallel tooling catalog, cron/webhook runners that fire runs, multi-version rollback UI, real Chat, undo stack.
 
 See also: [workbench-workflows-contract.md](./workbench-workflows-contract.md), [workbench-architecture.md](./workbench-architecture.md), [workbench-rss-ui.md](./workbench-rss-ui.md), [craft-modules-sidecar.md](./craft-modules-sidecar.md).

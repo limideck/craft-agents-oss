@@ -31,15 +31,33 @@ If you previously hit `database is locked`, quit Craft and kill stale sidecars (
 
 | Region | Panel | Role |
 |--------|--------|------|
-| Feeds | `rss-feeds` | Smart views + subscriptions; add / refresh |
+| Feeds | `rss-feeds` | Smart views + subscriptions; add / manage / refresh / OPML export |
 | Articles | `rss-article-list` | List with Latest/Digest for Today/All; search |
-| Reader | `rss-reader` | HTML body, star, open original, Ask AI |
+| Reader | `rss-reader` | HTML body, 全文, star, open original, Ask AI, podcast player |
 
 Article state is **star-only** (no unread), matching feedoverflow.
 
+### Manage feeds
+
+Feeds header **gear** opens Manage feeds: rename, delete, copy URL, and **Export** OPML (downloads `feeds.opml`). After rename/delete the UI calls `refreshRssData()`.
+
+### Add feed / OPML import
+
+Add (+) opens a dialog with tabs **URL** | **OPML**. OPML accepts file drop/picker or pasted XML; success shows imported/skipped counts via `rssImportOpml`.
+
+### Podcast player
+
+When an article has `audioUrl`, Reader shows a Play chip; the bottom bar supports play/pause, seek, ±15s, and speed.
+
+### Full text (全文)
+
+Reader toolbar **全文** calls `rssFetchArticleContent` → Go readability (`GET /api/rss/articles/fetch-content?url=`). Extracted HTML is shown in-session (not persisted); toggle restores RSS body.
+
 ## Data path
 
-`~/.craft-agent/workspaces/{workspaceId}/modules/rss/rss.db`
+`{rootPath}/modules/rss/rss.db` — see [workspace-storage.md](./workspace-storage.md).
+
+Pass `X-Craft-Workspace-Id` (+ optional `X-Craft-Workspace-Root`) on every request. Never assume `basename(rootPath) === workspaceId`.
 
 ## Dev attach (optional)
 

@@ -448,6 +448,11 @@ export const CHANNEL_MAP = {
   restartOpenConnector: invoke(RPC_CHANNELS.openConnector.RESTART),
   openConnectorFetch: invoke(RPC_CHANNELS.openConnector.FETCH),
 
+  getTablesStatus: invoke(RPC_CHANNELS.tables.GET_STATUS),
+  getTablesConfig: invoke(RPC_CHANNELS.tables.GET_CONFIG),
+  restartTables: invoke(RPC_CHANNELS.tables.RESTART),
+  tablesFetch: invoke(RPC_CHANNELS.tables.FETCH),
+
   // craft-modules sidecar
   getCraftModulesStatus: invoke(RPC_CHANNELS.craftModules.GET_STATUS),
   getCraftModulesConfig: invoke(RPC_CHANNELS.craftModules.GET_CONFIG),
@@ -460,8 +465,10 @@ export const CHANNEL_MAP = {
   rssRenameFeed: invoke(RPC_CHANNELS.rss.RENAME_FEED),
   rssDeleteFeed: invoke(RPC_CHANNELS.rss.DELETE_FEED),
   rssImportOpml: invoke(RPC_CHANNELS.rss.IMPORT_OPML),
+  rssExportOpml: invoke(RPC_CHANNELS.rss.EXPORT_OPML),
   rssListArticles: invoke(RPC_CHANNELS.rss.LIST_ARTICLES),
   rssGetArticle: invoke(RPC_CHANNELS.rss.GET_ARTICLE),
+  rssFetchArticleContent: invoke(RPC_CHANNELS.rss.FETCH_ARTICLE_CONTENT),
   rssToggleStar: invoke(RPC_CHANNELS.rss.TOGGLE_STAR),
   rssStarredCount: invoke(RPC_CHANNELS.rss.STARRED_COUNT),
   rssRefresh: invoke(RPC_CHANNELS.rss.REFRESH),
@@ -476,4 +483,6 @@ export const CHANNEL_MAP = {
   workflowsUpdate: invoke(RPC_CHANNELS.workflows.UPDATE),
   workflowsDelete: invoke(RPC_CHANNELS.workflows.DELETE),
   workflowsRun: invoke(RPC_CHANNELS.workflows.RUN),
+  workflowsDeploy: invoke(RPC_CHANNELS.workflows.DEPLOY),
+  workflowsUndeploy: invoke(RPC_CHANNELS.workflows.UNDEPLOY),
 } satisfies ChannelMap

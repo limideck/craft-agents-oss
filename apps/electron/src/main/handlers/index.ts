@@ -10,6 +10,7 @@ import { registerBrowserHandlers } from './browser'
 import { registerSettingsGuiHandlers } from './settings'
 import { registerOpenConnectorHandlers } from './open-connector'
 import { registerCraftModulesHandlers } from './craft-modules'
+import { registerTablesHandlers } from './tables'
 
 export function registerGuiRpcHandlers(server: RpcServer, deps: HandlerDeps): void {
   registerSystemGuiHandlers(server, deps)
@@ -18,6 +19,7 @@ export function registerGuiRpcHandlers(server: RpcServer, deps: HandlerDeps): vo
   registerSettingsGuiHandlers(server, deps)
   registerOpenConnectorHandlers(server, deps)
   registerCraftModulesHandlers(server, deps)
+  registerTablesHandlers(server, deps)
 }
 
 export function registerAllRpcHandlers(server: RpcServer, deps: HandlerDeps, serverCtx?: ServerHandlerContext): void {

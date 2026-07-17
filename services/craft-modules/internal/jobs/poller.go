@@ -45,7 +45,7 @@ func (p *Poller) Start(ctx context.Context) {
 
 func (p *Poller) pollOnce(ctx context.Context) {
 	p.Caches.Each(func(workspaceID string, c *cache.Cache) error {
-		handle, err := p.DBMgr.Get(workspaceID)
+		handle, err := p.DBMgr.Get(workspaceID, "")
 		if err != nil {
 			p.Log.Warn("poll: open db failed", "workspace", workspaceID, "err", err)
 			return nil

@@ -90,7 +90,8 @@ import {
   startOpenConnectorSidecar,
   stopOpenConnectorSidecar,
 } from './open-connector-sidecar'
-import { ensureOpenConnectorMcpSource } from '@craft-agent/shared/sources'
+import { startTablesSidecar, stopTablesSidecar } from './tables-sidecar'
+import { ensureOpenConnectorMcpSource, ensureTablesMcpSource } from '@craft-agent/shared/sources'
 import {
   startCraftModulesSidecar,
   stopCraftModulesSidecar,
@@ -108,7 +109,7 @@ import { setSearchPlatform, setImageProcessor } from '@craft-agent/server-core/s
 import { createApplicationMenu } from './menu'
 import { WindowManager } from './window-manager'
 import { loadWindowState, saveWindowState } from './window-state'
-import { getWorkspaces, getWorkspaceByNameOrId, loadStoredConfig, addWorkspace, saveConfig } from '@craft-agent/shared/config'
+import { getWorkspaces, getWorkspaceByNameOrId, loadStoredConfig, addWorkspace, saveConfig, reconcileWorkspaceIds } from '@craft-agent/shared/config'
 import { getDefaultWorkspacesDir } from '@craft-agent/shared/workspaces'
 import { initializeDocs } from '@craft-agent/shared/docs'
 import { initializeReleaseNotes } from '@craft-agent/shared/release-notes'
@@ -808,8 +809,19 @@ app.whenReady().then(async () => {
       // craft-modules Go sidecar — RSS (+ future modules); failures non-fatal
       void (async () => {
         try {
-          const cmConfig = await startCraftModulesSidecar()
-          mainLog.info('[craft-modules] sidecar ready', { baseUrl: cmConfig.baseUrl })
+          // Align local config.id with registry id and migrate orphan module DBs
+          // before the UI / MCP tools talk to craft-modules.
+          reconcileWorkspaceIds()
+          const activeWs =
+            getWorkspaces().find((ws) => ws.id === loadStoredConfig()?.activeWorkspaceId) ??
+            getWorkspaces().find((ws) => !ws.remoteServer)
+          const cmConfig = await startCraftModulesSidecar({
+            defaultWorkspaceId: activeWs?.id,
+          })
+          mainLog.info('[craft-modules] sidecar ready', {
+            baseUrl: cmConfig.baseUrl,
+            defaultWorkspaceId: activeWs?.id ?? null,
+          })
           const localWorkspaces = getWorkspaces().filter((ws) => !ws.remoteServer)
           for (const ws of localWorkspaces) {
             try {
@@ -823,6 +835,7 @@ app.whenReady().then(async () => {
                 slug: result.slug,
                 created: result.created,
                 updated: result.updated,
+                defaultsUpdated: result.defaultsUpdated,
                 mcpUrl: result.mcpUrl,
               })
             } catch (err) {
@@ -834,6 +847,38 @@ app.whenReady().then(async () => {
           }
         } catch (err) {
           mainLog.warn('[craft-modules] sidecar start skipped/failed:', err)
+        }
+      })()
+
+      // Tables sidecar (plydb fork) — MCP query gateway; failures non-fatal
+      void (async () => {
+        try {
+          const tablesConfig = await startTablesSidecar()
+          mainLog.info('[tables] sidecar ready', { baseUrl: tablesConfig.baseUrl })
+          const localWorkspaces = getWorkspaces().filter((ws) => !ws.remoteServer)
+          for (const ws of localWorkspaces) {
+            try {
+              const result = await ensureTablesMcpSource({
+                workspaceRootPath: ws.rootPath,
+                baseUrl: tablesConfig.baseUrl,
+                token: tablesConfig.token,
+              })
+              mainLog.info('[tables] MCP source ensured', {
+                workspaceId: ws.id,
+                slug: result.slug,
+                created: result.created,
+                updated: result.updated,
+                mcpUrl: result.mcpUrl,
+              })
+            } catch (err) {
+              mainLog.error('[tables] failed to ensure MCP source', {
+                workspaceId: ws.id,
+                error: err,
+              })
+            }
+          }
+        } catch (err) {
+          mainLog.warn('[tables] sidecar start skipped/failed:', err)
         }
       })()
 
@@ -1317,6 +1362,13 @@ app.on('before-quit', async (event) => {
       mainLog.info('[craft-modules] sidecar stopped')
     } catch (err) {
       mainLog.error('[craft-modules] stop failed:', err)
+    }
+
+    try {
+      await stopTablesSidecar()
+      mainLog.info('[tables] sidecar stopped')
+    } catch (err) {
+      mainLog.error('[tables] stop failed:', err)
     }
 
     // Stop messaging gateways so the WhatsApp worker subprocess exits cleanly.

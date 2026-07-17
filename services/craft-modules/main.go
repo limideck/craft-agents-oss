@@ -33,9 +33,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	dbMgr := db.NewManager(cfg.WorkspacesRoot)
+	dbMgr := db.NewManager()
 	caches := cache.NewWorkspaceCaches(dbMgr)
-	wfMgr := workflows.NewManager(cfg.WorkspacesRoot)
+	wfMgr := workflows.NewManager()
 
 	srv := &httpapi.Server{
 		DBMgr:            dbMgr,

@@ -33,6 +33,7 @@ import {
   migrateLegacyCredentials,
   migrateLegacyLlmConnectionsConfig,
   migrateOrphanedDefaultConnections,
+  reconcileWorkspaceIds,
   MODEL_REGISTRY,
   type Workspace,
   type WorkspaceInfo,
@@ -72,7 +73,7 @@ import {
   type SessionHeader,
   pickSessionFields,
 } from '@craft-agent/shared/sessions'
-import { loadWorkspaceSources, loadAllSources, getSourcesBySlugs, isSourceUsable, type LoadedSource, type McpServerConfig, getSourcesNeedingAuth, getSourceCredentialManager, getSourceServerBuilder, type SourceWithCredential, isApiOAuthProvider, hasRenewEndpoint, SERVER_BUILD_ERRORS, TokenRefreshManager, createTokenGetter } from '@craft-agent/shared/sources'
+import { loadWorkspaceSources, loadAllSources, getSourcesBySlugs, isSourceUsable, type LoadedSource, type McpServerConfig, getSourcesNeedingAuth, getSourceCredentialManager, getSourceServerBuilder, type SourceWithCredential, isApiOAuthProvider, hasRenewEndpoint, SERVER_BUILD_ERRORS, TokenRefreshManager, createTokenGetter, mergePreferredBuiltinSourceSlugs, preferredBuiltinSlugsAdded } from '@craft-agent/shared/sources'
 import { ConfigWatcher, type ConfigWatcherCallbacks } from '@craft-agent/shared/config'
 import { getValidClaudeOAuthToken } from '@craft-agent/shared/auth'
 import { resolveAuthEnvVars } from '@craft-agent/shared/config'
@@ -1908,6 +1909,9 @@ export class SessionManager implements ISessionManager {
       // Fix defaultLlmConnection if it points to a non-existent connection
       migrateOrphanedDefaultConnections()
 
+      // Align local workspace config.id with global registry id (craft-modules RSS key)
+      reconcileWorkspaceIds()
+
       // Migrate legacy credentials to LLM connection format (one-time migration)
       // This ensures credentials saved before LLM connections are available via the new system
       await migrateLegacyCredentials()
@@ -1981,6 +1985,9 @@ export class SessionManager implements ISessionManager {
 
           this.sessions.set(meta.id, managed)
 
+          // Prefer-builtin: auto-enable craft-modules on existing sessions when usable
+          this.ensurePreferredBuiltinSourcesInSession(managed)
+
           // Initialize session metadata in AutomationSystem for diffing
           const automationSystem = this.automationSystems.get(workspaceRootPath)
           if (automationSystem) {
@@ -2049,6 +2056,8 @@ export class SessionManager implements ISessionManager {
       if (managed.sharedId === undefined) managed.sharedId = stored.sharedId
       if (managed.transferredSessionSummary === undefined) managed.transferredSessionSummary = stored.transferredSessionSummary
       if (managed.transferredSessionSummaryApplied === undefined) managed.transferredSessionSummaryApplied = stored.transferredSessionSummaryApplied
+      // Prefer-builtin heal once cold metadata is present
+      this.ensurePreferredBuiltinSourcesInSession(managed)
 
       // Queue recovery: find orphaned queued messages from crash/restart and re-queue them.
       const orphanedQueued = managed.messages.filter(m =>
@@ -2518,6 +2527,8 @@ export class SessionManager implements ISessionManager {
       managed.sharedId = storedSession.sharedId
       // Sync name from disk - ensures title persistence across lazy loading
       managed.name = storedSession.name
+      // Prefer-builtin heal after disk hydrate (legacy sessions)
+      this.ensurePreferredBuiltinSourcesInSession(managed)
       // Restore LLM connection state - ensures correct provider on resume
       if (storedSession.llmConnection) {
         managed.llmConnection = storedSession.llmConnection
@@ -2601,8 +2612,13 @@ export class SessionManager implements ISessionManager {
       ?? getDefaultThinkingLevel()
     // Get default model from workspace config (used when no session-specific model is set)
     const defaultModel = wsConfig?.defaults?.model
-    // Get default enabled sources from workspace config
-    const defaultEnabledSourceSlugs = options?.enabledSourceSlugs ?? wsConfig?.defaults?.enabledSourceSlugs
+    // Get default enabled sources from workspace config, then merge preferred
+    // builtins (craft-modules) so agents can use RSS/KB/Workflows without a
+    // manual Sources toggle — see docs/craft-modules-agent-routing.md.
+    const defaultEnabledSourceSlugs = mergePreferredBuiltinSourceSlugs(
+      workspaceRootPath,
+      options?.enabledSourceSlugs ?? wsConfig?.defaults?.enabledSourceSlugs,
+    )
 
     // Resolve model tier hints ('fast' / 'default') to actual model IDs.
     // EditPopover uses tier hints instead of hardcoded Anthropic model names
@@ -4932,6 +4948,35 @@ export class SessionManager implements ISessionManager {
   // ============================================
 
   /**
+   * Ensure prefer-builtin Sources (craft-modules) are in the session's
+   * enabledSourceSlugs when the on-disk Source is usable. Heals sessions
+   * created before auto-enable existed. Persists + emits sources_changed
+   * when slugs were added. Does not run on every setSessionSources — the
+   * chat Sources toggle still works until the next cold load / restart.
+   */
+  private ensurePreferredBuiltinSourcesInSession(managed: ManagedSession): void {
+    const workspaceRootPath = managed.workspace.rootPath
+    const before = managed.enabledSourceSlugs
+    const after = mergePreferredBuiltinSourceSlugs(workspaceRootPath, before)
+    const added = preferredBuiltinSlugsAdded(before, after)
+    if (added.length === 0) return
+
+    managed.enabledSourceSlugs = after
+    sessionLog.info(
+      `Auto-enabled preferred builtin source(s) for session ${managed.id}: ${added.join(', ')}`,
+    )
+    this.persistSession(managed)
+    this.sendEvent(
+      {
+        type: 'sources_changed',
+        sessionId: managed.id,
+        enabledSourceSlugs: after,
+      },
+      managed.workspace.id,
+    )
+  }
+
+  /**
    * Update session's enabled sources
    * If agent exists, builds and applies servers immediately.
    * Otherwise, servers will be built fresh on next message.
@@ -5987,6 +6032,10 @@ export class SessionManager implements ISessionManager {
 
     // Start perf span for entire sendMessage flow
     const sendSpan = perf.span('session.sendMessage', { sessionId })
+
+    // Prefer-builtin: ensure craft-modules is active before building MCP tools
+    // (covers sessions that skipped startup heal, e.g. created while sidecar was down).
+    this.ensurePreferredBuiltinSourcesInSession(managed)
 
     const workspaceRootPath = managed.workspace.rootPath
     const enabledSlugs = managed.enabledSourceSlugs ?? []

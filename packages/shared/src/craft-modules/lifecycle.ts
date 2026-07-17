@@ -122,6 +122,10 @@ function workspacesRoot(): string {
   return process.env.CRAFT_WORKSPACES_ROOT?.trim() || join(CONFIG_DIR, 'workspaces')
 }
 
+function craftConfigPath(): string {
+  return process.env.CRAFT_CONFIG_PATH?.trim() || join(CONFIG_DIR, 'config.json')
+}
+
 async function waitForHealth(url: string, timeoutMs = HEALTH_TIMEOUT_MS): Promise<void> {
   const deadline = Date.now() + timeoutMs
   let lastErr: unknown
@@ -169,11 +173,16 @@ export function getCraftModulesSidecarConfig(): CraftModulesSidecarConfig | null
   return { baseUrl, token: secrets.token, ready: true }
 }
 
-export async function startCraftModulesSidecar(): Promise<CraftModulesSidecarConfig> {
+export async function startCraftModulesSidecar(options?: {
+  /** Active/default workspace id for MCP tools that omit workspace_id */
+  defaultWorkspaceId?: string | null
+}): Promise<CraftModulesSidecarConfig> {
   if (ready && baseUrl && secrets) {
     return { baseUrl, token: secrets.token, ready: true }
   }
   if (startPromise) return startPromise
+
+  const defaultWorkspaceId = options?.defaultWorkspaceId?.trim() || undefined
 
   startPromise = (async () => {
     starting = true
@@ -213,8 +222,12 @@ export async function startCraftModulesSidecar(): Promise<CraftModulesSidecarCon
       ...process.env,
       PORT: String(port),
       CRAFT_WORKSPACES_ROOT: workspacesRoot(),
+      CRAFT_CONFIG_PATH: craftConfigPath(),
       CRAFT_MODULES_TOKEN: secrets.token,
       HOME: process.env.HOME || homedir(),
+    }
+    if (defaultWorkspaceId) {
+      env.CRAFT_DEFAULT_WORKSPACE_ID = defaultWorkspaceId
     }
 
     proc = spawn(bin, ['--port', String(port)], {
@@ -302,11 +315,15 @@ export async function stopCraftModulesSidecar(): Promise<void> {
   })
 }
 
-export async function restartCraftModulesSidecar(): Promise<CraftModulesSidecarConfig> {
+export async function restartCraftModulesSidecar(options?: {
+  defaultWorkspaceId?: string | null
+}): Promise<CraftModulesSidecarConfig> {
   await stopCraftModulesSidecar()
-  return startCraftModulesSidecar()
+  return startCraftModulesSidecar(options)
 }
 
-export async function ensureCraftModulesSidecar(): Promise<CraftModulesSidecarConfig> {
-  return startCraftModulesSidecar()
+export async function ensureCraftModulesSidecar(options?: {
+  defaultWorkspaceId?: string | null
+}): Promise<CraftModulesSidecarConfig> {
+  return startCraftModulesSidecar(options)
 }

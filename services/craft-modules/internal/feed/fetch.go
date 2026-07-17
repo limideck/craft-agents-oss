@@ -114,7 +114,7 @@ func ParseBytes(data []byte) (*Parsed, error) {
 func ParseURL(ctx context.Context, url string) (*Parsed, error) {
 	target := strings.TrimSuffix(url, "/")
 	if err := ssrf.AssertSafeURL(ctx, target); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetch blocked: %w", err)
 	}
 	data, err := fetchXML(ctx, target)
 	if err != nil {
@@ -132,14 +132,14 @@ func fetchXML(ctx context.Context, url string) ([]byte, error) {
 	}
 	req.Header.Set("User-Agent", "craft-modules/0.1")
 	req.Header.Set("Accept", "*/*")
-	client := &http.Client{Timeout: fetchTimeout}
+	client := ssrf.HTTPClient(fetchTimeout)
 	res, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetch failed: %w", err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
-		return nil, fmt.Errorf("status code %d", res.StatusCode)
+		return nil, fmt.Errorf("fetch failed: status code %d", res.StatusCode)
 	}
 	return io.ReadAll(res.Body)
 }

@@ -201,7 +201,10 @@ export class PromptBuilder {
    * See docs/craft-modules-agent-routing.md.
    */
   formatCraftModulesContext(): string {
-    return formatCraftModulesContextBlock({ omitActiveLine: true });
+    return formatCraftModulesContextBlock({
+      omitActiveLine: true,
+      workspaceId: this.config.workspace?.id,
+    });
   }
 
   /**

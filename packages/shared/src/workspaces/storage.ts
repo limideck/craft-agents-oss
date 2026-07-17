@@ -88,6 +88,61 @@ export function getWorkspaceSkillsPath(rootPath: string): string {
   return join(rootPath, 'skills');
 }
 
+/** Builtin workbench module ids that live under `{rootPath}/modules/`. */
+export const WORKSPACE_MODULE_IDS = ['rss', 'tables', 'workflows', 'knowledge'] as const;
+export type WorkspaceModuleId = (typeof WORKSPACE_MODULE_IDS)[number];
+
+/**
+ * Get path to workspace modules directory (`{rootPath}/modules`)
+ */
+export function getWorkspaceModulesPath(rootPath: string): string {
+  return join(rootPath, 'modules');
+}
+
+/**
+ * Get path to a single module root (`{rootPath}/modules/{moduleId}`)
+ */
+export function getWorkspaceModulePath(rootPath: string, moduleId: WorkspaceModuleId): string {
+  return join(rootPath, 'modules', moduleId);
+}
+
+/** RSS SQLite path: `{rootPath}/modules/rss/rss.db` */
+export function getWorkspaceRssDbPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'rss', 'rss.db');
+}
+
+/** Workflows SQLite path: `{rootPath}/modules/workflows/workflows.db` */
+export function getWorkspaceWorkflowsDbPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'workflows', 'workflows.db');
+}
+
+/**
+ * Preferred file SoT for workflow graph definitions (YAML/JSON).
+ * Definitions may still live in workflows.db today; this path is reserved.
+ */
+export function getWorkspaceWorkflowsDefinitionsPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'workflows', 'definitions');
+}
+
+/** Tables (plydb) data dir: `{rootPath}/modules/tables` */
+export function getWorkspaceTablesDataPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'tables');
+}
+
+/**
+ * Ensure empty module directory tree under `{rootPath}/modules/`.
+ * Safe to call repeatedly (mkdir -p).
+ */
+export function ensureWorkspaceModuleDirs(rootPath: string): void {
+  for (const id of WORKSPACE_MODULE_IDS) {
+    mkdirSync(join(rootPath, 'modules', id), { recursive: true });
+  }
+  // Knowledge reserved stubs (product not shipped yet)
+  mkdirSync(join(rootPath, 'modules', 'knowledge', 'docs'), { recursive: true });
+  mkdirSync(join(rootPath, 'modules', 'knowledge', 'index'), { recursive: true });
+  mkdirSync(getWorkspaceWorkflowsDefinitionsPath(rootPath), { recursive: true });
+}
+
 // ============================================================
 // Config Operations
 // ============================================================
@@ -287,12 +342,14 @@ export function generateUniqueWorkspacePath(name: string, baseDir: string): stri
  * @param rootPath - Absolute path where workspace folder will be created
  * @param name - Display name for the workspace
  * @param defaults - Optional default settings for new sessions
+ * @param id - Optional canonical workspace id (must match global registry when provided)
  * @returns The created WorkspaceConfig
  */
 export function createWorkspaceAtPath(
   rootPath: string,
   name: string,
-  defaults?: WorkspaceConfig['defaults']
+  defaults?: WorkspaceConfig['defaults'],
+  id?: string,
 ): WorkspaceConfig {
   const now = Date.now();
   const slug = generateSlug(name);
@@ -315,7 +372,8 @@ export function createWorkspaceAtPath(
   };
 
   const config: WorkspaceConfig = {
-    id: `ws_${randomUUID().slice(0, 8)}`,
+    // Prefer the registry id when callers provide one so craft-modules MCP/UI share one key.
+    id: id?.trim() || `ws_${randomUUID().slice(0, 8)}`,
     name,
     slug,
     defaults: workspaceDefaults,
@@ -329,6 +387,7 @@ export function createWorkspaceAtPath(
   mkdirSync(getWorkspaceSourcesPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSessionsPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSkillsPath(rootPath), { recursive: true });
+  ensureWorkspaceModuleDirs(rootPath);
 
   // Save config
   saveWorkspaceConfig(rootPath, config);

@@ -746,6 +746,14 @@ export interface ElectronAPI {
     request: import('./open-connector').OpenConnectorFetchRequest,
   ): Promise<import('./open-connector').OpenConnectorFetchResponse>
 
+  // Tables sidecar (plydb fork — MCP + admin HTTP)
+  getTablesStatus(): Promise<import('./tables').TablesSidecarStatus>
+  getTablesConfig(): Promise<import('./tables').TablesSidecarConfig>
+  restartTables(): Promise<import('./tables').TablesSidecarConfig>
+  tablesFetch(
+    request: import('./tables').TablesFetchRequest,
+  ): Promise<import('./tables').TablesFetchResponse>
+
   // craft-modules Go sidecar (RSS)
   getCraftModulesStatus(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarStatus>
   getCraftModulesConfig(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarConfig>
@@ -768,6 +776,7 @@ export interface ElectronAPI {
     skipped: number
     feeds: import('@craft-agent/shared/craft-modules').CraftModulesRssFeed[]
   }>
+  rssExportOpml(workspaceId: string): Promise<string>
   rssListArticles(
     workspaceId: string,
     input?: {
@@ -786,6 +795,10 @@ export interface ElectronAPI {
     workspaceId: string,
     articleId: string,
   ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssArticle>
+  rssFetchArticleContent(
+    workspaceId: string,
+    articleUrl: string,
+  ): Promise<{ content: string; title: string; byline: string }>
   rssToggleStar(
     workspaceId: string,
     article: import('@craft-agent/shared/craft-modules').CraftModulesRssArticle,
@@ -827,6 +840,14 @@ export interface ElectronAPI {
     workspaceId: string,
     workflowId: string,
   ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowRunResult>
+  workflowsDeploy(
+    workspaceId: string,
+    workflowId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult>
+  workflowsUndeploy(
+    workspaceId: string,
+    workflowId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult>
 }
 
 export interface MessagingPlatformRuntimeInfo {

@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,9 +19,17 @@ import (
 	"github.com/craft-agent/craft-modules/internal/model"
 	"github.com/craft-agent/craft-modules/internal/store"
 	"github.com/craft-agent/craft-modules/internal/workflows"
+	"github.com/craft-agent/craft-modules/internal/workspace"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
+)
+
+type ctxKey int
+
+const (
+	ctxWorkspaceID ctxKey = iota
+	ctxWorkspaceRoot
 )
 
 type Server struct {
@@ -51,9 +60,11 @@ func (s *Server) Router() http.Handler {
 			r.Get("/feeds", s.getFeeds)
 			r.Post("/feeds", s.postFeed)
 			r.Post("/feeds/import-opml", s.postImportOPML)
+			r.Get("/feeds/export-opml", s.getExportOPML)
 			r.Patch("/feeds/{id}", s.patchFeed)
 			r.Delete("/feeds/{id}", s.deleteFeed)
 			r.Get("/articles", s.getArticles)
+			r.Get("/articles/fetch-content", s.getFetchContent)
 			r.Get("/articles/{id}", s.getArticle)
 			r.Post("/articles/star", s.postStar)
 			r.Get("/starred/count", s.getStarredCount)
@@ -110,20 +121,38 @@ func (s *Server) workspaceMiddleware(next http.Handler) http.Handler {
 			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "X-Craft-Workspace-Id required"})
 			return
 		}
-		next.ServeHTTP(w, r)
+		headerRoot := strings.TrimSpace(r.Header.Get(workspace.HeaderRoot))
+		root, err := workspace.ResolveRoot(ws, headerRoot)
+		if err != nil {
+			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": err.Error()})
+			return
+		}
+		ctx := context.WithValue(r.Context(), ctxWorkspaceID, ws)
+		ctx = context.WithValue(ctx, ctxWorkspaceRoot, root)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func (s *Server) workspaceID(r *http.Request) string {
+	if id, ok := r.Context().Value(ctxWorkspaceID).(string); ok && id != "" {
+		return id
+	}
 	return strings.TrimSpace(r.Header.Get("X-Craft-Workspace-Id"))
 }
 
+func (s *Server) workspaceRoot(r *http.Request) string {
+	if root, ok := r.Context().Value(ctxWorkspaceRoot).(string); ok {
+		return root
+	}
+	return ""
+}
+
 func (s *Server) openDB(r *http.Request) (*db.DB, error) {
-	return s.DBMgr.Get(s.workspaceID(r))
+	return s.DBMgr.Get(s.workspaceID(r), s.workspaceRoot(r))
 }
 
 func (s *Server) openCache(r *http.Request) (*cache.Cache, error) {
-	return s.Caches.For(s.workspaceID(r))
+	return s.Caches.For(s.workspaceID(r), s.workspaceRoot(r))
 }
 
 func (s *Server) getFeeds(w http.ResponseWriter, r *http.Request) {
@@ -172,8 +201,13 @@ func (s *Server) postFeed(w http.ResponseWriter, r *http.Request) {
 	}
 	parsed, err := feed.ParseURL(r.Context(), resolved)
 	if err != nil {
+		// ParseURL fetches then parses; fetch/SSRF errors are prefixed with "fetch ".
+		msg := "failed to parse feed"
+		if strings.HasPrefix(err.Error(), "fetch ") {
+			msg = "failed to fetch feed"
+		}
 		httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{
-			"error": "failed to parse feed", "detail": err.Error(),
+			"error": msg, "detail": err.Error(),
 		})
 		return
 	}
@@ -259,6 +293,56 @@ func (s *Server) postImportOPML(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"imported": len(imported), "skipped": skipped, "feeds": imported,
 	})
+}
+
+func (s *Server) getExportOPML(w http.ResponseWriter, r *http.Request) {
+	handle, err := s.openDB(r)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	feeds, err := store.ListFeeds(handle.Reader())
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	raw, err := feed.ExportOPML(feeds)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="feeds.opml"`)
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(raw)
+}
+
+func (s *Server) getFetchContent(w http.ResponseWriter, r *http.Request) {
+	rawURL := strings.TrimSpace(r.URL.Query().Get("url"))
+	if rawURL == "" {
+		httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "url required"})
+		return
+	}
+	art, err := feed.FetchReadableContent(r.Context(), rawURL)
+	if err != nil {
+		msg := err.Error()
+		switch {
+		case strings.Contains(msg, "blocked"):
+			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "Blocked URL", "detail": msg})
+		case strings.Contains(msg, "only http") || strings.Contains(msg, "invalid URL"):
+			httpx.WriteJSON(w, http.StatusBadRequest, map[string]any{"error": "Blocked URL", "detail": msg})
+		case strings.Contains(msg, "upstream"):
+			httpx.WriteJSON(w, http.StatusBadGateway, map[string]any{"error": msg})
+		case strings.Contains(msg, "could not extract"):
+			httpx.WriteJSON(w, http.StatusUnprocessableEntity, map[string]any{"error": "Could not extract content"})
+		case strings.Contains(msg, "fetch failed"):
+			httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "Fetch failed", "detail": msg})
+		default:
+			httpx.WriteJSON(w, http.StatusInternalServerError, map[string]any{"error": "Fetch failed", "detail": msg})
+		}
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, art)
 }
 
 func (s *Server) patchFeed(w http.ResponseWriter, r *http.Request) {

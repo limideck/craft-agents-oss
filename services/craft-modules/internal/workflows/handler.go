@@ -7,10 +7,11 @@ import (
 
 	craftdb "github.com/craft-agent/craft-modules/internal/db"
 	"github.com/craft-agent/craft-modules/internal/httpx"
+	"github.com/craft-agent/craft-modules/internal/workspace"
 	"github.com/go-chi/chi/v5"
 )
 
-// Handler serves /api/workflows CRUD (+ run stub).
+// Handler serves /api/workflows CRUD (+ run stub + deploy).
 type Handler struct {
 	Mgr *Manager
 }
@@ -22,11 +23,18 @@ func (h *Handler) Mount(r chi.Router) {
 	r.Patch("/{id}", h.update)
 	r.Delete("/{id}", h.delete)
 	r.Post("/{id}/run", h.run)
+	r.Post("/{id}/deploy", h.deploy)
+	r.Post("/{id}/undeploy", h.undeploy)
 }
 
 func (h *Handler) open(r *http.Request) (*craftdb.DB, error) {
 	ws := strings.TrimSpace(r.Header.Get("X-Craft-Workspace-Id"))
-	return h.Mgr.Get(ws)
+	headerRoot := strings.TrimSpace(r.Header.Get(workspace.HeaderRoot))
+	root, err := workspace.ResolveRoot(ws, headerRoot)
+	if err != nil {
+		return nil, err
+	}
+	return h.Mgr.Get(ws, root)
 }
 
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
@@ -177,6 +185,42 @@ func (h *Handler) run(w http.ResponseWriter, r *http.Request) {
 		"runId":    runID,
 		"steps":    steps,
 	})
+}
+
+func (h *Handler) deploy(w http.ResponseWriter, r *http.Request) {
+	handle, err := h.open(r)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	result, ok, err := Deploy(handle.Writer(), chi.URLParam(r, "id"))
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	if !ok {
+		httpx.WriteJSON(w, http.StatusNotFound, map[string]any{"error": "not found"})
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, result)
+}
+
+func (h *Handler) undeploy(w http.ResponseWriter, r *http.Request) {
+	handle, err := h.open(r)
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	result, ok, err := Undeploy(handle.Writer(), chi.URLParam(r, "id"))
+	if err != nil {
+		serverError(w, err)
+		return
+	}
+	if !ok {
+		httpx.WriteJSON(w, http.StatusNotFound, map[string]any{"error": "not found"})
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, result)
 }
 
 func serverError(w http.ResponseWriter, err error) {

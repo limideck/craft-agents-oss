@@ -57,6 +57,7 @@ describe('PromptBuilder volatile/stable context split (issue #862)', () => {
     expect(stableText).toContain('<workspace_capabilities>')
     expect(stableText).toContain('<craft_modules>')
     expect(stableText).toContain('Prefer builtin Craft modules')
+    expect(stableText).toContain('workspace_id:')
     expect(stableText).not.toContain('Active workbench module:')
 
     // The halves must not bleed into each other

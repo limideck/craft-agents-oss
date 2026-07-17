@@ -7,6 +7,7 @@ Status: **Phases 1 + 3 implemented** — Module Registry + `<craft_modules>` inj
 Related:
 
 - [Craft Modules sidecar](./craft-modules-sidecar.md) — Go process, HTTP + MCP tools
+- [Workspace storage](./workspace-storage.md) — rootPath-only persistence contract
 - [Workbench architecture](./workbench-architecture.md) — shell, module registration, layouts
 
 ---
@@ -50,7 +51,7 @@ Related:
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ 3. Single MCP source slug: craft-modules                        │
-│    Tools: rss_* | kb_* | wf_*  (Go sidecar /mcp)                │
+│    Tools: rss_* (incl. export OPML / fetch content) | kb_* | wf_* │
 │    Optional thin Skills (Phase 2) for deep workflows only       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -173,9 +174,52 @@ When the user is in a Workbench module (e.g. RSS) and opens Ask AI / chat:
 | **1 — Registry + Context** | Declarative registry, `<craft_modules>` injection, prefer-builtin rules, tests | **Done** |
 | **2 — Skills** | Optional thin skills per deep workflow (`requiredSources: [craft-modules]`) | Planned |
 | **3 — Tighter workbench binding** | Reliable per-turn `activeModuleId` from ActivityBar → `SendMessageOptions` → PromptBuilder | **Done** |
+| **4 — Session auto-activate** | Prefer-builtin Source auto-enabled in workspace defaults + sessions (no manual Sources toggle) | **Done** |
 
 ---
 
 ## 11. Decision summary
 
 **Accepted:** three-layer prefer-builtin routing — TS Module Registry → Policy Context every turn → single `craft-modules` MCP with namespaced tools. Skills optional and thin. Workbench active module enriches the same context block when available.
+
+---
+
+## 12. Session activation (“配置了但未激活”)
+
+### What “未激活” means
+
+Two different flags exist:
+
+| Layer | Field | Meaning |
+|-------|--------|---------|
+| **Source on disk** | `sources/craft-modules/config.json` → `enabled: true` | Source is configured / usable |
+| **Session** | `enabledSourceSlugs` includes `craft-modules` | MCP tools are loaded for **this** chat |
+
+Agents see the latter via `<sources>`:
+
+```text
+Active: …
+Inactive: craft-modules (inactive)   ← configured on disk, not in this session
+```
+
+Prefer-builtin context (`<craft_modules>`) still tells the model to prefer `rss_*` tools, so the model may say “先激活 craft-modules” when the slug is inactive.
+
+### How activation works today
+
+1. **Automatic (preferred — local workspaces):**
+   - Sidecar startup / `ensureCraftModulesMcpSource` upserts the Source **and** adds `craft-modules` to workspace `defaults.enabledSourceSlugs`.
+   - **New sessions** merge preferred builtins into `enabledSourceSlugs` at create time.
+   - **Existing sessions** are healed on app load, message hydrate, and each `sendMessage` when the on-disk Source is usable — users should **not** need to toggle Sources for RSS / Workflows.
+2. **Manual (fallback):** Chat input Sources chips / panel → enable `craft-modules` (same as any MCP Source). Workspace Settings → default sources also controls new-session defaults.
+3. **Agent path:** `source_test` (or failed tool → `onSourceActivationRequest`) can activate mid-turn; prefer-builtin auto-enable makes this unnecessary for craft-modules.
+
+### Restart behavior
+
+After restart, sidecar re-ensures the Source + workspace defaults. Session heal re-adds `craft-modules` if it was missing. Treat it as an **always-on preferred builtin** for local workspaces while the sidecar Source exists — not something users should manually activate for normal RSS use.
+
+### Code pointers
+
+- Upsert + workspace defaults: `packages/shared/src/craft-modules/mcp-source.ts` (`ensureCraftModulesMcpSource`, `ensureCraftModulesInWorkspaceDefaults`)
+- Session merge: `packages/shared/src/sources/preferred-builtin.ts` → `SessionManager` (`mergePreferredBuiltinSourceSlugs`, `ensurePreferredBuiltinSourcesInSession`)
+- Active vs inactive formatting: `packages/shared/src/agent/core/source-manager.ts` (`formatSourceState`)
+

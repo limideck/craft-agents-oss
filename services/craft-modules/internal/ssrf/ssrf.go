@@ -1,10 +1,19 @@
+// Package ssrf blocks requests to private/link-local/loopback addresses.
+//
+// Validation happens at dial time (and on redirects) so DNS rebinding cannot
+// bypass checks. Hostnames are resolved with the process DNS resolver; on
+// macOS, craft-modules should be built with CGO enabled so the system
+// resolver is used (pure-Go DNS fails on some macOS configurations).
 package ssrf
 
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"net/http"
 	"net/url"
+	"time"
 )
 
 var privateV4CIDRs = mustCIDRs(
@@ -40,32 +49,79 @@ func isPrivateIP(ip net.IP) bool {
 	return ip.IsLoopback() || ip.IsUnspecified() || ip.IsPrivate() || ip.IsLinkLocalUnicast()
 }
 
-func AssertSafeURL(ctx context.Context, raw string) error {
+// AssertSafeURL validates scheme and blocks literal private IPs.
+// Hostname DNS is intentionally deferred to DialContext so resolution uses the
+// same path as the actual connection and errors stay accurate.
+func AssertSafeURL(_ context.Context, raw string) error {
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme == "" {
-		return errors.New("Invalid URL")
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return errors.New("invalid URL")
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return errors.New("Only http/https URLs are allowed")
+		return errors.New("only http/https URLs are allowed")
 	}
 	host := u.Hostname()
 	if host == "" {
-		return errors.New("Invalid URL")
+		return errors.New("invalid URL")
 	}
 	if ip := net.ParseIP(host); ip != nil {
 		if isPrivateIP(ip) {
-			return errors.New("Blocked address")
-		}
-		return nil
-	}
-	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-	if err != nil || len(addrs) == 0 {
-		return errors.New("Host did not resolve")
-	}
-	for _, a := range addrs {
-		if isPrivateIP(a.IP) {
-			return errors.New("Blocked address")
+			return errors.New("blocked address")
 		}
 	}
 	return nil
+}
+
+func dialSafe(ctx context.Context, network, addr string) (net.Conn, error) {
+	host, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return nil, err
+	}
+	dialer := &net.Dialer{Timeout: 30 * time.Second}
+	if ip := net.ParseIP(host); ip != nil {
+		if isPrivateIP(ip) {
+			return nil, errors.New("blocked address")
+		}
+		return dialer.DialContext(ctx, network, addr)
+	}
+	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, fmt.Errorf("host %q did not resolve: %w", host, err)
+	}
+	if len(addrs) == 0 {
+		return nil, fmt.Errorf("host %q did not resolve", host)
+	}
+	var last error
+	for _, a := range addrs {
+		if isPrivateIP(a.IP) {
+			last = errors.New("blocked address")
+			continue
+		}
+		conn, dialErr := dialer.DialContext(ctx, network, net.JoinHostPort(a.IP.String(), port))
+		if dialErr == nil {
+			return conn, nil
+		}
+		last = dialErr
+	}
+	if last == nil {
+		last = errors.New("blocked address")
+	}
+	return nil, last
+}
+
+// HTTPClient returns an HTTP client that refuses private destinations,
+// including after redirects.
+func HTTPClient(timeout time.Duration) *http.Client {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = dialSafe
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: transport,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 10 {
+				return errors.New("too many redirects")
+			}
+			return AssertSafeURL(req.Context(), req.URL.String())
+		},
+	}
 }

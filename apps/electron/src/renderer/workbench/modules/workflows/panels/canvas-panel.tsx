@@ -287,9 +287,19 @@ export function CanvasPanel() {
   return (
     <PanelRoot>
       <PanelHeaderBar className="justify-between gap-2">
-        <span className="font-medium truncate min-w-0">
-          {workflow ? workflow.name : 'Canvas'}
-        </span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="font-medium truncate min-w-0">
+            {workflow ? workflow.name : 'Canvas'}
+          </span>
+          {workflow?.status === 'deployed' && workflow.version > 0 ? (
+            <span
+              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium bg-foreground-10 text-muted-foreground"
+              title={workflow.deployedAt ? `Deployed ${workflow.deployedAt}` : undefined}
+            >
+              Deployed · v{workflow.version}
+            </span>
+          ) : null}
+        </div>
         <span className="shrink-0 tabular-nums text-[11px] text-muted-foreground">
           {loading && !workflow ? 'Loading…' : `${nodeCount} nodes · ${edgeCount} edges`}
         </span>

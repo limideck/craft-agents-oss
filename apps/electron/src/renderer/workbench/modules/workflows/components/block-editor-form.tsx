@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -187,7 +188,9 @@ function FieldControl({
  * Writable Editor form driven by BlockConfig.fields.
  */
 export function BlockEditorForm({ node, onNameChange, onConfigChange }: Props) {
+  const { t } = useTranslation()
   const block = getBlockConfig(node.type)
+  const showTriggerStubHint = node.type === 'schedule' || node.type === 'webhook'
 
   return (
     <div className="space-y-3">
@@ -209,6 +212,13 @@ export function BlockEditorForm({ node, onNameChange, onConfigChange }: Props) {
           onChange={(v) => onConfigChange(field.key, v)}
         />
       ))}
+      {showTriggerStubHint ? (
+        <p className="text-[11px] text-muted-foreground leading-snug rounded-md border border-border/60 bg-foreground-5 px-2.5 py-2">
+          {node.type === 'schedule'
+            ? t('workbench.automations.scheduleStubHint')
+            : t('workbench.automations.webhookStubHint')}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { CanvasPanel } from './panels/canvas-panel'
 import { LogsPanel } from './panels/logs-panel'
 import { RightPanel } from './panels/right-panel'
 
-/** Workflows workbench module — @xyflow/react canvas; graph CRUD via craft-modules RPC. */
+/** Workflows canvas module definition — ActivityBar registration moved to automationsModule (Flows). */
 export const workflowsModule: WorkbenchModule = {
   id: 'workflows',
   title: 'Workflows',

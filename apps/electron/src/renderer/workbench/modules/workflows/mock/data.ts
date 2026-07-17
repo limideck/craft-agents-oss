@@ -14,6 +14,8 @@ export const INITIAL_MOCK_WORKFLOWS: WorkflowSummary[] = [
     name: 'Onboarding digest',
     description: 'Daily summary → agent → Slack (sample)',
     updatedAt: hoursAgo(3),
+    status: 'draft',
+    version: 0,
     nodes: [
       {
         id: 'n-start',
@@ -67,6 +69,8 @@ export const INITIAL_MOCK_WORKFLOWS: WorkflowSummary[] = [
     name: 'Webhook triage',
     description: 'Inbound webhook → condition → agent',
     updatedAt: daysAgo(1),
+    status: 'draft',
+    version: 0,
     nodes: [
       {
         id: 'n-wh',
@@ -118,6 +122,8 @@ export const INITIAL_MOCK_WORKFLOWS: WorkflowSummary[] = [
     name: 'Intake router',
     description: 'Classify → switch → approve → respond (Phase 2.5 sample)',
     updatedAt: hoursAgo(1),
+    status: 'draft',
+    version: 0,
     nodes: [
       {
         id: 'n-start',
@@ -210,6 +216,8 @@ export const INITIAL_MOCK_WORKFLOWS: WorkflowSummary[] = [
     name: 'Blank canvas',
     description: 'Empty workflow for create/edit demos',
     updatedAt: hoursAgo(12),
+    status: 'draft',
+    version: 0,
     nodes: [],
     edges: [],
   },

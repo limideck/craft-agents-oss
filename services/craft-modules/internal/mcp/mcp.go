@@ -57,7 +57,7 @@ func newClient(deps Deps) *client {
 }
 
 type workspaceInput struct {
-	WorkspaceID string `json:"workspace_id,omitempty" jsonschema:"Craft workspace id"`
+	WorkspaceID string `json:"workspace_id,omitempty" jsonschema:"Craft workspace id from <craft_modules> workspace_id (matches Workbench UI). Prefer omitting to use CRAFT_DEFAULT_WORKSPACE_ID."`
 }
 
 func (c *client) ws(in workspaceInput) string {
@@ -117,6 +117,37 @@ func (c *client) request(ctx context.Context, method, path, workspaceID string, 
 
 func (c *client) get(ctx context.Context, path, workspaceID string) (any, error) {
 	return c.request(ctx, http.MethodGet, path, workspaceID, nil)
+}
+
+// getRaw returns the response body as a string (for XML/text endpoints).
+func (c *client) getRaw(ctx context.Context, path, workspaceID string) (string, error) {
+	if workspaceID == "" {
+		return "", fmt.Errorf("workspace_id required (tool arg or CRAFT_DEFAULT_WORKSPACE_ID)")
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+path, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("X-Craft-Workspace-Id", workspaceID)
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	res, err := c.http.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		if len(data) > 0 {
+			return "", fmt.Errorf("HTTP %d GET %s: %s", res.StatusCode, path, string(data))
+		}
+		return "", fmt.Errorf("HTTP %d GET %s", res.StatusCode, path)
+	}
+	return string(data), nil
 }
 
 func (c *client) post(ctx context.Context, path, workspaceID string, body any) (any, error) {

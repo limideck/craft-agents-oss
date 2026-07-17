@@ -153,13 +153,14 @@ async function getExpectedCoreChannels(): Promise<Set<string>> {
 }
 
 async function getExpectedGuiChannels(): Promise<Set<string>> {
-  const [browser, system, workspace, settings, openConnector, craftModules] = await Promise.all([
+  const [browser, system, workspace, settings, openConnector, craftModules, tables] = await Promise.all([
     import('../browser'),
     import('../system'),
     import('../workspace'),
     import('../settings'),
     import('../open-connector'),
     import('../craft-modules'),
+    import('../tables'),
   ])
 
   return new Set([
@@ -169,6 +170,7 @@ async function getExpectedGuiChannels(): Promise<Set<string>> {
     ...settings.GUI_HANDLED_CHANNELS,
     ...openConnector.GUI_HANDLED_CHANNELS,
     ...craftModules.GUI_HANDLED_CHANNELS,
+    ...tables.GUI_HANDLED_CHANNELS,
   ])
 }
 

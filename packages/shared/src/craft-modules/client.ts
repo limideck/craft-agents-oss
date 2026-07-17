@@ -1,7 +1,12 @@
 /**
  * Loopback HTTP client for craft-modules RSS + Workflows APIs.
+ *
+ * Persistence resolves workspaceId → absolute rootPath (registry), then
+ * reads/writes under `{rootPath}/modules/...`. Always send both
+ * X-Craft-Workspace-Id and X-Craft-Workspace-Root when root is known.
  */
 
+import { resolveWorkspaceRootPath } from '../config/storage.ts'
 import { requireCraftModulesEndpoint } from './endpoint.ts'
 import type {
   CraftModulesRssArticle,
@@ -10,6 +15,7 @@ import type {
   CraftModulesRssView,
   CraftModulesWorkflow,
   CraftModulesWorkflowCreateInput,
+  CraftModulesWorkflowDeployResult,
   CraftModulesWorkflowRunResult,
   CraftModulesWorkflowUpdateInput,
 } from './types.ts'
@@ -25,6 +31,18 @@ export class CraftModulesHttpError extends Error {
   }
 }
 
+function workspaceHeaders(workspaceId: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    Accept: 'application/json',
+    'X-Craft-Workspace-Id': workspaceId,
+  }
+  const root = resolveWorkspaceRootPath(workspaceId)
+  if (root) {
+    headers['X-Craft-Workspace-Root'] = root
+  }
+  return headers
+}
+
 async function request<T>(
   workspaceId: string,
   method: string,
@@ -33,10 +51,7 @@ async function request<T>(
 ): Promise<T> {
   const ep = requireCraftModulesEndpoint()
   const url = `${ep.baseUrl.replace(/\/+$/, '')}${path}`
-  const headers: Record<string, string> = {
-    Accept: 'application/json',
-    'X-Craft-Workspace-Id': workspaceId,
-  }
+  const headers = workspaceHeaders(workspaceId)
   if (ep.token) {
     headers.Authorization = `Bearer ${ep.token}`
   }
@@ -96,6 +111,45 @@ export async function importOpml(
   opml: string,
 ): Promise<{ imported: number; skipped: number; feeds: CraftModulesRssFeed[] }> {
   return request(workspaceId, 'POST', '/api/rss/feeds/import-opml', { opml })
+}
+
+export async function exportOpml(workspaceId: string): Promise<string> {
+  const ep = requireCraftModulesEndpoint()
+  const url = `${ep.baseUrl.replace(/\/+$/, '')}/api/rss/feeds/export-opml`
+  const headers: Record<string, string> = {
+    Accept: 'application/xml, text/xml, */*',
+    'X-Craft-Workspace-Id': workspaceId,
+  }
+  if (ep.token) {
+    headers.Authorization = `Bearer ${ep.token}`
+  }
+  const res = await fetch(url, { method: 'GET', headers })
+  const text = await res.text()
+  if (!res.ok) {
+    let message = text
+    try {
+      const parsed = JSON.parse(text) as { error?: string }
+      if (parsed.error) message = parsed.error
+    } catch {
+      // keep raw
+    }
+    throw new CraftModulesHttpError(message || `HTTP ${res.status}`, res.status, text)
+  }
+  return text
+}
+
+export type FetchArticleContentResult = {
+  content: string
+  title: string
+  byline: string
+}
+
+export async function fetchArticleContent(
+  workspaceId: string,
+  articleUrl: string,
+): Promise<FetchArticleContentResult> {
+  const params = new URLSearchParams({ url: articleUrl })
+  return request(workspaceId, 'GET', `/api/rss/articles/fetch-content?${params}`)
 }
 
 export type ListArticlesInput = {
@@ -215,4 +269,18 @@ export async function runWorkflow(
   workflowId: string,
 ): Promise<CraftModulesWorkflowRunResult> {
   return request(workspaceId, 'POST', `/api/workflows/${encodeURIComponent(workflowId)}/run`, {})
+}
+
+export async function deployWorkflow(
+  workspaceId: string,
+  workflowId: string,
+): Promise<CraftModulesWorkflowDeployResult> {
+  return request(workspaceId, 'POST', `/api/workflows/${encodeURIComponent(workflowId)}/deploy`, {})
+}
+
+export async function undeployWorkflow(
+  workspaceId: string,
+  workflowId: string,
+): Promise<CraftModulesWorkflowDeployResult> {
+  return request(workspaceId, 'POST', `/api/workflows/${encodeURIComponent(workflowId)}/undeploy`, {})
 }

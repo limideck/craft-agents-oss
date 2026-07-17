@@ -96,7 +96,14 @@ export {
   getBuiltinSources,
   isBuiltinSource,
   isPreferredBuiltinSource,
+  listPreferredBuiltinSourceSlugs,
 } from './builtin-sources.ts';
+
+// Prefer-builtin session / workspace defaults merge
+export {
+  mergePreferredBuiltinSourceSlugs,
+  preferredBuiltinSlugsAdded,
+} from './preferred-builtin.ts';
 
 // API Tools (types)
 export type { SummarizeCallback } from './api-tools.ts';
@@ -122,3 +129,16 @@ export type {
   EnsureOpenConnectorSourceInput,
   EnsureOpenConnectorSourceResult,
 } from './open-connector-source.ts'
+
+// Tables (plydb) MCP source (auto-registered when sidecar is ready)
+export {
+  ensureTablesMcpSource,
+  TABLES_SOURCE_SLUG,
+  TABLES_SOURCE_NAME,
+  TABLES_PROVIDER,
+  TABLES_TAGLINE,
+} from './tables-source.ts'
+export type {
+  EnsureTablesSourceInput,
+  EnsureTablesSourceResult,
+} from './tables-source.ts'

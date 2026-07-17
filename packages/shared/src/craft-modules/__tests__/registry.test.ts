@@ -41,6 +41,18 @@ describe('craft-modules registry', () => {
     expect(block).toContain('subscribe to feeds')
   })
 
+  it('includes workspace_id for craft-modules MCP tools when provided', () => {
+    const block = formatCraftModulesContextBlock({
+      workspaceId: '9ab64bb1-5cd9-61c6-b79a-00ae1cda2b1d',
+      omitActiveLine: true,
+    })
+    expect(block).toContain('workspace_id: 9ab64bb1-5cd9-61c6-b79a-00ae1cda2b1d')
+    expect(block).toContain('Pass workspace_id:')
+    expect(block).toContain('rss_list_feeds')
+    expect(block).toContain('rootPath/modules')
+    expect(block).not.toContain('Active workbench module:')
+  })
+
   it('includes active workbench module line when provided', () => {
     const block = formatCraftModulesContextBlock({ activeModuleId: 'rss' })
     expect(block).toContain('Active workbench module: rss')

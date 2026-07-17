@@ -8,7 +8,7 @@ export type DomainRpcServer = {
 /**
  * Knowledge domain RPC registration (skeleton).
  * Business logic lands in Phase 3+; workspace data under:
- *   ~/.craft-agent/workspaces/{id}/modules/knowledge/
+ *   `{rootPath}/modules/knowledge/` (see docs/workspace-storage.md)
  */
 export function registerKnowledgeRpcHandlers(server: DomainRpcServer): void {
   server.handle(RPC_CHANNELS.knowledge.PING, async () => ({

@@ -1,5 +1,6 @@
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Plus, Trash2, Workflow } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ function WorkflowListSkeleton({ rows = 5 }: { rows?: number }) {
  * ActivityBar side rail — workflow list (create + select + delete). Not a dock panel.
  */
 export function WorkflowListView() {
+  const { t } = useTranslation()
   const { refresh, workspaceId } = useWorkflowWorkspaceData({ bootstrap: true })
   const [workflows, setWorkflows] = useAtom(workflowsAtom)
   const [selectedId, setSelectedId] = useAtom(selectedWorkflowIdAtom)
@@ -61,7 +63,7 @@ export function WorkflowListView() {
 
   const createWorkflow = async () => {
     if (!workspaceId) {
-      toast.message('No workspace')
+      toast.message(t('workbench.automations.noWorkspace'))
       return
     }
     try {
@@ -71,7 +73,7 @@ export function WorkflowListView() {
       setSelectedNodeId(wf.nodes[0]?.id ?? null)
       setRunStatus({})
       setRightTab('editor')
-      toast.success('Workflow created')
+      toast.success(t('workbench.automations.flowCreated'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err))
       await refresh()
@@ -92,7 +94,7 @@ export function WorkflowListView() {
         }
         return next
       })
-      toast.success('Workflow deleted')
+      toast.success(t('workbench.automations.flowDeleted'))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : String(err))
       await refresh()
@@ -102,13 +104,13 @@ export function WorkflowListView() {
   return (
     <PanelRoot>
       <PanelHeaderBar className="justify-between">
-        <span className="font-medium truncate">Workflows</span>
+        <span className="font-medium truncate">{t('workbench.automations.flows')}</span>
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="h-6 w-6"
-          title="New workflow"
+          title={t('workbench.automations.newFlow')}
           disabled={!workspaceId}
           onClick={() => void createWorkflow()}
         >
@@ -123,14 +125,17 @@ export function WorkflowListView() {
             <p className="text-destructive/90">{error}</p>
             {/sidecar|unavailable|ECONNREFUSED|fetch failed|not ready/i.test(error) ? (
               <p className="text-xs">
-                Build/start the Go sidecar (`bun run build:craft-modules`) or set `CRAFT_MODULES_URL`.
+                {t('workbench.automations.sidecarHint')}
               </p>
             ) : null}
           </div>
         ) : workflows.length === 0 ? (
-          <div className="p-3 text-sm text-muted-foreground">No workflows yet.</div>
+          <div className="p-4 text-sm text-muted-foreground space-y-2">
+            <p>{t('workbench.automations.flowsEmptyTitle')}</p>
+            <p className="text-xs">{t('workbench.automations.flowsEmptyDescription')}</p>
+          </div>
         ) : (
-          <ul className="py-1" role="listbox" aria-label="Workflows">
+          <ul className="py-1" role="listbox" aria-label={t('workbench.automations.flows')}>
             {workflows.map((wf) => {
               const active = selectedId === wf.id
               return (
@@ -155,6 +160,12 @@ export function WorkflowListView() {
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="text-sm font-medium truncate">{wf.name}</div>
                       <div className="text-[11px] text-muted-foreground truncate">
+                        {wf.status === 'deployed' && wf.version > 0 ? (
+                          <>
+                            Deployed · v{wf.version}
+                            <span aria-hidden> · </span>
+                          </>
+                        ) : null}
                         {wf.description || `${wf.nodes.length} nodes`}
                         <span aria-hidden> · </span>
                         {formatUpdated(wf.updatedAt)}
@@ -169,7 +180,7 @@ export function WorkflowListView() {
                       'absolute right-1 top-1.5 h-6 w-6 opacity-0 group-hover:opacity-100',
                       'focus-visible:opacity-100',
                     )}
-                    title="Delete workflow"
+                    title={t('workbench.automations.deleteFlow')}
                     onClick={(e) => {
                       e.stopPropagation()
                       void removeWorkflow(wf.id)

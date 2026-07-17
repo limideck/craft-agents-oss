@@ -35,6 +35,9 @@ function toSummary(wf: CraftModulesWorkflow): WorkflowSummary {
     name: wf.name,
     description: wf.description,
     updatedAt: wf.updatedAt,
+    status: wf.status ?? 'draft',
+    version: wf.version ?? 0,
+    ...(wf.deployedAt ? { deployedAt: wf.deployedAt } : {}),
     nodes: wf.nodes.map((n) => ({
       id: n.id,
       type: n.type as WorkflowSummary['nodes'][number]['type'],
@@ -158,6 +161,14 @@ export async function runWorkflowViaRpc(
 ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowRunResult> {
   await flushPendingWorkflowPersists(workflowId)
   return window.electronAPI.workflowsRun(workspaceId, workflowId)
+}
+
+export async function deployWorkflowViaRpc(
+  workspaceId: string,
+  workflowId: string,
+): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult> {
+  await flushPendingWorkflowPersists(workflowId)
+  return window.electronAPI.workflowsDeploy(workspaceId, workflowId)
 }
 
 type Options = {

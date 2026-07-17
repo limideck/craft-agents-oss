@@ -2,7 +2,7 @@
 
 Frozen graph model, node configs, HTTP, and MCP surfaces for parallel UI (`@xyflow/react`) and Go (`craft-modules` / `internal/workflows`) work.
 
-**Status:** Graph persistence via `workflows:*` RPC → Go CRUD. **Run:** Go accepts `POST .../run` (runId); Craft (`server-core`) executes `agent` nodes via SessionManager and returns real step I/O. Other node types remain lightweight stubs. **Phase 2.5+** BlockConfig registry (~29 types) for editor/palette.
+**Status:** Graph persistence via `workflows:*` RPC → Go CRUD. **Run:** Go accepts `POST .../run` (runId); Craft (`server-core`) executes `agent` nodes via SessionManager and returns real step I/O. Other node types remain lightweight stubs. **Deploy:** Go `POST .../deploy` snapshots the current draft as the live version (`status: deployed`, version bump); schedule/webhook triggers are recorded as armed but do not fire yet. **Phase 2.5+** BlockConfig registry (~29 types) for editor/palette.
 
 Related:
 
@@ -16,10 +16,10 @@ Related:
 
 | Concern | Owner |
 |---------|--------|
-| Graph persistence (SQLite), CRUD HTTP, MCP `wf_*`, run enqueue (accept + runId) | **Go** (`craft-modules` / `internal/workflows`) |
+| Graph persistence (SQLite), CRUD HTTP, MCP `wf_*`, run enqueue (accept + runId), **deploy snapshot** | **Go** (`craft-modules` / `internal/workflows`) |
 | Agent / LLM / HITL steps when a run hits those types | **Craft** (TS `server-core` SessionManager; `workflows:run` orchestrates) |
 | Canvas, BlockConfig registry, Editor forms | **Electron Workbench UI** |
-| Thin RPC → Go HTTP (CRUD); run orchestration | `packages/domain-workflows` + `server-core` workflows-run |
+| Thin RPC → Go HTTP (CRUD + deploy); run orchestration | `packages/domain-workflows` + `server-core` workflows-run |
 
 **Hard rules**
 
@@ -44,6 +44,25 @@ type Workflow = {
   edges: Edge[]
   /** ISO-8601 */
   updatedAt: string
+  /** draft until Deploy publishes a live snapshot. */
+  status: 'draft' | 'deployed'
+  /** deployed_version; 0 if never deployed. */
+  version: number
+  /** ISO-8601; set on deploy (retained after undeploy as last-deploy time). */
+  deployedAt?: string
+  /** Present when status is deployed and the live graph has schedule/webhook nodes. */
+  triggersArmed?: {
+    armed: boolean
+    note?: string
+    triggers: {
+      nodeId: string
+      type: 'schedule' | 'webhook' | string
+      name?: string
+      cron?: string
+      path?: string
+      method?: string
+    }[]
+  }
 }
 
 type Node = {
@@ -484,18 +503,40 @@ Base: craft-modules loopback (`X-Craft-Workspace-Id` as for RSS). Paths freeze h
 
 | Method | Path | Purpose | Body / notes |
 |--------|------|---------|--------------|
-| GET | `/api/workflows` | List workflows | Prefer bare array for v1 |
-| POST | `/api/workflows` | Create | Body: `{ name, description?, nodes?, edges? }` → `201` + `Workflow` |
+| GET | `/api/workflows` | List workflows | Prefer bare array for v1; includes `status`, `version`, `deployedAt?`, `triggersArmed?` |
+| POST | `/api/workflows` | Create | Body: `{ name, description?, nodes?, edges? }` → `201` + `Workflow` (`status: draft`, `version: 0`) |
 | GET | `/api/workflows/:id` | Get one | `200` + `Workflow` / `404` |
-| PATCH | `/api/workflows/:id` | Update | Partial: `{ name?, description?, nodes?, edges? }` → `200` + `Workflow` |
+| PATCH | `/api/workflows/:id` | Update | Partial: `{ name?, description?, nodes?, edges? }` → `200` + `Workflow` (draft graph only; does not change live snapshot) |
 | DELETE | `/api/workflows/:id` | Delete | `204` / `404` |
-| POST | `/api/workflows/:id/run` | Run (stub) | Returns `{ accepted: true, runId, steps?: RunStep[] }` — steps synthesized by `type`; **no real execution** |
+| POST | `/api/workflows/:id/run` | Run (one-shot) | Returns `{ accepted: true, runId, steps?: RunStep[] }` — steps synthesized by `type`; Craft RPC path runs real agents |
+| POST | `/api/workflows/:id/deploy` | Deploy (publish live) | Snapshots current `definition_json` → `deployed_definition_json`; bumps `version`; sets `status: deployed`. Returns `{ id, version, deployedAt, status, triggersArmed? }` |
+| POST | `/api/workflows/:id/undeploy` | Undeploy | Clears live snapshot / armed triggers; `status: draft`. Keeps last `version` / `deployedAt`. Returns same deploy-result shape |
 
 `GET /health` modules list must include `"workflows"` once the package is mounted.
 
 Node `type` in `definition_json` is **not** validated against an allowlist on create/update — unknown types round-trip; the UI registry is authoritative for the palette.
 
-Persistence hint (Go): table `workflows (id, name, definition_json, updated_at)`.
+Persistence hint (Go): table `workflows (id, name, definition_json, updated_at, status, deployed_definition_json, deployed_at, deployed_version, triggers_armed_json)`.
+
+### Deploy vs Run
+
+| | **Run** | **Deploy** |
+|--|---------|------------|
+| Meaning | One-shot try of the **current draft** | Publish draft as the **live** version |
+| Who executes | Craft (agent nodes) + lightweight stubs | Go persistence only |
+| Triggers | Not involved | Schedule/webhook nodes recorded in `triggersArmed` (runners **stub** — do not fire yet) |
+
+### Deploy result shape
+
+```ts
+type DeployResult = {
+  id: string
+  version: number
+  deployedAt?: string
+  status: 'draft' | 'deployed'
+  triggersArmed?: Workflow['triggersArmed']
+}
+```
 
 ### Run stub result shape
 
@@ -527,12 +568,14 @@ Same MCP server as RSS (`craft-modules`); prefix `wf_`. Thin wrappers over HTTP.
 
 | Tool | Maps to | Notes |
 |------|---------|-------|
-| `wf_list` | `GET /api/workflows` | |
+| `wf_list` | `GET /api/workflows` | Includes deploy metadata |
 | `wf_get` | `GET /api/workflows/:id` | Args: `id` |
 | `wf_create` | `POST /api/workflows` | Args: name + optional graph |
 | `wf_update` | `PATCH /api/workflows/:id` | Args: `id` + patch fields |
 | `wf_delete` | `DELETE /api/workflows/:id` | Args: `id` |
 | `wf_run` | `POST /api/workflows/:id/run` | Accept + stub steps in Go; Craft RPC path runs real agents |
+| `wf_deploy` | `POST /api/workflows/:id/deploy` | Publish live snapshot; arms schedule/webhook metadata (runners stub) |
+| `wf_undeploy` | `POST /api/workflows/:id/undeploy` | Clear live status → draft |
 
 ---
 
@@ -548,20 +591,24 @@ Channels under `RPC_CHANNELS.workflows.*` mirror HTTP (same pattern as `domain-r
 | `workflows:update` | `PATCH /api/workflows/:id` |
 | `workflows:delete` | `DELETE /api/workflows/:id` |
 | `workflows:run` | Go accept + Craft agent execution for `agent` nodes |
+| `workflows:deploy` | `POST /api/workflows/:id/deploy` (Go-owned; domain-workflows proxies) |
+| `workflows:undeploy` | `POST /api/workflows/:id/undeploy` |
 | `workflows:ping` | `/health` |
 
 ---
 
 ## 9. Out of scope
 
-- Full graph executor for all ~23 node types (non-agent remain lightweight stubs)
-- Cron/webhook runners, Deploy / Chat session wiring
+- Full graph executor for all ~29 node types (non-agent remain lightweight stubs)
+- Cron/webhook **runners** that actually fire runs (deploy only records `triggersArmed`)
+- Multi-version history UI / rollback UI (one live snapshot is enough for MVP)
 - Embedding LLMs inside Go
 - OAuth SaaS integration catalog
 - Changing plan files
+- Sim-style API/Chatbot deploy tabs
 
 ---
 
 ## 10. Decision summary
 
-**Accepted:** Workflows share one JSON graph (`Workflow` + `Node.type` + `Edge`) between UI BlockConfig, Go SQLite, HTTP, and MCP. Phase 2.5 expands to ~23 primitive node types. **Run:** Go accepts; Craft executes `agent` steps via SessionManager and returns real Logs Output; other types stay stub/passthrough. Workbench UI uses `workflows:*` RPC.
+**Accepted:** Workflows share one JSON graph (`Workflow` + `Node.type` + `Edge`) between UI BlockConfig, Go SQLite, HTTP, and MCP. Phase 2.5 expands to ~29 primitive node types. **Run:** Go accepts; Craft executes `agent` steps via SessionManager and returns real Logs Output; other types stay stub/passthrough. **Deploy:** Go snapshots draft → live (`deployed_definition_json` + version); UI shows Deployed · vN. Schedule/webhook armed metadata is recorded but runners remain stub. Workbench UI uses `workflows:*` RPC.

@@ -21,6 +21,14 @@ export {
   getWorkspaceSourcesPath,
   getWorkspaceSessionsPath,
   getWorkspaceSkillsPath,
+  WORKSPACE_MODULE_IDS,
+  getWorkspaceModulesPath,
+  getWorkspaceModulePath,
+  getWorkspaceRssDbPath,
+  getWorkspaceWorkflowsDbPath,
+  getWorkspaceWorkflowsDefinitionsPath,
+  getWorkspaceTablesDataPath,
+  ensureWorkspaceModuleDirs,
   // Config operations
   loadWorkspaceConfig,
   saveWorkspaceConfig,
@@ -40,3 +48,5 @@ export {
   CONFIG_DIR,
   DEFAULT_WORKSPACES_DIR,
 } from './storage.ts';
+
+export type { WorkspaceModuleId } from './storage.ts';

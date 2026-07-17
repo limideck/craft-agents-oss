@@ -65,6 +65,12 @@ export type WorkflowSummary = {
   updatedAt: string
   nodes: WorkflowNode[]
   edges: WorkflowEdge[]
+  /** draft until Deploy publishes a live snapshot. */
+  status: 'draft' | 'deployed'
+  /** deployed_version; 0 if never deployed. */
+  version: number
+  /** ISO-8601 when last deployed. */
+  deployedAt?: string
 }
 
 export type WorkflowRightTab = 'chat' | 'toolbar' | 'editor'

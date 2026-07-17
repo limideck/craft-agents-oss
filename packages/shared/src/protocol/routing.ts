@@ -481,8 +481,10 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.rss.RENAME_FEED,
   RPC_CHANNELS.rss.DELETE_FEED,
   RPC_CHANNELS.rss.IMPORT_OPML,
+  RPC_CHANNELS.rss.EXPORT_OPML,
   RPC_CHANNELS.rss.LIST_ARTICLES,
   RPC_CHANNELS.rss.GET_ARTICLE,
+  RPC_CHANNELS.rss.FETCH_ARTICLE_CONTENT,
   RPC_CHANNELS.rss.TOGGLE_STAR,
   RPC_CHANNELS.rss.STARRED_COUNT,
   RPC_CHANNELS.rss.REFRESH,
@@ -496,6 +498,8 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.workflows.UPDATE,
   RPC_CHANNELS.workflows.DELETE,
   RPC_CHANNELS.workflows.RUN,
+  RPC_CHANNELS.workflows.DEPLOY,
+  RPC_CHANNELS.workflows.UNDEPLOY,
 
   // openConnector — local sidecar lifecycle (spawned by Electron main)
   RPC_CHANNELS.openConnector.GET_STATUS,

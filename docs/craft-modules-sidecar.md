@@ -7,6 +7,7 @@ Status: **In progress** — RSS sidecar + UI live; SQLITE busy hardening + A5 pa
 Related:
 
 - [Workbench architecture](./workbench-architecture.md) — shell, `domain-*` stubs, data path convention
+- [Workspace storage](./workspace-storage.md) — **rootPath-only** hard rule
 - [Prefer-builtin agent routing](./craft-modules-agent-routing.md) — Module Registry + `<craft_modules>` context
 - [Workbench RSS UI mock](./workbench-rss-ui.md) — panel contract the backend must feed
 - [Workbench Workflows contract](./workbench-workflows-contract.md) — frozen graph model, node configs, `/api/workflows`, MCP `wf_*`
@@ -24,7 +25,7 @@ Related:
 | One process | RSS (+ later KB / workflows) share one binary — not three sidecars |
 | Dual consumers | Workbench UI via domain RPC; Craft AI via MCP tools on the same store |
 | Dual hosts | Electron desktop and headless `@craft-agent/server` can both start (or attach to) the sidecar |
-| Align with conventions | Workspace data under `~/.craft-agent/workspaces/{id}/modules/...`; MCP as a normal workspace Source |
+| Align with conventions | Workspace data under `{rootPath}/modules/...` (see [workspace-storage.md](./workspace-storage.md)); MCP as a normal workspace Source |
 
 ## 2. Non-goals (v1)
 
@@ -91,6 +92,7 @@ Related:
 2. Spawn binary with env: data root, bind address, optional auth token, log dir.
 3. Poll `GET /health` until ready (timeout ~60s); start failure is **non-fatal** (Workbench shows degraded state; Agents simply lack the MCP source).
 4. Idempotently upsert workspace MCP Source (slug `craft-modules`, HTTP transport → `{baseUrl}/mcp`).
+5. Add `craft-modules` to workspace `defaults.enabledSourceSlugs` so **new sessions auto-activate** the Source (prefer-builtin). SessionManager also merges usable preferred builtins into existing sessions — see [Session activation](./craft-modules-agent-routing.md#12-session-activation-配置了但未激活). Users should not need a manual Sources toggle for RSS MCP tools.
 5. On app / server quit: SIGTERM → wait → SIGKILL.
 
 Headless `@craft-agent/server` must use the same helper (or a shared package under `packages/` that only knows spawn + health — no Electron APIs).
@@ -107,22 +109,26 @@ No public / LAN bind in v1. If a second “public” listener is ever needed (re
 
 ## 5. Data layout
 
-Aligned with [workbench-architecture](./workbench-architecture.md):
+Aligned with [workspace-storage.md](./workspace-storage.md) (**rootPath-only**):
 
 ```text
 ~/.craft-agent/
   craft-modules/
-    sidecar-secrets.json     # bearer token (mode 0600), optional
-  workspaces/{workspaceId}/
-    modules/
-      rss/
-        rss.db               # SQLite (WAL)
-        # optional: favicons/, opml-backups/
-      knowledge/             # Phase B — reserved
-      workflows/             # Phase C — reserved
+    sidecar-secrets.json     # bearer token (mode 0600), process-level only
+  config.json                # registry: workspace id → absolute rootPath
+
+{rootPath}/                  # never assume basename === workspaceId
+  modules/
+    rss/
+      rss.db                 # SQLite (WAL)
+    workflows/
+      workflows.db
+      definitions/           # preferred file SoT (future); DB is SoT today
+    knowledge/               # reserved
+    tables/                  # plydb (separate sidecar) — see craft-tables-sidecar.md
 ```
 
-Multi-workspace: either one Go process with `workspaceId` on every request, **or** one DB path per active workspace passed at spawn. **v1 decision:** single process; every API/MCP call carries `workspaceId` (or Craft sets `CRAFT_WORKSPACE_ID` when only one workspace is active and still accepts explicit override). Prefer explicit `workspaceId` in HTTP headers (`X-Craft-Workspace-Id`) so switching workspaces does not require restart.
+Multi-workspace: single Go process; every API/MCP call carries `X-Craft-Workspace-Id`. Prefer also sending absolute `X-Craft-Workspace-Root` from Electron/TS. When the root header is omitted, Go looks up `id → rootPath` in `config.json`. Switching workspaces does not require a craft-modules restart.
 
 ---
 
@@ -137,14 +143,16 @@ Sketch for RSS v1 (names freeze at implementation time; shape matches Workbench 
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/health` | `{ ok, version, modules: ["rss"] }` |
-| GET | `/api/rss/feeds` | List feeds + unread counts |
-| POST | `/api/rss/feeds` | Subscribe `{ url, title?, folderId? }` |
-| PATCH | `/api/rss/feeds/{id}` | Rename / move folder |
+| GET | `/api/rss/feeds` | List feeds |
+| POST | `/api/rss/feeds` | Subscribe `{ url, name? }` |
+| PATCH | `/api/rss/feeds/{id}` | Rename |
 | DELETE | `/api/rss/feeds/{id}` | Unsubscribe |
 | POST | `/api/rss/feeds/import-opml` | Bulk import |
-| GET | `/api/rss/articles` | Query: `feedId`, `unread`, `q`, `limit`, `cursor` |
+| GET | `/api/rss/feeds/export-opml` | Export all feeds as OPML XML |
+| GET | `/api/rss/articles` | Query: `view`, `feedId`, `mode`, `q`, `limit` |
+| GET | `/api/rss/articles/fetch-content` | Readability full text: `?url=` (SSRF-guarded) |
 | GET | `/api/rss/articles/{id}` | Full article body |
-| POST | `/api/rss/articles/{id}/read` | Mark read / unread |
+| POST | `/api/rss/articles/star` | Star / unstar |
 | POST | `/api/rss/refresh` | Refresh one feed or all |
 
 Folder CRUD can land in the same `/api/rss/folders*` set when UI needs it.
@@ -155,14 +163,16 @@ Keep channels under `RPC_CHANNELS.rss.*`. Handlers in `@craft-agent/domain-rss` 
 
 | RPC (planned) | Maps to |
 |---------------|---------|
-| `rss:ping` | `/health` (already stubbed) |
+| `rss:ping` | `/health` |
 | `rss:listFeeds` | `GET /api/rss/feeds` |
-| `rss:subscribe` | `POST /api/rss/feeds` |
+| `rss:addFeed` | `POST /api/rss/feeds` |
+| `rss:renameFeed` / `rss:deleteFeed` | `PATCH` / `DELETE /api/rss/feeds/{id}` |
 | `rss:listArticles` | `GET /api/rss/articles` |
 | `rss:getArticle` | `GET /api/rss/articles/{id}` |
-| `rss:markRead` | `POST .../read` |
+| `rss:fetchArticleContent` | `GET .../articles/fetch-content?url=` |
+| `rss:toggleStar` / `rss:starredCount` | Star APIs |
 | `rss:refresh` | `POST /api/rss/refresh` |
-| `rss:importOpml` | `POST .../import-opml` |
+| `rss:importOpml` / `rss:exportOpml` | OPML import / export |
 
 Renderer continues to use existing preload/RPC paths — **no new IPC style** for RSS data. Optional sidecar status IPC (`craftModules:getStatus`) may mirror OpenConnector for Settings / degraded banners only.
 
@@ -178,12 +188,10 @@ Renderer continues to use existing preload/RPC paths — **no new IPC style** fo
 |------|------|
 | `rss_list_feeds` | List subscriptions |
 | `rss_add_feed` | Subscribe by URL |
-| `rss_delete_feed` | Unsubscribe |
-| `rss_list_articles` | Filter / search |
-| `rss_get_article` | Full content |
-| `rss_mark_read` | Read state |
-| `rss_refresh` | Trigger fetch |
-| `rss_import_opml` | Bulk import |
+| `rss_rename_feed` / `rss_delete_feed` | Manage subscriptions |
+| `rss_import_opml` / `rss_export_opml` | Bulk import / export OPML |
+| `rss_get_*_articles` / `rss_toggle_star` / `rss_refresh_feeds` | Articles + star + refresh |
+| `rss_fetch_article_content` | Readability full text for a URL |
 
 Prefix tools with `rss_` so Knowledge / Workflows can add `kb_*` / `wf_*` in the same MCP server without collision.
 
@@ -216,7 +224,7 @@ Same binary, separate packages under Go (`internal/rss`, `internal/knowledge`, `
 | **Knowledge** | Document ingest, chunk metadata, local index/search tools, file blobs under `modules/knowledge/` | Embedding provider selection, chat RAG orchestration, UI |
 | **Workflows** | Durable job defs, cron/triggers, step run log, calling HTTP/MCP actions as steps | Agent sessions as a step type, human-in-the-loop UI, model picks |
 
-Workflows Phase 2 freezes the shared graph + CRUD surface in [workbench-workflows-contract.md](./workbench-workflows-contract.md) (`Workflow` / `Node.type` / `Edge`, `/api/workflows*`, MCP `wf_list`…`wf_run` stub). Executor remains deferred; UI may mock then switch to `domain-workflows` RPC.
+Workflows Phase 2 freezes the shared graph + CRUD surface in [workbench-workflows-contract.md](./workbench-workflows-contract.md) (`Workflow` / `Node.type` / `Edge`, `/api/workflows*`, MCP `wf_list`…`wf_run` / `wf_deploy`). **Deploy** snapshots the draft as live (`deployed_definition_json` + version); schedule/webhook triggers are recorded as armed but runners remain stub. Executor for non-agent nodes remains deferred; UI uses `domain-workflows` RPC.
 
 Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path is stable. Workflows CRUD may proceed against the contract in parallel with UI xyflow work.
 
@@ -264,7 +272,7 @@ Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path 
 1. **Auth token:** always-on bearer for loopback vs trust loopback-only until remote deploy exists.  
    *Recommendation:* always-on token (cheap, matches OpenConnector).
 2. **Workspace routing:** header vs path prefix `/api/workspaces/{id}/rss/...`.  
-   *Recommendation:* header for shorter paths; path prefix acceptable if preferred for logs.
+   *Decision:* header `X-Craft-Workspace-Id` + optional `X-Craft-Workspace-Root`; persistence resolves via registry (see [workspace-storage.md](./workspace-storage.md)).
 3. **Repo path:** `services/craft-modules` vs `apps/craft-modules`.  
    *Recommendation:* `services/` to signal “not Electron UI”.
 4. **MCP source slug:** `craft-modules` vs per-module sources.  

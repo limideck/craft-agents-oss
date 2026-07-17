@@ -3,6 +3,7 @@ import { useAtomValue } from 'jotai'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { EscapeInterruptProvider } from '@/context/EscapeInterruptContext'
 import { ensureWorkbenchModulesRegistered } from '../modules'
+import { useAutomationsDeepLink } from '../modules/automations'
 import { getModule } from '../registry/module-registry'
 import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
 import { WorkspaceDataProvider } from '../providers/WorkspaceDataProvider'
@@ -50,6 +51,9 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
   const mod = getModule(activeModuleId)
   const ActivityView = mod?.activityView
   const prevModuleRef = useRef<string | null>(null)
+
+  // Classic automations/* routes → Automations module + Rules surface
+  useAutomationsDeepLink()
 
   // Reset when workspace (and DockviewHost) remounts.
   useEffect(() => {

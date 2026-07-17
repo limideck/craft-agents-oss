@@ -29,11 +29,14 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 | Agents | Session nav in ActivityBar + chat dock |
 | Sources | List + detail (API / MCP / Local filters) |
 | Skills | List + detail |
+| Automations | Rules + Flows unified entry — [workbench-automations-ui.md](./workbench-automations-ui.md); Flows canvas — [workbench-workflows-ui.md](./workbench-workflows-ui.md); contract — [workbench-workflows-contract.md](./workbench-workflows-contract.md) |
 | Connectors | Open Connector console (Overview/Providers/Actions/Runs/Access) |
 | Settings | ActivityBar footer |
 | RSS | UI mock (no RPC) — [workbench-rss-ui.md](./workbench-rss-ui.md) |
+| Tables | Browse/upload/preview UI + plydb sidecar — [workbench-tables-ui.md](./workbench-tables-ui.md), [craft-tables-sidecar.md](./craft-tables-sidecar.md) |
 | Knowledge | Placeholder only |
-| Workflows | UI mock (no RPC) — [workbench-workflows-ui.md](./workbench-workflows-ui.md); Phase 2 contract — [workbench-workflows-contract.md](./workbench-workflows-contract.md) |
+
+> **Note:** The former standalone **Workflows** ActivityBar module is no longer registered. Workflow UI lives under Automations → **Flows** (`modules/workflows/` code stays; `automationsModule` re-exports `wf-*` panels).
 
 ## Open Connector preview
 
@@ -56,7 +59,7 @@ apps/electron/src/renderer/workbench/
   shell/WorkbenchShell.tsx     # TopBar + ActivityBar + DockviewHost
   shell/WorkbenchTopBar.tsx    # Workspace switcher + AppMenu
   shell/ActivityBar.tsx        # Module switcher (footer = Settings)
-  providers/WorkspaceDataProvider.tsx  # sources/skills → jotai atoms
+  providers/WorkspaceDataProvider.tsx  # sources/skills/automations → jotai atoms
   dock/
     DockviewHost.tsx           # DockviewReact + portal host
     panel-portal-*.ts(x)       # Persist panel React trees across fromJSON
@@ -70,10 +73,11 @@ apps/electron/src/renderer/workbench/
   modules/
     agents/                    # Chat + session activityView
     sources/ | skills/ | settings/
+    automations/               # Rules + Flows (ActivityBar entry)
     connectors/                # Open Connector console
     rss/                             # UI mock (no RPC)
     knowledge/                       # Placeholder
-    workflows/                       # UI mock (no RPC)
+    workflows/                       # Flow canvas (registered via automations)
   store/workbench-store.ts     # Jotai: active module + dock API
 ```
 
@@ -87,11 +91,13 @@ Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping`
 
 Phase 3+ backend direction: a single Go sidecar (`craft-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [craft-modules-sidecar.md](./craft-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<craft_modules>` context) — see [craft-modules-agent-routing.md](./craft-modules-agent-routing.md).
 
-Workspace data (future):
+Workspace data (see [workspace-storage.md](./workspace-storage.md)):
 
 ```
-~/.craft-agent/workspaces/{id}/modules/{rss|knowledge|workflows}/
+{rootPath}/modules/{rss|tables|knowledge|workflows}/
 ```
+
+Never key module data by `workspaceId` folder name under `~/.craft-agent/workspaces/{id}/` when `rootPath` is slug-named.
 
 ## Register a module
 

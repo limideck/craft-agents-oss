@@ -31,6 +31,8 @@ export const rssErrorAtom = atom<string | null>(null)
 
 export const rssAddFeedOpenAtom = atom(false)
 
+export const rssManageFeedsOpenAtom = atom(false)
+
 export function selectionToQuery(sel: RssSidebarSelection): {
   view: CraftModulesRssView
   feedId?: string

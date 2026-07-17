@@ -12,7 +12,7 @@ func registerTools(server *sdkmcp.Server, c *client, _ string) {
 
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "rss_list_feeds",
-		Description: "List all subscribed RSS feeds with id, name, and URL.",
+		Description: "List all subscribed RSS feeds with id, name, and URL. Call this before claiming feeds are already added. Use workspace_id from <craft_modules> (same as Workbench UI).",
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in workspaceInput) (*sdkmcp.CallToolResult, any, error) {
 		res, err := c.get(ctx, "/api/rss/feeds", c.ws(in))
 		if err != nil {
@@ -28,7 +28,7 @@ func registerTools(server *sdkmcp.Server, c *client, _ string) {
 	}
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "rss_add_feed",
-		Description: "Subscribe to a new RSS feed by URL.",
+		Description: "Subscribe to a new RSS feed by URL. Pass workspace_id from <craft_modules> so the feed appears in the Workbench RSS UI.",
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in addFeedInput) (*sdkmcp.CallToolResult, any, error) {
 		res, err := c.post(ctx, "/api/rss/feeds", c.ws(in.workspaceInput), map[string]any{"url": in.URL, "name": in.Name})
 		if err != nil {
@@ -77,6 +77,32 @@ func registerTools(server *sdkmcp.Server, c *client, _ string) {
 		Description: "Bulk-import feeds from OPML XML.",
 	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in importOPMLInput) (*sdkmcp.CallToolResult, any, error) {
 		res, err := c.post(ctx, "/api/rss/feeds/import-opml", c.ws(in.workspaceInput), map[string]any{"opml": in.OPML})
+		if err != nil {
+			return nil, nil, err
+		}
+		return textResult(res)
+	})
+
+	sdkmcp.AddTool(server, &sdkmcp.Tool{
+		Name:        "rss_export_opml",
+		Description: "Export all subscribed feeds as OPML XML.",
+	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in workspaceInput) (*sdkmcp.CallToolResult, any, error) {
+		raw, err := c.getRaw(ctx, "/api/rss/feeds/export-opml", c.ws(in))
+		if err != nil {
+			return nil, nil, err
+		}
+		return &sdkmcp.CallToolResult{Content: []sdkmcp.Content{&sdkmcp.TextContent{Text: raw}}}, nil, nil
+	})
+
+	type fetchContentInput struct {
+		workspaceInput
+		URL string `json:"url" jsonschema:"Article page URL to extract full text from"`
+	}
+	sdkmcp.AddTool(server, &sdkmcp.Tool{
+		Name:        "rss_fetch_article_content",
+		Description: "Fetch a web page and extract readable full-text HTML (readability). Use when RSS content is truncated.",
+	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in fetchContentInput) (*sdkmcp.CallToolResult, any, error) {
+		res, err := c.get(ctx, "/api/rss/articles/fetch-content?url="+url.QueryEscape(in.URL), c.ws(in.workspaceInput))
 		if err != nil {
 			return nil, nil, err
 		}

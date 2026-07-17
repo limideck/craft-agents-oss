@@ -107,6 +107,31 @@ export type CraftModulesWorkflow = {
   edges: CraftModulesWorkflowEdge[]
   /** ISO-8601 */
   updatedAt: string
+  /** draft until Deploy publishes a live snapshot. */
+  status: 'draft' | 'deployed'
+  /** deployed_version; 0 if never deployed. */
+  version: number
+  /** ISO-8601; set when deployed (or last deploy after undeploy). */
+  deployedAt?: string
+  /** Present when deployed and the live graph has schedule/webhook nodes. */
+  triggersArmed?: CraftModulesWorkflowTriggersArmed
+}
+
+export type CraftModulesWorkflowArmedTrigger = {
+  nodeId: string
+  type: 'schedule' | 'webhook' | string
+  name?: string
+  cron?: string
+  path?: string
+  method?: string
+}
+
+export type CraftModulesWorkflowTriggersArmed = {
+  /** True when live graph has at least one schedule or webhook node. */
+  armed: boolean
+  /** Documents that schedule/webhook runners are stub. */
+  note?: string
+  triggers: CraftModulesWorkflowArmedTrigger[]
 }
 
 export type CraftModulesWorkflowCreateInput = {
@@ -144,5 +169,14 @@ export type CraftModulesWorkflowRunResult = {
    * nodes via SessionManager; other types may still be lightweight stubs.
    */
   steps?: CraftModulesWorkflowRunStep[]
+}
+
+/** POST /api/workflows/:id/deploy (and undeploy) response. */
+export type CraftModulesWorkflowDeployResult = {
+  id: string
+  version: number
+  deployedAt?: string
+  status: 'draft' | 'deployed'
+  triggersArmed?: CraftModulesWorkflowTriggersArmed
 }
 

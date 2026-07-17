@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/craft-agent/craft-modules/internal/workspace"
 )
 
 type DB struct {
@@ -16,30 +18,40 @@ type DB struct {
 	path  string
 }
 
+// Manager opens per-workspace RSS DBs under {rootPath}/modules/rss/rss.db.
+// Callers must resolve workspace id → absolute rootPath first (registry / header).
 type Manager struct {
-	root   string
 	mu     sync.Mutex
 	opened map[string]*DB
 }
 
-func NewManager(root string) *Manager {
-	return &Manager{root: root, opened: map[string]*DB{}}
+func NewManager() *Manager {
+	return &Manager{opened: map[string]*DB{}}
 }
 
-func (m *Manager) DBPath(workspaceID string) string {
-	if os.Getenv("CRAFT_MODULES_DB_ROOT") != "" && os.Getenv("CRAFT_WORKSPACES_ROOT") == "" {
-		return filepath.Join(m.root, workspaceID, "rss.db")
+// DBPath returns the RSS sqlite path for an absolute workspace root.
+func DBPath(rootPath string) string {
+	return workspace.ModulePath(rootPath, "rss", "rss.db")
+}
+
+// Get opens (or returns) the RSS DB for workspaceID at absolute rootPath.
+// rootPath may be empty when the workspace is already open (e.g. poller).
+func (m *Manager) Get(workspaceID, rootPath string) (*DB, error) {
+	workspaceID = strings.TrimSpace(workspaceID)
+	if workspaceID == "" {
+		return nil, fmt.Errorf("workspace id required")
 	}
-	return filepath.Join(m.root, workspaceID, "modules", "rss", "rss.db")
-}
 
-func (m *Manager) Get(workspaceID string) (*DB, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if handle, ok := m.opened[workspaceID]; ok {
 		return handle, nil
 	}
-	path := m.DBPath(workspaceID)
+	rootPath = filepath.Clean(strings.TrimSpace(rootPath))
+	if rootPath == "" || !filepath.IsAbs(rootPath) {
+		return nil, fmt.Errorf("absolute workspace rootPath required")
+	}
+	path := DBPath(rootPath)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return nil, err
 	}
