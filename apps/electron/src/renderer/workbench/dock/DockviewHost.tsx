@@ -19,7 +19,12 @@ import {
   resolveModuleLayout,
 } from './layout-manager'
 import { useAtomValue, useSetAtom, useStore } from 'jotai'
-import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
+import {
+  activeModuleIdAtom,
+  cancelLayoutPersistAtom,
+  dockviewApiAtom,
+  layoutModuleIdAtom,
+} from '../store/workbench-store'
 
 function PortalSlot(props: IDockviewPanelProps) {
   const containerRef = usePortalSlot(props)
@@ -37,10 +42,12 @@ type DockviewHostProps = {
 export function DockviewHost({ workspaceId }: DockviewHostProps) {
   const store = useStore()
   const setApi = useSetAtom(dockviewApiAtom)
-  const activeModuleId = useAtomValue(activeModuleIdAtom)
+  const setCancelLayoutPersist = useSetAtom(cancelLayoutPersistAtom)
+  const layoutModuleId = useAtomValue(layoutModuleIdAtom)
   const detachRef = useRef<(() => void) | null>(null)
-  const moduleIdRef = useRef(activeModuleId)
-  moduleIdRef.current = activeModuleId
+  // Persist against the layout-owner module, not the ActivityBar selection mid-switch.
+  const moduleIdRef = useRef(layoutModuleId)
+  moduleIdRef.current = layoutModuleId
   const storeRef = useRef(store)
   storeRef.current = store
 
@@ -53,11 +60,15 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
       'session-list',
       'chat',
       'files',
+      'file-editor',
       'changes',
       'terminal',
       'rss-feeds',
       'rss-article-list',
       'rss-reader',
+      'sites-chat',
+      'sites-files',
+      'sites-preview',
     ]) {
       if (!map[key]) map[key] = PortalSlot
     }
@@ -68,10 +79,11 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
     return () => {
       detachRef.current?.()
       detachRef.current = null
+      setCancelLayoutPersist(null)
       panelPortalManager.releaseAll()
       setApi(null)
     }
-  }, [setApi, workspaceId])
+  }, [setApi, setCancelLayoutPersist, workspaceId])
 
   const onReady = useCallback(
     (event: DockviewReadyEvent) => {
@@ -81,6 +93,8 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
       detachRef.current?.()
 
       const moduleId = storeRef.current.get(activeModuleIdAtom)
+      storeRef.current.set(layoutModuleIdAtom, moduleId)
+      moduleIdRef.current = moduleId
       const mod = getModule(moduleId)
       const saved = loadPersistedLayout(workspaceId, moduleId)
       try {
@@ -99,14 +113,17 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
       const removeDisposable = api.onDidRemovePanel((panel) => {
         panelPortalManager.release(panel.id)
       })
-      const unsubPersist = createLayoutPersistence(workspaceId, () => moduleIdRef.current).attach(api)
+      const persistence = createLayoutPersistence(workspaceId, () => moduleIdRef.current)
+      setCancelLayoutPersist(() => persistence.cancelPending)
+      const unsubPersist = persistence.attach(api)
 
       detachRef.current = () => {
         removeDisposable.dispose()
         unsubPersist()
+        setCancelLayoutPersist(null)
       }
     },
-    [setApi, workspaceId],
+    [setApi, setCancelLayoutPersist, workspaceId],
   )
 
   const renderPanel = useCallback(

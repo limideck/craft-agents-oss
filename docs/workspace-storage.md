@@ -41,6 +41,9 @@ There is **no migration** from older layouts. Wipe leftover global / id-keyed da
     ├── knowledge/                    # reserved (docs/, knowledge.db, index/)
     │   ├── docs/
     │   └── index/
+    ├── sites/
+    │   ├── sites.db                  # site project metadata
+    │   └── {slug}/                   # Vite + React project tree
     └── workflows/
         ├── workflows.db              # runs / deploy meta / definitions (current SoT)
         └── definitions/              # preferred file SoT for graph YAML/JSON (future)
@@ -50,7 +53,7 @@ Default create location is still `~/.craft-agent/workspaces/{slug}/`, but the sl
 
 ## Sidecar path resolution
 
-### craft-modules (RSS + Workflows)
+### craft-modules (RSS + Sites + Workflows)
 
 | Mechanism | Role |
 |-----------|------|
@@ -61,10 +64,11 @@ Default create location is still `~/.craft-agent/workspaces/{slug}/`, but the sl
 Resolved DB paths:
 
 - RSS: `{rootPath}/modules/rss/rss.db`
+- Sites: `{rootPath}/modules/sites/sites.db` (+ Vite projects under `{rootPath}/modules/sites/{slug}/`)
 - Workflows: `{rootPath}/modules/workflows/workflows.db`
 
 TS helper: `resolveWorkspaceRootPath(workspaceId)` in `@craft-agent/shared/config`.  
-Path builders: `getWorkspaceRssDbPath` / `getWorkspaceTablesDataPath` / … in `@craft-agent/shared/workspaces`.
+Path builders: `getWorkspaceRssDbPath` / `getWorkspaceSitesPath` / `getWorkspaceTablesDataPath` / … in `@craft-agent/shared/workspaces`.
 
 ### Tables (plydb)
 

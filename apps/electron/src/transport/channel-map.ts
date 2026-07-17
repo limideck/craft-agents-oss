@@ -195,6 +195,11 @@ export const CHANNEL_MAP = {
 
   // Server filesystem browsing (remote mode)
   listServerDirectory: invoke(RPC_CHANNELS.fs.LIST_DIRECTORY),
+  listServerEntries: invoke(RPC_CHANNELS.fs.LIST_ENTRIES),
+  createServerFile: invoke(RPC_CHANNELS.fs.CREATE_FILE),
+  createServerDirectory: invoke(RPC_CHANNELS.fs.MKDIR),
+  renameServerPath: invoke(RPC_CHANNELS.fs.RENAME),
+  deleteServerPath: invoke(RPC_CHANNELS.fs.DELETE),
 
   // Debug logging
   debugLog: invoke(RPC_CHANNELS.debug.LOG),
@@ -474,6 +479,22 @@ export const CHANNEL_MAP = {
   rssRefresh: invoke(RPC_CHANNELS.rss.REFRESH),
   rssGetSettings: invoke(RPC_CHANNELS.rss.GET_SETTINGS),
   rssPatchSettings: invoke(RPC_CHANNELS.rss.PATCH_SETTINGS),
+
+  // Sites domain
+  sitesPing: invoke(RPC_CHANNELS.sites.PING),
+  sitesList: invoke(RPC_CHANNELS.sites.LIST),
+  sitesGet: invoke(RPC_CHANNELS.sites.GET),
+  sitesCreate: invoke(RPC_CHANNELS.sites.CREATE),
+  sitesDelete: invoke(RPC_CHANNELS.sites.DELETE),
+  sitesUpdate: invoke(RPC_CHANNELS.sites.UPDATE),
+  sitesListFiles: invoke(RPC_CHANNELS.sites.LIST_FILES),
+  sitesReadFile: invoke(RPC_CHANNELS.sites.READ_FILE),
+  sitesWriteFile: invoke(RPC_CHANNELS.sites.WRITE_FILE),
+  sitesPreviewStart: invoke(RPC_CHANNELS.sites.PREVIEW_START),
+  sitesPreviewStop: invoke(RPC_CHANNELS.sites.PREVIEW_STOP),
+  sitesPreviewUrl: invoke(RPC_CHANNELS.sites.PREVIEW_URL),
+  sitesVisualEditSave: invoke(RPC_CHANNELS.sites.VISUAL_EDIT_SAVE),
+  sitesBindSession: invoke(RPC_CHANNELS.sites.BIND_SESSION),
 
   // Workflows domain
   workflowsPing: invoke(RPC_CHANNELS.workflows.PING),

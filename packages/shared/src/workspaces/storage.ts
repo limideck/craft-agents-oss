@@ -89,7 +89,7 @@ export function getWorkspaceSkillsPath(rootPath: string): string {
 }
 
 /** Builtin workbench module ids that live under `{rootPath}/modules/`. */
-export const WORKSPACE_MODULE_IDS = ['rss', 'tables', 'workflows', 'knowledge'] as const;
+export const WORKSPACE_MODULE_IDS = ['rss', 'tables', 'workflows', 'knowledge', 'sites'] as const;
 export type WorkspaceModuleId = (typeof WORKSPACE_MODULE_IDS)[number];
 
 /**
@@ -114,6 +114,16 @@ export function getWorkspaceRssDbPath(rootPath: string): string {
 /** Workflows SQLite path: `{rootPath}/modules/workflows/workflows.db` */
 export function getWorkspaceWorkflowsDbPath(rootPath: string): string {
   return join(rootPath, 'modules', 'workflows', 'workflows.db');
+}
+
+/** Sites module root: `{rootPath}/modules/sites` */
+export function getWorkspaceSitesPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'sites');
+}
+
+/** Sites SQLite path: `{rootPath}/modules/sites/sites.db` */
+export function getWorkspaceSitesDbPath(rootPath: string): string {
+  return join(rootPath, 'modules', 'sites', 'sites.db');
 }
 
 /**

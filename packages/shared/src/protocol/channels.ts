@@ -106,6 +106,11 @@ export const RPC_CHANNELS = {
   fs: {
     SEARCH: 'fs:search',
     LIST_DIRECTORY: 'fs:listDirectory',
+    LIST_ENTRIES: 'fs:listEntries',
+    CREATE_FILE: 'fs:createFile',
+    MKDIR: 'fs:mkdir',
+    RENAME: 'fs:rename',
+    DELETE: 'fs:delete',
   },
   debug: {
     LOG: 'debug:log',
@@ -477,6 +482,25 @@ export const RPC_CHANNELS = {
   },
   knowledge: {
     PING: 'knowledge:ping',
+  },
+  /**
+   * Sites (建站) domain — proxies to craft-modules Go sidecar.
+   */
+  sites: {
+    PING: 'sites:ping',
+    LIST: 'sites:list',
+    GET: 'sites:get',
+    CREATE: 'sites:create',
+    DELETE: 'sites:delete',
+    UPDATE: 'sites:update',
+    LIST_FILES: 'sites:listFiles',
+    READ_FILE: 'sites:readFile',
+    WRITE_FILE: 'sites:writeFile',
+    PREVIEW_START: 'sites:previewStart',
+    PREVIEW_STOP: 'sites:previewStop',
+    PREVIEW_URL: 'sites:previewUrl',
+    VISUAL_EDIT_SAVE: 'sites:visualEditSave',
+    BIND_SESSION: 'sites:bindSession',
   },
   workflows: {
     PING: 'workflows:ping',

@@ -6,7 +6,7 @@
 import { CRAFT_MODULES_SOURCE_SLUG } from './mcp-source.ts'
 
 /** Known builtin module ids; open string union for future modules. */
-export type CraftBuiltinModuleId = 'rss' | 'knowledge' | 'workflows' | (string & {})
+export type CraftBuiltinModuleId = 'rss' | 'knowledge' | 'workflows' | 'sites' | (string & {})
 
 export type CraftBuiltinModule = {
   id: CraftBuiltinModuleId
@@ -85,6 +85,22 @@ const CRAFT_BUILTIN_MODULES: readonly CraftBuiltinModule[] = [
     // wf_* tools exist on craft-modules MCP (stub run)
     enabled: true,
   },
+  {
+    id: 'sites',
+    title: 'Sites',
+    intents: [
+      'create a site',
+      'list sites',
+      'preview a site',
+      'edit site files',
+      'build a landing page',
+      'scaffold a website',
+      'visual edit a site',
+    ],
+    toolPrefix: 'sites_',
+    preferBuiltin: true,
+    enabled: true,
+  },
 ]
 
 export function listCraftBuiltinModules(): readonly CraftBuiltinModule[] {
@@ -109,11 +125,11 @@ export function formatCraftModulesContextBlock(
     `Source slug: ${CRAFT_MODULES_SOURCE_SLUG}`,
     'Rules:',
     `- When intent matches an enabled module below, call tools on ${CRAFT_MODULES_SOURCE_SLUG} (prefixes listed).`,
-    '- Do NOT create new API or MCP Sources for RSS, Knowledge, or Workflows when craft-modules covers the need.',
+    '- Do NOT create new API or MCP Sources for RSS, Knowledge, Workflows, or Sites when craft-modules covers the need.',
     '- Optional skills (if listed) are for deep multi-step workflows only; still require craft-modules.',
     '- Always pass workspace_id from this block (never invent ids or read a different config.json id).',
     '- Module data lives under the workspace folder (rootPath/modules/…), not ~/.craft-agent/tables or workspaces/{uuid}/modules.',
-    '- Before claiming feeds/workflows "already added", call the list tool (rss_list_feeds / wf_list) for this workspace_id.',
+    '- Before claiming feeds/workflows/sites "already added", call the list tool (rss_list_feeds / wf_list / sites_list) for this workspace_id.',
     '',
     'Modules:',
   ]
@@ -132,7 +148,7 @@ export function formatCraftModulesContextBlock(
     lines.push('')
     lines.push(`workspace_id: ${workspaceId}`)
     lines.push(
-      `Pass workspace_id: "${workspaceId}" on every rss_*/wf_*/kb_* tool call (matches Workbench UI).`,
+      `Pass workspace_id: "${workspaceId}" on every rss_*/wf_*/kb_*/sites_* tool call (matches Workbench UI).`,
     )
   }
 

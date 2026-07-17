@@ -1,4 +1,4 @@
-import { readFile, writeFile, unlink, mkdir, readdir, stat } from 'fs/promises'
+import { readFile, writeFile, unlink, mkdir, readdir, stat, rename, rm, open } from 'fs/promises'
 import { isAbsolute, join, resolve, dirname, parse as parsePath } from 'path'
 import { homedir } from 'os'
 import { validatePathFormat } from '../../utils/path-validation'
@@ -27,6 +27,11 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.file.GENERATE_THUMBNAIL,
   RPC_CHANNELS.fs.SEARCH,
   RPC_CHANNELS.fs.LIST_DIRECTORY,
+  RPC_CHANNELS.fs.LIST_ENTRIES,
+  RPC_CHANNELS.fs.CREATE_FILE,
+  RPC_CHANNELS.fs.MKDIR,
+  RPC_CHANNELS.fs.RENAME,
+  RPC_CHANNELS.fs.DELETE,
 ] as const
 
 export function registerFilesHandlers(server: RpcServer, deps: HandlerDeps): void {
@@ -593,5 +598,93 @@ export function registerFilesHandlers(server: RpcServer, deps: HandlerDeps): voi
       totalEntries,
       entries,
     } satisfies DirectoryListingResult
+  })
+
+  // List files + directories for the workbench file tree (workspace-scoped).
+  server.handle(RPC_CHANNELS.fs.LIST_ENTRIES, async (ctx, dirPath: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const safePath = await validateFilePath(dirPath, getWorkspaceAllowedDirs(workspaceId))
+    const info = await stat(safePath)
+    if (!info.isDirectory()) {
+      throw new Error('Path is not a directory')
+    }
+
+    const raw = await readdir(safePath, { withFileTypes: true })
+    const entries: Array<{ name: string; path: string; isDir: boolean; isSymlink: boolean }> = []
+
+    for (const entry of raw) {
+      if (entry.name === '.' || entry.name === '..') continue
+      const fullPath = join(safePath, entry.name)
+      const isSymlink = entry.isSymbolicLink()
+      let isDir = entry.isDirectory()
+
+      if (isSymlink) {
+        try {
+          const target = await stat(fullPath)
+          isDir = target.isDirectory()
+        } catch {
+          continue
+        }
+      } else if (!entry.isFile() && !entry.isDirectory()) {
+        continue
+      }
+
+      entries.push({ name: entry.name, path: fullPath, isDir, isSymlink })
+    }
+
+    entries.sort((a, b) => {
+      if (a.isDir !== b.isDir) return a.isDir ? -1 : 1
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    })
+
+    const totalEntries = entries.length
+    const truncated = totalEntries > 2000
+    if (truncated) entries.length = 2000
+
+    return {
+      currentPath: safePath,
+      truncated,
+      totalEntries,
+      entries,
+    }
+  })
+
+  server.handle(RPC_CHANNELS.fs.CREATE_FILE, async (ctx, filePath: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const safePath = await validateFilePath(filePath, getWorkspaceAllowedDirs(workspaceId))
+    await mkdir(dirname(safePath), { recursive: true })
+    const handle = await open(safePath, 'wx')
+    await handle.close()
+    return { path: safePath }
+  })
+
+  server.handle(RPC_CHANNELS.fs.MKDIR, async (ctx, dirPath: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const safePath = await validateFilePath(dirPath, getWorkspaceAllowedDirs(workspaceId))
+    await mkdir(safePath, { recursive: true })
+    return { path: safePath }
+  })
+
+  server.handle(RPC_CHANNELS.fs.RENAME, async (ctx, oldPath: string, newPath: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const allowed = getWorkspaceAllowedDirs(workspaceId)
+    const safeOld = await validateFilePath(oldPath, allowed)
+    const safeNew = await validateFilePath(newPath, allowed)
+    if (safeOld === safeNew) return { path: safeNew }
+    await mkdir(dirname(safeNew), { recursive: true })
+    await rename(safeOld, safeNew)
+    return { path: safeNew }
+  })
+
+  server.handle(RPC_CHANNELS.fs.DELETE, async (ctx, targetPath: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const allowed = getWorkspaceAllowedDirs(workspaceId)
+    const safePath = await validateFilePath(targetPath, allowed)
+    // Never delete a workspace root itself.
+    if (allowed.some((dir) => resolve(dir) === resolve(safePath))) {
+      throw new Error('Cannot delete workspace root')
+    }
+    await rm(safePath, { recursive: true, force: false })
+    return { ok: true as const }
   })
 }

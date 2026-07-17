@@ -534,6 +534,14 @@ export interface DirectoryListingResult {
   entries: Array<{ name: string; path: string; isSymlink: boolean }>
 }
 
+/** Workspace file-tree listing (files + directories). */
+export interface FsListEntriesResult {
+  currentPath: string
+  truncated: boolean
+  totalEntries: number
+  entries: Array<{ name: string; path: string; isDir: boolean; isSymlink: boolean }>
+}
+
 // ---------------------------------------------------------------------------
 // File types
 // ---------------------------------------------------------------------------

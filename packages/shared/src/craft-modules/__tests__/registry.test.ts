@@ -13,15 +13,17 @@ import {
 import { CRAFT_MODULES_SOURCE_SLUG } from '../mcp-source.ts'
 
 describe('craft-modules registry', () => {
-  it('registers rss (enabled), knowledge (disabled), workflows (enabled)', () => {
+  it('registers rss (enabled), knowledge (disabled), workflows (enabled), sites (enabled)', () => {
     const mods = listCraftBuiltinModules()
-    expect(mods.map((m) => m.id)).toEqual(['rss', 'knowledge', 'workflows'])
+    expect(mods.map((m) => m.id)).toEqual(['rss', 'knowledge', 'workflows', 'sites'])
     expect(getCraftBuiltinModule('rss')?.enabled).toBe(true)
     expect(getCraftBuiltinModule('rss')?.toolPrefix).toBe('rss_')
     expect(getCraftBuiltinModule('knowledge')?.enabled).toBe(false)
     expect(getCraftBuiltinModule('knowledge')?.toolPrefix).toBe('kb_')
     expect(getCraftBuiltinModule('workflows')?.enabled).toBe(true)
     expect(getCraftBuiltinModule('workflows')?.toolPrefix).toBe('wf_')
+    expect(getCraftBuiltinModule('sites')?.enabled).toBe(true)
+    expect(getCraftBuiltinModule('sites')?.toolPrefix).toBe('sites_')
     expect(mods.every((m) => m.preferBuiltin === true)).toBe(true)
   })
 
@@ -38,6 +40,8 @@ describe('craft-modules registry', () => {
     expect(block).toContain('tools kb_*')
     expect(block).toContain('workflows (enabled)')
     expect(block).toContain('tools wf_*')
+    expect(block).toContain('sites (enabled)')
+    expect(block).toContain('tools sites_*')
     expect(block).toContain('subscribe to feeds')
   })
 

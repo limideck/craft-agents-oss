@@ -1,5 +1,5 @@
 /**
- * Loopback HTTP client for craft-modules RSS + Workflows APIs.
+ * Loopback HTTP client for craft-modules RSS + Workflows + Sites APIs.
  *
  * Persistence resolves workspaceId → absolute rootPath (registry), then
  * reads/writes under `{rootPath}/modules/...`. Always send both
@@ -13,6 +13,12 @@ import type {
   CraftModulesRssFeed,
   CraftModulesRssListMode,
   CraftModulesRssView,
+  CraftModulesSite,
+  CraftModulesSiteCreateInput,
+  CraftModulesSiteFileNode,
+  CraftModulesSitePreviewResult,
+  CraftModulesSiteUpdateInput,
+  CraftModulesVisualEditSaveInput,
   CraftModulesWorkflow,
   CraftModulesWorkflowCreateInput,
   CraftModulesWorkflowDeployResult,
@@ -283,4 +289,121 @@ export async function undeployWorkflow(
   workflowId: string,
 ): Promise<CraftModulesWorkflowDeployResult> {
   return request(workspaceId, 'POST', `/api/workflows/${encodeURIComponent(workflowId)}/undeploy`, {})
+}
+
+// ---------------------------------------------------------------------------
+// Sites (建站)
+// ---------------------------------------------------------------------------
+
+export async function sitesPing(): Promise<{
+  ok: boolean
+  domain: 'sites'
+  version?: string
+  modules?: string[]
+}> {
+  const ep = requireCraftModulesEndpoint()
+  const res = await fetch(`${ep.baseUrl.replace(/\/+$/, '')}/health`)
+  const data = (await res.json()) as { ok?: boolean; version?: string; modules?: string[] }
+  return {
+    ok: Boolean(data.ok),
+    domain: 'sites',
+    version: data.version,
+    modules: data.modules,
+  }
+}
+
+export async function listSites(workspaceId: string): Promise<CraftModulesSite[]> {
+  return request(workspaceId, 'GET', '/api/sites')
+}
+
+export async function getSite(workspaceId: string, siteId: string): Promise<CraftModulesSite> {
+  return request(workspaceId, 'GET', `/api/sites/${encodeURIComponent(siteId)}`)
+}
+
+export async function createSite(
+  workspaceId: string,
+  input: CraftModulesSiteCreateInput,
+): Promise<CraftModulesSite> {
+  return request(workspaceId, 'POST', '/api/sites', input)
+}
+
+export async function updateSite(
+  workspaceId: string,
+  siteId: string,
+  input: CraftModulesSiteUpdateInput,
+): Promise<CraftModulesSite> {
+  return request(workspaceId, 'PATCH', `/api/sites/${encodeURIComponent(siteId)}`, input)
+}
+
+export async function deleteSite(workspaceId: string, siteId: string): Promise<void> {
+  await request(workspaceId, 'DELETE', `/api/sites/${encodeURIComponent(siteId)}`)
+}
+
+export async function listSiteFiles(
+  workspaceId: string,
+  siteId: string,
+): Promise<CraftModulesSiteFileNode[]> {
+  return request(workspaceId, 'GET', `/api/sites/${encodeURIComponent(siteId)}/files`)
+}
+
+export async function readSiteFile(
+  workspaceId: string,
+  siteId: string,
+  path: string,
+): Promise<{ path: string; content: string }> {
+  const qs = new URLSearchParams({ path })
+  return request(
+    workspaceId,
+    'GET',
+    `/api/sites/${encodeURIComponent(siteId)}/files/content?${qs}`,
+  )
+}
+
+export async function writeSiteFile(
+  workspaceId: string,
+  siteId: string,
+  input: { path: string; content: string },
+): Promise<{ ok: true }> {
+  return request(workspaceId, 'PUT', `/api/sites/${encodeURIComponent(siteId)}/files/content`, input)
+}
+
+export async function startSitePreview(
+  workspaceId: string,
+  siteId: string,
+): Promise<CraftModulesSitePreviewResult> {
+  return request(workspaceId, 'POST', `/api/sites/${encodeURIComponent(siteId)}/preview/start`, {})
+}
+
+export async function stopSitePreview(
+  workspaceId: string,
+  siteId: string,
+): Promise<{ ok: true }> {
+  return request(workspaceId, 'POST', `/api/sites/${encodeURIComponent(siteId)}/preview/stop`, {})
+}
+
+export async function getSitePreview(
+  workspaceId: string,
+  siteId: string,
+): Promise<CraftModulesSitePreviewResult> {
+  return request(workspaceId, 'GET', `/api/sites/${encodeURIComponent(siteId)}/preview`)
+}
+
+export async function saveSiteVisualEdit(
+  workspaceId: string,
+  input: CraftModulesVisualEditSaveInput,
+): Promise<{ ok: true }> {
+  return request(
+    workspaceId,
+    'POST',
+    `/api/sites/${encodeURIComponent(input.siteId)}/visual-edit`,
+    input,
+  )
+}
+
+export async function bindSiteSession(
+  workspaceId: string,
+  siteId: string,
+  sessionId: string | null,
+): Promise<CraftModulesSite> {
+  return updateSite(workspaceId, siteId, { sessionId })
 }

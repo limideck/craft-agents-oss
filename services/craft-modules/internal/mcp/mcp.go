@@ -157,6 +157,13 @@ func (c *client) post(ctx context.Context, path, workspaceID string, body any) (
 	return c.request(ctx, http.MethodPost, path, workspaceID, body)
 }
 
+func (c *client) put(ctx context.Context, path, workspaceID string, body any) (any, error) {
+	if body == nil {
+		body = map[string]any{}
+	}
+	return c.request(ctx, http.MethodPut, path, workspaceID, body)
+}
+
 func (c *client) patch(ctx context.Context, path, workspaceID string, body any) (any, error) {
 	return c.request(ctx, http.MethodPatch, path, workspaceID, body)
 }

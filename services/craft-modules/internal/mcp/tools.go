@@ -9,6 +9,7 @@ import (
 
 func registerTools(server *sdkmcp.Server, c *client, _ string) {
 	registerWorkflowTools(server, c)
+	registerSitesTools(server, c)
 
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "rss_list_feeds",

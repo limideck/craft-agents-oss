@@ -291,6 +291,17 @@
         "typescript": "^5.8.2",
       },
     },
+    "packages/domain-sites": {
+      "name": "@craft-agent/domain-sites",
+      "version": "0.11.1",
+      "dependencies": {
+        "@craft-agent/shared": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.8.2",
+      },
+    },
     "packages/domain-workflows": {
       "name": "@craft-agent/domain-workflows",
       "version": "0.11.1",
@@ -378,6 +389,7 @@
         "@craft-agent/core": "workspace:*",
         "@craft-agent/domain-knowledge": "workspace:*",
         "@craft-agent/domain-rss": "workspace:*",
+        "@craft-agent/domain-sites": "workspace:*",
         "@craft-agent/domain-workflows": "workspace:*",
         "@craft-agent/shared": "workspace:*",
         "@earendil-works/pi-ai": "0.80.6",
@@ -718,6 +730,8 @@
     "@craft-agent/domain-knowledge": ["@craft-agent/domain-knowledge@workspace:packages/domain-knowledge"],
 
     "@craft-agent/domain-rss": ["@craft-agent/domain-rss@workspace:packages/domain-rss"],
+
+    "@craft-agent/domain-sites": ["@craft-agent/domain-sites@workspace:packages/domain-sites"],
 
     "@craft-agent/domain-workflows": ["@craft-agent/domain-workflows@workspace:packages/domain-workflows"],
 
@@ -3835,6 +3849,8 @@
 
     "@craft-agent/domain-rss/@types/node": ["@types/node@22.19.6", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-qm+G8HuG6hOHQigsi7VGuLjUVu6TtBo/F05zvX04Mw2uCg9Dv0Qxy3Qw7j41SidlTcl5D/5yg0SEZqOB+EqZnQ=="],
 
+    "@craft-agent/domain-sites/@types/node": ["@types/node@22.19.6", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-qm+G8HuG6hOHQigsi7VGuLjUVu6TtBo/F05zvX04Mw2uCg9Dv0Qxy3Qw7j41SidlTcl5D/5yg0SEZqOB+EqZnQ=="],
+
     "@craft-agent/domain-workflows/@types/node": ["@types/node@22.19.6", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-qm+G8HuG6hOHQigsi7VGuLjUVu6TtBo/F05zvX04Mw2uCg9Dv0Qxy3Qw7j41SidlTcl5D/5yg0SEZqOB+EqZnQ=="],
 
     "@craft-agent/messaging-gateway/@types/node": ["@types/node@22.19.6", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-qm+G8HuG6hOHQigsi7VGuLjUVu6TtBo/F05zvX04Mw2uCg9Dv0Qxy3Qw7j41SidlTcl5D/5yg0SEZqOB+EqZnQ=="],
@@ -4336,6 +4352,8 @@
     "@craft-agent/domain-knowledge/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
     "@craft-agent/domain-rss/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
+
+    "@craft-agent/domain-sites/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
     "@craft-agent/domain-workflows/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 

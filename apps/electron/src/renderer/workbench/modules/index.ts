@@ -9,13 +9,14 @@ import { settingsModule } from './settings'
 import { rssModule } from './rss'
 import { tablesModule } from './tables'
 import { knowledgeModule } from './knowledge'
+import { sitesModule } from './sites'
 import { workflowsModule } from './workflows'
 
 let registered = false
 
 /**
  * Register built-in workbench modules once (idempotent).
- * Order: shared panels → Agents → Sources → Skills → Automations → Connectors → RSS/Tables/KB → Settings footer.
+ * Order: shared panels → Agents → Sources → Skills → Automations → Connectors → RSS/Tables/KB/Sites → Settings footer.
  * Workflows UI is folded into Automations (Flows); workflowsModule is not registered on the ActivityBar.
  */
 export function ensureWorkbenchModulesRegistered(): void {
@@ -30,6 +31,7 @@ export function ensureWorkbenchModulesRegistered(): void {
   registerModule(rssModule)
   registerModule(tablesModule)
   registerModule(knowledgeModule)
+  registerModule(sitesModule)
   registerModule(settingsModule)
 }
 
@@ -43,6 +45,7 @@ export {
   rssModule,
   tablesModule,
   knowledgeModule,
+  sitesModule,
   /** Kept for re-use / tests; not registered on ActivityBar (see automationsModule). */
   workflowsModule,
 }

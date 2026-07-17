@@ -30,6 +30,7 @@
     "@craft-agent/domain-rss": "workspace:*",
     "@craft-agent/domain-knowledge": "workspace:*",
     "@craft-agent/domain-workflows": "workspace:*",
+    "@craft-agent/domain-sites": "workspace:*",
     "jose": "^6.0.0",
     "ws": "^8.19.0",
     "sharp": "0.34.5",

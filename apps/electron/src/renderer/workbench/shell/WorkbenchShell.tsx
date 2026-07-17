@@ -1,11 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { EscapeInterruptProvider } from '@/context/EscapeInterruptContext'
 import { ensureWorkbenchModulesRegistered } from '../modules'
 import { useAutomationsDeepLink } from '../modules/automations'
 import { getModule } from '../registry/module-registry'
-import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
+import {
+  activeModuleIdAtom,
+  cancelLayoutPersistAtom,
+  dockviewApiAtom,
+  layoutModuleIdAtom,
+} from '../store/workbench-store'
 import { WorkspaceDataProvider } from '../providers/WorkspaceDataProvider'
 import { ActivityBar } from './ActivityBar'
 import { WorkbenchTopBar } from './WorkbenchTopBar'
@@ -48,6 +53,8 @@ export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
 function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
   const activeModuleId = useAtomValue(activeModuleIdAtom)
   const api = useAtomValue(dockviewApiAtom)
+  const cancelLayoutPersist = useAtomValue(cancelLayoutPersistAtom)
+  const setLayoutModuleId = useSetAtom(layoutModuleIdAtom)
   const mod = getModule(activeModuleId)
   const ActivityView = mod?.activityView
   const prevModuleRef = useRef<string | null>(null)
@@ -67,6 +74,10 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
     const prev = prevModuleRef.current
     if (prev === mod.id) return
 
+    // Drop in-flight debounce so it cannot write the outgoing dock snapshot
+    // under the incoming module key (Sites/RSS/etc. looking like Agents).
+    cancelLayoutPersist?.()
+
     if (prev !== null) {
       try {
         savePersistedLayout(workspaceId, prev, api.toJSON())
@@ -76,17 +87,23 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
     }
 
     prevModuleRef.current = mod.id
-    if (prev === null) return
+    if (prev === null) {
+      setLayoutModuleId(mod.id)
+      return
+    }
 
     const saved = loadPersistedLayout(workspaceId, mod.id)
     try {
       if (saved) {
         api.fromJSON(saved)
-        return
+      } else {
+        const layout = resolveModuleLayout(mod.defaultLayout)
+        if (!layout) {
+          setLayoutModuleId(mod.id)
+          return
+        }
+        applyLayout(api, layout, api.width || 1200, api.height || 800)
       }
-      const layout = resolveModuleLayout(mod.defaultLayout)
-      if (!layout) return
-      applyLayout(api, layout, api.width || 1200, api.height || 800)
     } catch (err) {
       console.warn(`[workbench] failed to apply layout for module "${mod.id}"`, err)
       const layout = resolveModuleLayout(mod.defaultLayout)
@@ -98,7 +115,9 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
         }
       }
     }
-  }, [api, mod, workspaceId])
+    // Layout now belongs to the ActivityBar selection — safe to persist again.
+    setLayoutModuleId(mod.id)
+  }, [api, mod, workspaceId, cancelLayoutPersist, setLayoutModuleId])
 
   if (!workspaceId) {
     return (

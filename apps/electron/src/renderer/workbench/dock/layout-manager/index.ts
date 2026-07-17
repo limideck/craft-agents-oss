@@ -23,6 +23,7 @@ export {
   savePersistedLayout,
   clearPersistedLayout,
   createLayoutPersistence,
+  layoutMatchesModule,
   workbenchLayoutSuffix,
   workbenchLayoutSuffixLegacy,
 } from './persistence'

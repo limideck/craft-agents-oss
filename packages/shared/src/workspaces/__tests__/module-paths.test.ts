@@ -12,6 +12,8 @@ import {
   ensureWorkspaceModuleDirs,
   getWorkspaceModulePath,
   getWorkspaceRssDbPath,
+  getWorkspaceSitesDbPath,
+  getWorkspaceSitesPath,
   getWorkspaceTablesDataPath,
   getWorkspaceWorkflowsDbPath,
   getWorkspaceWorkflowsDefinitionsPath,
@@ -35,6 +37,8 @@ describe('workspace module paths', () => {
       join(root, 'modules', 'workflows', 'workflows.db'),
     )
     expect(getWorkspaceTablesDataPath(root)).toBe(join(root, 'modules', 'tables'))
+    expect(getWorkspaceSitesPath(root)).toBe(join(root, 'modules', 'sites'))
+    expect(getWorkspaceSitesDbPath(root)).toBe(join(root, 'modules', 'sites', 'sites.db'))
     expect(getWorkspaceModulePath(root, 'knowledge')).toBe(join(root, 'modules', 'knowledge'))
     expect(getWorkspaceRssDbPath(root)).not.toContain(id)
   })
@@ -44,6 +48,7 @@ describe('workspace module paths', () => {
     expect(existsSync(join(root, 'modules', 'rss'))).toBe(true)
     expect(existsSync(join(root, 'modules', 'tables'))).toBe(true)
     expect(existsSync(join(root, 'modules', 'workflows'))).toBe(true)
+    expect(existsSync(join(root, 'modules', 'sites'))).toBe(true)
     expect(existsSync(getWorkspaceWorkflowsDefinitionsPath(root))).toBe(true)
     expect(existsSync(join(root, 'modules', 'knowledge', 'docs'))).toBe(true)
     expect(existsSync(join(root, 'modules', 'knowledge', 'index'))).toBe(true)
@@ -55,5 +60,6 @@ describe('workspace module paths', () => {
     expect(existsSync(join(wsRoot, 'modules', 'rss'))).toBe(true)
     expect(existsSync(join(wsRoot, 'modules', 'tables'))).toBe(true)
     expect(existsSync(join(wsRoot, 'modules', 'workflows', 'definitions'))).toBe(true)
+    expect(existsSync(join(wsRoot, 'modules', 'sites'))).toBe(true)
   })
 })

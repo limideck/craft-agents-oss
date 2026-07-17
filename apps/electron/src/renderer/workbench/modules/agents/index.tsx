@@ -2,6 +2,7 @@ import { Bot } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { SessionListPanel } from './panels/session-list-panel'
 import { FilesPanel } from './panels/files-panel'
+import { FileEditorPanel } from './panels/file-editor-panel'
 import { PlaceholderPanel } from './panels/placeholder-panel'
 
 /** Session nav in ActivityBar side rail (classic Sessions upper half). */
@@ -55,6 +56,12 @@ export const agentsModule: WorkbenchModule = {
       title: 'Files',
       singleton: true,
       render: () => <FilesPanel />,
+    },
+    {
+      component: 'file-editor',
+      title: 'Preview',
+      // Not a singleton — preview slot + optional pinned tabs share this component.
+      render: (params) => <FileEditorPanel params={params} />,
     },
     {
       component: 'changes',

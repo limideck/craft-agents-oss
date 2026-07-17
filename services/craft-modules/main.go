@@ -14,6 +14,7 @@ import (
 	"github.com/craft-agent/craft-modules/internal/db"
 	"github.com/craft-agent/craft-modules/internal/httpapi"
 	"github.com/craft-agent/craft-modules/internal/jobs"
+	"github.com/craft-agent/craft-modules/internal/sites"
 	"github.com/craft-agent/craft-modules/internal/workflows"
 
 	_ "modernc.org/sqlite"
@@ -36,11 +37,15 @@ func main() {
 	dbMgr := db.NewManager()
 	caches := cache.NewWorkspaceCaches(dbMgr)
 	wfMgr := workflows.NewManager()
+	sitesMgr := sites.NewManager()
+	sitesPreview := sites.NewPreviewManager()
 
 	srv := &httpapi.Server{
 		DBMgr:            dbMgr,
 		Caches:           caches,
 		WFMgr:            wfMgr,
+		SitesMgr:         sitesMgr,
+		SitesPreview:     sitesPreview,
 		Token:            cfg.Token,
 		DefaultWorkspace: cfg.DefaultWorkspace,
 		Port:             cfg.Port,

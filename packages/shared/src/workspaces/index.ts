@@ -27,6 +27,8 @@ export {
   getWorkspaceRssDbPath,
   getWorkspaceWorkflowsDbPath,
   getWorkspaceWorkflowsDefinitionsPath,
+  getWorkspaceSitesPath,
+  getWorkspaceSitesDbPath,
   getWorkspaceTablesDataPath,
   ensureWorkspaceModuleDirs,
   // Config operations

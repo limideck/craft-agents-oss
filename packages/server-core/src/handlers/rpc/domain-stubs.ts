@@ -10,6 +10,7 @@ import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
 import { registerRssRpcHandlers } from '@craft-agent/domain-rss'
 import { registerKnowledgeRpcHandlers } from '@craft-agent/domain-knowledge'
 import { registerWorkflowsRpcHandlers } from '@craft-agent/domain-workflows'
+import { registerSitesRpcHandlers } from '@craft-agent/domain-sites'
 import type { HandlerDeps } from '../handler-deps'
 import { registerWorkflowsRunHandler } from './workflows-run'
 
@@ -30,6 +31,20 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.rss.GET_SETTINGS,
   RPC_CHANNELS.rss.PATCH_SETTINGS,
   RPC_CHANNELS.knowledge.PING,
+  RPC_CHANNELS.sites.PING,
+  RPC_CHANNELS.sites.LIST,
+  RPC_CHANNELS.sites.GET,
+  RPC_CHANNELS.sites.CREATE,
+  RPC_CHANNELS.sites.DELETE,
+  RPC_CHANNELS.sites.UPDATE,
+  RPC_CHANNELS.sites.LIST_FILES,
+  RPC_CHANNELS.sites.READ_FILE,
+  RPC_CHANNELS.sites.WRITE_FILE,
+  RPC_CHANNELS.sites.PREVIEW_START,
+  RPC_CHANNELS.sites.PREVIEW_STOP,
+  RPC_CHANNELS.sites.PREVIEW_URL,
+  RPC_CHANNELS.sites.VISUAL_EDIT_SAVE,
+  RPC_CHANNELS.sites.BIND_SESSION,
   RPC_CHANNELS.workflows.PING,
   RPC_CHANNELS.workflows.LIST,
   RPC_CHANNELS.workflows.GET,
@@ -44,6 +59,7 @@ export const HANDLED_CHANNELS = [
 export function registerDomainStubHandlers(server: RpcServer, deps: HandlerDeps): void {
   registerRssRpcHandlers(server)
   registerKnowledgeRpcHandlers(server)
+  registerSitesRpcHandlers(server)
   registerWorkflowsRpcHandlers(server, { skipRun: true })
   registerWorkflowsRunHandler(server, deps)
 }

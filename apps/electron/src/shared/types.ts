@@ -346,6 +346,12 @@ export interface ElectronAPI {
 
   // Server filesystem browsing (remote mode)
   listServerDirectory(dirPath: string): Promise<DirectoryListingResult>
+  /** List files + directories for the workbench file tree (workspace-scoped). */
+  listServerEntries(dirPath: string): Promise<import('@craft-agent/shared/protocol').FsListEntriesResult>
+  createServerFile(filePath: string): Promise<{ path: string }>
+  createServerDirectory(dirPath: string): Promise<{ path: string }>
+  renameServerPath(oldPath: string, newPath: string): Promise<{ path: string }>
+  deleteServerPath(targetPath: string): Promise<{ ok: true }>
   // Debug: send renderer logs to main process log file
   debugLog(...args: unknown[]): void
 
@@ -811,6 +817,61 @@ export interface ElectronAPI {
     workspaceId: string,
     input: { rsshub_base_url: string },
   ): Promise<{ ok: true }>
+
+  // Sites domain (proxied to craft-modules)
+  sitesPing(): Promise<{
+    ok: boolean
+    domain: 'sites'
+    version?: string
+    modules?: string[]
+  }>
+  sitesList(workspaceId: string): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite[]>
+  sitesGet(
+    workspaceId: string,
+    siteId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+  sitesCreate(
+    workspaceId: string,
+    input: import('@craft-agent/shared/craft-modules').CraftModulesSiteCreateInput,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+  sitesDelete(workspaceId: string, siteId: string): Promise<{ ok: true }>
+  sitesUpdate(
+    workspaceId: string,
+    siteId: string,
+    input: import('@craft-agent/shared/craft-modules').CraftModulesSiteUpdateInput,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+  sitesListFiles(
+    workspaceId: string,
+    siteId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSiteFileNode[]>
+  sitesReadFile(
+    workspaceId: string,
+    siteId: string,
+    path: string,
+  ): Promise<{ path: string; content: string }>
+  sitesWriteFile(
+    workspaceId: string,
+    siteId: string,
+    input: { path: string; content: string },
+  ): Promise<{ ok: true }>
+  sitesPreviewStart(
+    workspaceId: string,
+    siteId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSitePreviewResult>
+  sitesPreviewStop(workspaceId: string, siteId: string): Promise<{ ok: true }>
+  sitesPreviewUrl(
+    workspaceId: string,
+    siteId: string,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSitePreviewResult>
+  sitesVisualEditSave(
+    workspaceId: string,
+    input: import('@craft-agent/shared/craft-modules').CraftModulesVisualEditSaveInput,
+  ): Promise<{ ok: true }>
+  sitesBindSession(
+    workspaceId: string,
+    siteId: string,
+    sessionId: string | null,
+  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
 
   // Workflows domain (proxied to craft-modules)
   workflowsPing(): Promise<{

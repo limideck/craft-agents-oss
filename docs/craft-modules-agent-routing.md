@@ -1,6 +1,6 @@
 # Craft Modules — Prefer-Builtin Agent Routing
 
-Source of truth for how Craft Agents prefer **builtin workbench modules** (RSS, Knowledge, Workflows) over ad-hoc API/MCP Sources when user intent matches.
+Source of truth for how Craft Agents prefer **builtin workbench modules** (RSS, Knowledge, Sites, Workflows) over ad-hoc API/MCP Sources when user intent matches.
 
 Status: **Phases 1 + 3 implemented** — Module Registry + `<craft_modules>` injection; per-turn workbench `activeModuleId` → PromptBuilder. Optional Skills = Phase 2.
 
@@ -51,7 +51,7 @@ Related:
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │ 3. Single MCP source slug: craft-modules                        │
-│    Tools: rss_* (incl. export OPML / fetch content) | kb_* | wf_* │
+│    Tools: rss_* | sites_* | kb_* | wf_*                         │
 │    Optional thin Skills (Phase 2) for deep workflows only       │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -70,7 +70,7 @@ Related:
 ## 4. Registry schema
 
 ```ts
-export type CraftBuiltinModuleId = 'rss' | 'knowledge' | 'workflows' | (string & {})
+export type CraftBuiltinModuleId = 'rss' | 'knowledge' | 'sites' | 'workflows' | (string & {})
 
 export type CraftBuiltinModule = {
   id: CraftBuiltinModuleId
@@ -78,7 +78,7 @@ export type CraftBuiltinModule = {
   /** Natural-language intent cues for the prompt catalog */
   intents: string[]
   /** MCP tool name prefix on source slug craft-modules */
-  toolPrefix: string // 'rss_' | 'kb_' | 'wf_'
+  toolPrefix: string // 'rss_' | 'kb_' | 'sites_' | 'wf_'
   /** Optional deep-workflow skill (Phase 2) */
   skillSlug?: string
   preferBuiltin: true
@@ -106,15 +106,16 @@ Prefer builtin Craft modules over creating new API/MCP Sources when user intent 
 Source slug: craft-modules
 Rules:
 - When intent matches a module below, call tools on craft-modules (prefixes listed).
-- Do NOT create new API or MCP Sources for RSS, Knowledge, or Workflows when craft-modules covers the need.
+- Do NOT create new API or MCP Sources for RSS, Knowledge, Sites, or Workflows when craft-modules covers the need.
 - Optional skills (if listed) are for deep multi-step workflows only; still require craft-modules.
 
 Modules:
 - rss (enabled): RSS / feeds — tools rss_* — intents: subscribe to feeds, list feeds, refresh feeds, read articles, …
 - knowledge (disabled): Knowledge base — tools kb_* — …
+- sites (enabled): Sites / 建站 — tools sites_* — intents: create site, scaffold landing page, edit site files, start preview, …
 - workflows (enabled): Workflows — tools wf_* — …
 
-Active workbench module: rss
+Active workbench module: sites
 </craft_modules>
 ```
 
@@ -125,8 +126,8 @@ Injection point: `PromptBuilder.buildStableContextParts()` (catalog) and `buildV
 ## 6. Prefer-builtin policy (agents must follow)
 
 - Prefer `craft-modules` MCP tools for intents that match an **enabled** registry module.
-- Tools live on source slug **`craft-modules`** with prefixes `rss_`, `kb_`, `wf_`.
-- Do **not** create new API/MCP Sources for RSS / Knowledge / Workflows when craft-modules already covers that purpose.
+- Tools live on source slug **`craft-modules`** with prefixes `rss_`, `sites_`, `kb_`, `wf_`.
+- Do **not** create new API/MCP Sources for RSS / Knowledge / Sites / Workflows when craft-modules already covers that purpose.
 - Do **not** invent parallel HTTP clients to the sidecar; use MCP tools (or domain RPC is UI-only).
 - If a module is **disabled** in the registry, do not pretend its tools exist; fall back to normal Source/skill behavior.
 - Optional Skills (Phase 2) may deepen workflows but must declare `requiredSources: [craft-modules]` and must not replace the prefer-builtin rule.
@@ -136,9 +137,9 @@ Injection point: `PromptBuilder.buildStableContextParts()` (catalog) and `buildV
 ## 7. How to add a new module (checklist)
 
 1. **Go sidecar** — HTTP API + MCP tools with a unique prefix (`foo_*`); see [craft-modules-sidecar.md](./craft-modules-sidecar.md).
-2. **Registry** — Add a `CraftBuiltinModule` in `packages/shared/src/craft-modules/registry.ts` (`enabled: true` only when tools are real).
-3. **Workbench** — Register UI module per [workbench-architecture.md](./workbench-architecture.md) (`registerModule`, panels, layout).
-4. **Domain RPC** (if UI needs data) — `packages/domain-<id>/` + channels + server-core mount.
+2. **Registry** — Add a `CraftBuiltinModule` in `packages/shared/src/craft-modules/registry.ts` (`enabled: true` only when tools are real). For Sites: `id: 'sites'`, `toolPrefix: 'sites_'`, `preferBuiltin: true`, `enabled: true`.
+3. **Workbench** — Register UI module per [workbench-architecture.md](./workbench-architecture.md) (`registerModule`, panels, layout). Sites: [workbench-sites-ui.md](./workbench-sites-ui.md).
+4. **Domain RPC** (if UI needs data) — `packages/domain-<id>/` + channels + server-core mount (`domain-sites` → `/api/sites`).
 5. **Context** — No PromptBuilder change needed if you only extend the registry (formatter reads the list).
 6. **Tests** — Extend registry unit tests for the new id / prefix / intents.
 7. **Optional Skill (Phase 2)** — Thin `SKILL.md` with `requiredSources: [craft-modules]`; set `skillSlug` on the registry entry.
@@ -209,7 +210,7 @@ Prefer-builtin context (`<craft_modules>`) still tells the model to prefer `rss_
 1. **Automatic (preferred — local workspaces):**
    - Sidecar startup / `ensureCraftModulesMcpSource` upserts the Source **and** adds `craft-modules` to workspace `defaults.enabledSourceSlugs`.
    - **New sessions** merge preferred builtins into `enabledSourceSlugs` at create time.
-   - **Existing sessions** are healed on app load, message hydrate, and each `sendMessage` when the on-disk Source is usable — users should **not** need to toggle Sources for RSS / Workflows.
+   - **Existing sessions** are healed on app load, message hydrate, and each `sendMessage` when the on-disk Source is usable — users should **not** need to toggle Sources for RSS / Sites / Workflows.
 2. **Manual (fallback):** Chat input Sources chips / panel → enable `craft-modules` (same as any MCP Source). Workspace Settings → default sources also controls new-session defaults.
 3. **Agent path:** `source_test` (or failed tool → `onSourceActivationRequest`) can activate mid-turn; prefer-builtin auto-enable makes this unnecessary for craft-modules.
 

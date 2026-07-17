@@ -35,6 +35,7 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 | RSS | UI mock (no RPC) — [workbench-rss-ui.md](./workbench-rss-ui.md) |
 | Tables | Browse/upload/preview UI + plydb sidecar — [workbench-tables-ui.md](./workbench-tables-ui.md), [craft-tables-sidecar.md](./craft-tables-sidecar.md) |
 | Knowledge | Placeholder only |
+| Sites | Agent site IDE (Chat \| Files \| Preview) — [workbench-sites-ui.md](./workbench-sites-ui.md) |
 
 > **Note:** The former standalone **Workflows** ActivityBar module is no longer registered. Workflow UI lives under Automations → **Flows** (`modules/workflows/` code stays; `automationsModule` re-exports `wf-*` panels).
 
@@ -77,6 +78,7 @@ apps/electron/src/renderer/workbench/
     connectors/                # Open Connector console
     rss/                             # UI mock (no RPC)
     knowledge/                       # Placeholder
+    sites/                           # Sites / 建站 (Chat | Files | Preview)
     workflows/                       # Flow canvas (registered via automations)
   store/workbench-store.ts     # Jotai: active module + dock API
 ```
@@ -86,15 +88,16 @@ Domain packages (backend skeletons):
 - `packages/domain-rss`
 - `packages/domain-knowledge`
 - `packages/domain-workflows`
+- `packages/domain-sites`
 
-Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping` / `knowledge:ping` / `workflows:ping`).
+Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping` / `knowledge:ping` / `workflows:ping` / `sites:*`).
 
 Phase 3+ backend direction: a single Go sidecar (`craft-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [craft-modules-sidecar.md](./craft-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<craft_modules>` context) — see [craft-modules-agent-routing.md](./craft-modules-agent-routing.md).
 
 Workspace data (see [workspace-storage.md](./workspace-storage.md)):
 
 ```
-{rootPath}/modules/{rss|tables|knowledge|workflows}/
+{rootPath}/modules/{rss|tables|knowledge|sites|workflows}/
 ```
 
 Never key module data by `workspaceId` folder name under `~/.craft-agent/workspaces/{id}/` when `rootPath` is slug-named.
@@ -145,7 +148,8 @@ URL / deep link restores focus only; it does **not** serialize the full dock tre
 |-------|-----------|------|
 | `session-list` | `session-list` | Left — Craft sessions atom (thin list) |
 | `chat` | `chat` | Center — existing `ChatPage` |
-| `files` | `files` | Right — file-tree + `listServerDirectory` |
+| `files` | `files` | Right — file tree (lazy expand, create/rename/delete, drag-move) |
+| `file-editor` | `file-editor` | Center preview slot (`preview:file-editor`) — click file to open; double-click pins |
 | `changes` / `terminal` | placeholders | Phase 3+ |
 
 ## Portal rule
@@ -159,4 +163,4 @@ Heavy panels (chat, future browser/canvas/editors) render through `PanelPortalHo
 | 0 Scaffold (dockview, theme, portals, registries) | Done |
 | 1 Dock shell + Agents + feature flag | Done |
 | 2 Contracts + placeholder modules + domain skeletons | Done |
-| 3+ RSS / KB / workflows business logic | UI mocks: [workbench-rss-ui.md](./workbench-rss-ui.md), [workbench-workflows-ui.md](./workbench-workflows-ui.md); workflows graph/HTTP/MCP freeze: [workbench-workflows-contract.md](./workbench-workflows-contract.md); backend design: [craft-modules-sidecar.md](./craft-modules-sidecar.md); agent prefer-builtin: [craft-modules-agent-routing.md](./craft-modules-agent-routing.md) |
+| 3+ RSS / KB / Sites / workflows business logic | UI: [workbench-rss-ui.md](./workbench-rss-ui.md), [workbench-sites-ui.md](./workbench-sites-ui.md), [workbench-workflows-ui.md](./workbench-workflows-ui.md); workflows graph/HTTP/MCP freeze: [workbench-workflows-contract.md](./workbench-workflows-contract.md); backend design: [craft-modules-sidecar.md](./craft-modules-sidecar.md); agent prefer-builtin: [craft-modules-agent-routing.md](./craft-modules-agent-routing.md) |

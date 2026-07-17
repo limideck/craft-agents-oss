@@ -1,8 +1,8 @@
 # Craft Modules Sidecar (Go)
 
-Design boundary for local workbench modules (**RSS first**; Knowledge and Workflows later) as a single Go sidecar process, exposed to Craft Agents via loopback HTTP (UI) and MCP (AI).
+Design boundary for local workbench modules (**RSS**, **Sites**, Knowledge and Workflows) as a single Go sidecar process, exposed to Craft Agents via loopback HTTP (UI) and MCP (AI).
 
-Status: **In progress** — RSS sidecar + UI live; SQLITE busy hardening + A5 packaging landed.
+Status: **In progress** — RSS sidecar + UI live; Sites module in progress; SQLITE busy hardening + A5 packaging landed.
 
 Related:
 
@@ -10,10 +10,11 @@ Related:
 - [Workspace storage](./workspace-storage.md) — **rootPath-only** hard rule
 - [Prefer-builtin agent routing](./craft-modules-agent-routing.md) — Module Registry + `<craft_modules>` context
 - [Workbench RSS UI mock](./workbench-rss-ui.md) — panel contract the backend must feed
+- [Workbench Sites UI](./workbench-sites-ui.md) — Chat \| Files \| Preview, `/api/sites`, `sites_*`
 - [Workbench Workflows contract](./workbench-workflows-contract.md) — frozen graph model, node configs, `/api/workflows`, MCP `wf_*`
 - [Workbench Workflows UI mock](./workbench-workflows-ui.md) — editor shell (mock until RPC)
 - [OpenConnector sidecar](./open-connector.md) — lifecycle / health / MCP source pattern to mirror
-- Reference implementations (exploration only): `test/yarr`, `test/feedoverflow`, `test/craft-agents-oss-old/examples/apps/rss`
+- Reference implementations (exploration only): `test/yarr`, `test/feedoverflow`, `test/craft-agents-oss-old/examples/apps/rss`, `test/kandev` Design, `test/Doable` editor
 
 ---
 
@@ -22,7 +23,7 @@ Related:
 | Goal | Meaning |
 |------|---------|
 | Independent data plane | Fetch, parse, persist, and background jobs live outside the Bun/Electron agent runtime |
-| One process | RSS (+ later KB / workflows) share one binary — not three sidecars |
+| One process | RSS + Sites (+ later KB / workflows) share one binary — not separate sidecars |
 | Dual consumers | Workbench UI via domain RPC; Craft AI via MCP tools on the same store |
 | Dual hosts | Electron desktop and headless `@craft-agent/server` can both start (or attach to) the sidecar |
 | Align with conventions | Workspace data under `{rootPath}/modules/...` (see [workspace-storage.md](./workspace-storage.md)); MCP as a normal workspace Source |
@@ -44,7 +45,7 @@ Related:
 ┌─────────────────────────────────────────────────────────────────┐
 │ Craft (TypeScript / Bun / Electron)                             │
 │  • Workbench UI (React)                                         │
-│  • domain-rss | domain-knowledge | domain-workflows (thin RPC)  │
+│  • domain-rss | domain-sites | domain-knowledge | domain-workflows │
 │  • SessionManager, models, skills, Sources registry             │
 │  • Sidecar lifecycle (spawn / health / stop / MCP source)       │
 └────────────────────────────┬────────────────────────────────────┘
@@ -54,6 +55,7 @@ Related:
 │ craft-modules (Go) — single long-lived process                  │
 │  • SQLite + file layout per workspace module                    │
 │  • RSS fetch / parse / refresh worker                           │
+│  • Sites scaffold / Vite preview manager / visual-edit writeback│
 │  • HTTP JSON API (UI + internal)                                │
 │  • MCP endpoint (Streamable HTTP) — thin wrappers over HTTP API │
 │  • Later: knowledge index / workflow job runners (same binary)  │
@@ -121,6 +123,9 @@ Aligned with [workspace-storage.md](./workspace-storage.md) (**rootPath-only**):
   modules/
     rss/
       rss.db                 # SQLite (WAL)
+    sites/
+      sites.db               # site metadata
+      {slug}/                # Vite + React project
     workflows/
       workflows.db
       definitions/           # preferred file SoT (future); DB is SoT today
@@ -156,6 +161,22 @@ Sketch for RSS v1 (names freeze at implementation time; shape matches Workbench 
 | POST | `/api/rss/refresh` | Refresh one feed or all |
 
 Folder CRUD can land in the same `/api/rss/folders*` set when UI needs it.
+
+### 6.1b Sites HTTP (`internal/sites`)
+
+Consumed only by `domain-sites` RPC (renderer never talks to Go HTTP). Preview ports start at **5400**.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET/POST | `/api/sites` | List / create (template: `blank` \| `landing` \| `website`) |
+| GET/PATCH/DELETE | `/api/sites/{id}` | Read / rename / delete |
+| GET/PUT | `/api/sites/{id}/files…` | List / read / write project files |
+| POST | `/api/sites/{id}/preview/start` | Start Vite (port 5400+) |
+| POST | `/api/sites/{id}/preview/stop` | Stop preview |
+| GET | `/api/sites/{id}/preview` | Preview URL / status |
+| POST | `/api/sites/{id}/visual-edit` | Visual-edit MVP writeback |
+
+Go package layout: `services/craft-modules/internal/sites/` (`models`, `store`, `scaffold`, `devserver`, `handlers`, `visualedit`, MCP wrappers).
 
 ### 6.2 Domain RPC (Workbench)
 
@@ -193,7 +214,16 @@ Renderer continues to use existing preload/RPC paths — **no new IPC style** fo
 | `rss_get_*_articles` / `rss_toggle_star` / `rss_refresh_feeds` | Articles + star + refresh |
 | `rss_fetch_article_content` | Readability full text for a URL |
 
-Prefix tools with `rss_` so Knowledge / Workflows can add `kb_*` / `wf_*` in the same MCP server without collision.
+Prefix tools with `rss_` so Knowledge / Sites / Workflows can add `kb_*` / `sites_*` / `wf_*` in the same MCP server without collision.
+
+**Sites tool set (v1 target):**
+
+| Tool | Role |
+|------|------|
+| `sites_list` / `sites_create` | List / scaffold projects |
+| `sites_list_files` / `sites_read_file` / `sites_write_file` | Module-aware FS |
+| `sites_preview_start` | Start / ensure Vite preview |
+| `sites_run_command` | Restricted project commands |
 
 Optional bundled skill (later): `skills/rss-reader` that documents tools + when to call them. Prefer-builtin routing (registry + context) is specified in [craft-modules-agent-routing.md](./craft-modules-agent-routing.md).
 
@@ -215,18 +245,21 @@ Optional bundled skill (later): `skills/rss-reader` that documents tools + when 
 
 ---
 
-## 8. Knowledge & Workflows (later boundaries)
+## 8. Knowledge, Sites & Workflows (boundaries)
 
-Same binary, separate packages under Go (`internal/rss`, `internal/knowledge`, `internal/workflows`), separate SQLite/dirs, same `/health` module list.
+Same binary, separate packages under Go (`internal/rss`, `internal/sites`, `internal/knowledge`, `internal/workflows`), separate SQLite/dirs, same `/health` module list.
 
 | Module | Go owns | Craft (TS) still owns |
 |--------|---------|------------------------|
+| **Sites** | Project CRUD, template scaffold, Vite preview manager (5400+), file R/W, visual-edit writeback, `sites_*` MCP | Workbench panels, session/`cwd` binding, Agent chat |
 | **Knowledge** | Document ingest, chunk metadata, local index/search tools, file blobs under `modules/knowledge/` | Embedding provider selection, chat RAG orchestration, UI |
 | **Workflows** | Durable job defs, cron/triggers, step run log, calling HTTP/MCP actions as steps | Agent sessions as a step type, human-in-the-loop UI, model picks |
 
+Sites UI contract: [workbench-sites-ui.md](./workbench-sites-ui.md). Sites v1 does **not** include Doable data plane, custom-domain publish, PPT, or Next.js.
+
 Workflows Phase 2 freezes the shared graph + CRUD surface in [workbench-workflows-contract.md](./workbench-workflows-contract.md) (`Workflow` / `Node.type` / `Edge`, `/api/workflows*`, MCP `wf_list`…`wf_run` / `wf_deploy`). **Deploy** snapshots the draft as live (`deployed_definition_json` + version); schedule/webhook triggers are recorded as armed but runners remain stub. Executor for non-agent nodes remains deferred; UI uses `domain-workflows` RPC.
 
-Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path is stable. Workflows CRUD may proceed against the contract in parallel with UI xyflow work.
+Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path is stable. Sites and Workflows CRUD may proceed against their contracts in parallel with UI work.
 
 ---
 
@@ -251,7 +284,7 @@ Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path 
 | **A3 — MCP** | `/mcp` tools + auto Source registration | Agent can list/add feeds via tools |
 | **A4 — Domain RPC + UI** | `domain-rss` proxy; Workbench drops mock for live data | RSS panels work end-to-end offline-capable with real DB |
 | **A5 — Packaging** | Cross-compile + `extraResources` + headless parity | Packaged app starts sidecar without Go toolchain — **done** (`bun run build:craft-modules`) |
-| **B / C** | Knowledge / Workflows modules in-process | Separate design addenda |
+| **B / C** | Knowledge / Sites / Workflows modules in-process | Separate design addenda; Sites: [workbench-sites-ui.md](./workbench-sites-ui.md) |
 
 ---
 

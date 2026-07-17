@@ -17,6 +17,7 @@ import (
 	"github.com/craft-agent/craft-modules/internal/httpx"
 	"github.com/craft-agent/craft-modules/internal/mcp"
 	"github.com/craft-agent/craft-modules/internal/model"
+	"github.com/craft-agent/craft-modules/internal/sites"
 	"github.com/craft-agent/craft-modules/internal/store"
 	"github.com/craft-agent/craft-modules/internal/workflows"
 	"github.com/craft-agent/craft-modules/internal/workspace"
@@ -36,6 +37,8 @@ type Server struct {
 	DBMgr            *db.Manager
 	Caches           *cache.WorkspaceCaches
 	WFMgr            *workflows.Manager
+	SitesMgr         *sites.Manager
+	SitesPreview     *sites.PreviewManager
 	Token            string
 	DefaultWorkspace string
 	Port             int
@@ -76,6 +79,10 @@ func (s *Server) Router() http.Handler {
 			r.Use(s.workspaceMiddleware)
 			(&workflows.Handler{Mgr: s.WFMgr}).Mount(r)
 		})
+		r.Route("/api/sites", func(r chi.Router) {
+			r.Use(s.workspaceMiddleware)
+			(&sites.Handler{Mgr: s.SitesMgr, Preview: s.SitesPreview}).Mount(r)
+		})
 	})
 
 	return r
@@ -85,7 +92,7 @@ func (s *Server) health(w http.ResponseWriter, _ *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"ok":      true,
 		"version": config.Version,
-		"modules": []string{"rss", "workflows"},
+		"modules": []string{"rss", "workflows", "sites"},
 	})
 }
 

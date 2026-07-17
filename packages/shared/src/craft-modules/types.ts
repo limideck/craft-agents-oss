@@ -180,3 +180,67 @@ export type CraftModulesWorkflowDeployResult = {
   triggersArmed?: CraftModulesWorkflowTriggersArmed
 }
 
+/** Sites (建站) — agent-driven site builder */
+
+export type CraftModulesSiteTemplate = 'blank' | 'landing' | 'website'
+export type CraftModulesSiteStatus = 'idle' | 'installing' | 'ready' | 'previewing' | 'error'
+
+export type CraftModulesSite = {
+  id: string
+  name: string
+  slug: string
+  template: CraftModulesSiteTemplate
+  /** Absolute project directory */
+  path: string
+  previewPort: number | null
+  previewUrl: string | null
+  status: CraftModulesSiteStatus
+  sessionId: string | null
+  /** Unix ms */
+  createdAt: number
+  updatedAt: number
+}
+
+export type CraftModulesSiteFileNode = {
+  name: string
+  /** Relative to site root */
+  path: string
+  type: 'file' | 'directory'
+  children?: CraftModulesSiteFileNode[]
+}
+
+export type CraftModulesSiteCreateInput = {
+  name: string
+  template?: CraftModulesSiteTemplate
+  sessionId?: string
+}
+
+export type CraftModulesSiteUpdateInput = {
+  name?: string
+  sessionId?: string | null
+}
+
+export type CraftModulesVisualEdit = {
+  type: 'text' | 'style'
+  selector?: string
+  line?: number
+  column?: number
+  oldValue?: string
+  newValue: string
+  /** For style, e.g. color, fontSize */
+  property?: string
+}
+
+export type CraftModulesVisualEditSaveInput = {
+  siteId: string
+  /** Relative to site root */
+  filePath: string
+  edits: CraftModulesVisualEdit[]
+}
+
+export type CraftModulesSitePreviewResult = {
+  previewUrl: string | null
+  previewPort: number | null
+  status: CraftModulesSiteStatus
+}
+
