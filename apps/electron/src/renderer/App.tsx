@@ -11,6 +11,7 @@ import { generateMessageId } from '../shared/types'
 import { useEventProcessor } from './event-processor'
 import type { AgentEvent, Effect } from './event-processor'
 import { AppShell } from '@/components/app-shell/AppShell'
+import { WorkbenchShell, isWorkbenchShellEnabled } from '@/workbench'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { OnboardingWizard, ReauthScreen } from '@/components/onboarding'
 import { WorkspacePicker } from '@/components/workspace'
@@ -2085,6 +2086,12 @@ export default function App() {
                 <SessionLoadErrorScreen
                   message={sessionLoadError}
                   onRetry={() => { void loadSessionsFromServer() }}
+                />
+              ) : isWorkbenchShellEnabled() ? (
+                <WorkbenchShell
+                  contextValue={appShellContextValue}
+                  menuNewChatTrigger={menuNewChatTrigger}
+                  isFocusedMode={isFocusedMode}
                 />
               ) : (
                 <AppShell

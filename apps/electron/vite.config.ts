@@ -59,6 +59,12 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom']
   },
+  define: {
+    // Expose workbench feature flag to renderer bundles (shared feature-flags reads process.env)
+    'process.env.CRAFT_FEATURE_WORKBENCH_SHELL': JSON.stringify(
+      process.env.CRAFT_FEATURE_WORKBENCH_SHELL ?? '',
+    ),
+  },
   optimizeDeps: {
     include: ['react', 'react-dom', 'jotai', 'pdfjs-dist'],
     exclude: ['@craft-agent/ui'],

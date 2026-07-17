@@ -59,6 +59,18 @@ export function isEmbeddedServerEnabled(): boolean {
   return false;
 }
 
+/**
+ * Runtime-evaluated check for the dockview Workbench shell.
+ *
+ * Defaults to disabled. Override with CRAFT_FEATURE_WORKBENCH_SHELL=1|0.
+ * Renderer also honors localStorage `craft-feature-workbench-shell`.
+ */
+export function isWorkbenchShellEnabled(): boolean {
+  const override = parseBooleanEnv(getEnv('CRAFT_FEATURE_WORKBENCH_SHELL'));
+  if (override !== undefined) return override;
+  return false;
+}
+
 export const FEATURE_FLAGS = {
   /** Enable Opus 4.7 fast mode (speed:"fast" + beta header). 6x pricing. */
   fastMode: false,
@@ -86,5 +98,13 @@ export const FEATURE_FLAGS = {
    */
   get embeddedServer(): boolean {
     return isEmbeddedServerEnabled();
+  },
+  /**
+   * Enable dockview Workbench shell (dual-shell with AppShell).
+   *
+   * Defaults to disabled. Override with CRAFT_FEATURE_WORKBENCH_SHELL=1|0.
+   */
+  get workbenchShell(): boolean {
+    return isWorkbenchShellEnabled();
   },
 } as const;

@@ -1,0 +1,157 @@
+/* Dockview workbench chrome — wired to Craft theme vars (not frontend --ide-*) */
+
+.dockview-theme-craft {
+  --dv-background-color: var(--card);
+  --dv-group-view-background-color: var(--background);
+
+  --dv-separator-border: var(--border);
+  --dv-active-sash-color: var(--accent);
+  --dv-paneview-header-border-color: var(--border);
+
+  --dv-tabs-and-actions-container-font-size: 12px;
+  --dv-tabs-and-actions-container-height: 40px;
+  --dv-tabs-and-actions-container-background-color: var(--background);
+
+  --dv-activegroup-visiblepanel-tab-background-color: var(--muted);
+  --dv-activegroup-visiblepanel-tab-color: var(--foreground);
+
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-activegroup-hiddenpanel-tab-color: var(--muted-foreground);
+
+  --dv-inactivegroup-visiblepanel-tab-background-color: color-mix(
+    in srgb,
+    var(--muted) 100%,
+    transparent
+  );
+  --dv-inactivegroup-visiblepanel-tab-color: color-mix(
+    in srgb,
+    var(--muted-foreground) 100%,
+    transparent
+  );
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-hiddenpanel-tab-color: color-mix(
+    in srgb,
+    var(--muted-foreground) 100%,
+    transparent
+  );
+
+  --dv-tab-close-icon: var(--muted-foreground);
+  --dv-tabs-container-scrollbar-color: var(--foreground-30);
+  --dv-drag-over-background-color: color-mix(in oklab, var(--accent) 10%, transparent);
+  --dv-drag-over-border-color: var(--accent);
+}
+
+.dockview-theme-craft .dv-tabs-and-actions-container {
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  min-height: 40px;
+  height: 40px;
+  padding: 7px 5px 5px;
+  align-items: center;
+}
+
+.dockview-theme-craft .dv-tabs-container.dv-horizontal .dv-tab::before {
+  display: none !important;
+}
+
+.dockview-theme-craft .dv-tab {
+  padding: 0;
+  margin: 0 1px;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: auto;
+  border-radius: 5px;
+  border-bottom: none !important;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  cursor: pointer;
+}
+
+.dockview-theme-craft .dv-tab:hover {
+  background: color-mix(in srgb, var(--muted) 50%, transparent);
+  color: var(--foreground);
+}
+
+.dockview-theme-craft .dv-active-tab {
+  border-bottom: none !important;
+}
+
+.dockview-theme-craft .dv-tab:focus-within,
+.dockview-theme-craft .dv-tab:focus-visible {
+  box-shadow:
+    inset 0 0 0 1px var(--ring),
+    0 0 0 1px color-mix(in oklab, var(--ring) 20%, transparent);
+}
+
+.dockview-theme-craft .dv-default-tab {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 7px;
+  gap: 5px;
+  height: 24px;
+  line-height: 1;
+}
+
+.dockview-theme-craft .dv-default-tab .dv-default-tab-action {
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+  border-radius: 4px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.dockview-theme-craft .dv-default-tab .dv-default-tab-action .dv-svg {
+  height: 8px;
+  width: 8px;
+}
+
+.dockview-theme-craft .dv-default-tab .dv-default-tab-action:hover {
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  color: var(--foreground);
+}
+
+.dockview-theme-craft .dv-default-tab .dv-default-tab-action:focus-visible {
+  outline: 1px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.dockview-theme-craft .dv-tab:hover .dv-default-tab .dv-default-tab-action,
+.dockview-theme-craft .dv-active-tab .dv-default-tab .dv-default-tab-action {
+  opacity: 1;
+}
+
+.dockview-theme-craft .dv-content-container {
+  background: var(--card);
+}
+
+.dockview-theme-craft .dv-resize-container > .sash-container .sash {
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.dockview-theme-craft .dv-resize-container > .sash-container .sash:hover,
+.dockview-theme-craft .dv-resize-container > .sash-container .sash.active {
+  background: var(--accent);
+}
+
+.dockview-theme-craft .dv-void-container {
+  flex: 1;
+}
+
+.dockview-theme-craft .dv-watermark {
+  background: transparent;
+}
+
+.dockview-theme-craft .drop-target-dropzone > .drop-target-selection {
+  border: 2px solid var(--accent);
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+  border-radius: 4px;
+}

@@ -473,6 +473,11 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.messaging.DISMISS_PENDING_SENDER,
   RPC_CHANNELS.messaging.ALLOW_PENDING_SENDER,
   RPC_CHANNELS.messaging.SET_BINDING_ACCESS,
+
+  // Domain stubs (Phase 2) — mount points for future modules
+  RPC_CHANNELS.rss.PING,
+  RPC_CHANNELS.knowledge.PING,
+  RPC_CHANNELS.workflows.PING,
 ])
 
 // ---------------------------------------------------------------------------

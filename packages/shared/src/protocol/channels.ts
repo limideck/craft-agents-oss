@@ -455,6 +455,19 @@ export const RPC_CHANNELS = {
     ALLOW_PENDING_SENDER: 'messaging:access:allowPending',
     SET_BINDING_ACCESS: 'messaging:access:setBindingAccess',
   },
+  /**
+   * Domain stubs (Phase 2) — empty mount points for future RSS / KB / workflows.
+   * Handlers currently no-op ping only; business logic lands in Phase 3+.
+   */
+  rss: {
+    PING: 'rss:ping',
+  },
+  knowledge: {
+    PING: 'knowledge:ping',
+  },
+  workflows: {
+    PING: 'workflows:ping',
+  },
 } as const
 
 // IPC_CHANNELS compat alias removed — all consumers now use RPC_CHANNELS

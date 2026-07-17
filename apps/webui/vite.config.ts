@@ -75,6 +75,9 @@ export default defineConfig({
   define: {
     // Flag to detect web UI context in shared code
     'import.meta.env.IS_WEBUI': 'true',
+    'process.env.CRAFT_FEATURE_WORKBENCH_SHELL': JSON.stringify(
+      process.env.CRAFT_FEATURE_WORKBENCH_SHELL ?? '',
+    ),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'jotai'],
