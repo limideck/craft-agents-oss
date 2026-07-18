@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronRight, File, Folder } from 'lucide-react'
-import type { CraftModulesSiteFileNode } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesSiteFileNode } from '@grose-agent/shared/grose-modules'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
-import { Spinner } from '@craft-agent/ui'
+import { Spinner } from '@grose-agent/ui'
 import { cn } from '@/lib/utils'
 import {
   selectedSiteAtom,
@@ -21,7 +21,7 @@ function FileTreeNode({
   selectedPath,
   onSelect,
 }: {
-  node: CraftModulesSiteFileNode
+  node: GroseModulesSiteFileNode
   depth: number
   selectedPath: string | null
   onSelect: (path: string) => void

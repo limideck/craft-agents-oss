@@ -1,6 +1,6 @@
-import type { MessageEnvelope } from '@craft-agent/shared/protocol'
+import type { MessageEnvelope } from '@grose-agent/shared/protocol'
 
-const WIRE_TYPE_KEY = '__craftRpcType'
+const WIRE_TYPE_KEY = '__groseRpcType'
 const WIRE_BASE64_KEY = 'base64'
 const UINT8_WIRE_TYPE = 'u8'
 

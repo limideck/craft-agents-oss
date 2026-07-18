@@ -15,7 +15,7 @@ export type DatagridToasterProps = ToasterProps & {
 
 /**
  * Toast host for datagrid actions (copy/paste, undo, validation).
- * Mount once near the app root when using `@craft-agent/datagrid`.
+ * Mount once near the app root when using `@grose-agent/datagrid`.
  */
 const Toaster = ({ theme = 'system', ...props }: DatagridToasterProps) => {
   return (

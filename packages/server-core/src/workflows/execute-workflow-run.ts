@@ -1,19 +1,19 @@
 /**
- * Craft-side workflow run executor.
+ * Grose-side workflow run executor.
  *
- * Go (`craft-modules`) accepts the run and may synthesize stub steps for non-LLM
+ * Go (`grose-modules`) accepts the run and may synthesize stub steps for non-LLM
  * nodes. Agent / HITL steps are owned here: create a session, send the node
  * prompt, wait for the turn, and write real assistant text into the step output.
  */
 
 import type {
-  CraftModulesWorkflow,
-  CraftModulesWorkflowEdge,
-  CraftModulesWorkflowNode,
-  CraftModulesWorkflowRunStep,
-} from '@craft-agent/shared/craft-modules'
-import type { CreateSessionOptions } from '@craft-agent/shared/protocol'
-import type { PermissionMode } from '@craft-agent/shared/agent/mode-types'
+  GroseModulesWorkflow,
+  GroseModulesWorkflowEdge,
+  GroseModulesWorkflowNode,
+  GroseModulesWorkflowRunStep,
+} from '@grose-agent/shared/grose-modules'
+import type { CreateSessionOptions } from '@grose-agent/shared/protocol'
+import type { PermissionMode } from '@grose-agent/shared/agent/mode-types'
 import type { SessionCompletionEvent } from '../sessions/SessionManager'
 
 const TRIGGER_TYPES = new Set(['start', 'schedule', 'webhook'])
@@ -40,7 +40,7 @@ export type WorkflowRunHost = {
 
 export type ExecuteWorkflowRunOptions = {
   workspaceId: string
-  workflow: CraftModulesWorkflow
+  workflow: GroseModulesWorkflow
   runId: string
   host: WorkflowRunHost
   /** Optional override for tests. */
@@ -49,9 +49,9 @@ export type ExecuteWorkflowRunOptions = {
 
 /** Topological / BFS order from triggers (or roots), then any remaining nodes. */
 export function linearizeWorkflowNodes(
-  nodes: CraftModulesWorkflowNode[],
-  edges: CraftModulesWorkflowEdge[],
-): CraftModulesWorkflowNode[] {
+  nodes: GroseModulesWorkflowNode[],
+  edges: GroseModulesWorkflowEdge[],
+): GroseModulesWorkflowNode[] {
   if (nodes.length === 0) return []
 
   const byId = new Map(nodes.map((n) => [n.id, n]))
@@ -72,7 +72,7 @@ export function linearizeWorkflowNodes(
   )
   const queue = roots.length > 0 ? [...roots] : [...nodes]
   const seen = new Set<string>()
-  const ordered: CraftModulesWorkflowNode[] = []
+  const ordered: GroseModulesWorkflowNode[] = []
 
   while (queue.length > 0) {
     const cur = queue.shift()!
@@ -94,7 +94,7 @@ export function linearizeWorkflowNodes(
 }
 
 function sampleNonAgentInput(
-  node: CraftModulesWorkflowNode,
+  node: GroseModulesWorkflowNode,
   prev: Record<string, unknown> | null,
 ): Record<string, unknown> {
   const incoming = prev ?? { trigger: 'manual' }
@@ -116,7 +116,7 @@ function sampleNonAgentInput(
 }
 
 function sampleNonAgentOutput(
-  node: CraftModulesWorkflowNode,
+  node: GroseModulesWorkflowNode,
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   switch (node.type) {
@@ -160,7 +160,7 @@ function buildAgentPrompt(
 async function runAgentStep(
   host: WorkflowRunHost,
   workspaceId: string,
-  node: CraftModulesWorkflowNode,
+  node: GroseModulesWorkflowNode,
   context: Record<string, unknown> | null,
   timeoutMs: number,
 ): Promise<{
@@ -303,16 +303,16 @@ function waitForAgentTurn(
 }
 
 /**
- * Execute a workflow graph: real Craft agent sessions for `agent` nodes;
+ * Execute a workflow graph: real Grose agent sessions for `agent` nodes;
  * lightweight stub/passthrough I/O for everything else (v1).
  */
 export async function executeWorkflowRun(
   opts: ExecuteWorkflowRunOptions,
-): Promise<CraftModulesWorkflowRunStep[]> {
+): Promise<GroseModulesWorkflowRunStep[]> {
   const { workspaceId, workflow, runId, host } = opts
   const timeoutMs = opts.agentTimeoutMs ?? AGENT_STEP_TIMEOUT_MS
   const ordered = linearizeWorkflowNodes(workflow.nodes, workflow.edges)
-  const steps: CraftModulesWorkflowRunStep[] = []
+  const steps: GroseModulesWorkflowRunStep[] = []
   let prev: Record<string, unknown> | null = null
 
   for (let i = 0; i < ordered.length; i++) {

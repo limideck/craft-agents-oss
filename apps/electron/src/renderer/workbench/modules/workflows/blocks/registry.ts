@@ -175,7 +175,7 @@ export const BLOCK_REGISTRY: Record<WorkflowNodeType, BlockConfig> = {
     type: 'agent',
     category: 'ai',
     label: 'Agent',
-    description: 'Craft agent / LLM turn',
+    description: 'Grose agent / LLM turn',
     accent: ACCENT.ai,
     handles: { target: ['target'], source: ['source'] },
     fields: [

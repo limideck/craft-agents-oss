@@ -103,7 +103,7 @@ export function SourceListView() {
             <p className="text-destructive/90">{error}</p>
             <p className="text-xs leading-relaxed">
               Run <code className="rounded bg-muted px-1">bun run setup:tables</code> then restart,
-              or set <code className="rounded bg-muted px-1">CRAFT_TABLES_URL</code>.
+              or set <code className="rounded bg-muted px-1">GROSE_TABLES_URL</code>.
             </p>
             <Button
               type="button"

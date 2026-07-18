@@ -1,8 +1,8 @@
 import * as React from 'react'
 import { Check, Image as ImageIcon } from 'lucide-react'
 import type { ComponentEntry } from './types'
-import { ImageSupportWarningBanner } from '@/components/app-shell/input/ImageSupportWarningBanner'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@craft-agent/ui'
+import { ImageSupportWarningBanner } from '@/components/composer/ImageSupportWarningBanner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@grose-agent/ui'
 import { cn } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 

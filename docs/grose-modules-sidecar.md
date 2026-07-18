@@ -1,0 +1,318 @@
+# Grose Modules Sidecar (Go)
+
+Design boundary for local workbench modules (**RSS**, **Sites**, Knowledge and Workflows) as a single Go sidecar process, exposed to Grose Agents via loopback HTTP (UI) and MCP (AI).
+
+Status: **In progress** — RSS sidecar + UI live; Sites module in progress; SQLITE busy hardening + A5 packaging landed.
+
+Related:
+
+- [Workbench architecture](./workbench-architecture.md) — shell, `domain-*` stubs, data path convention
+- [Workspace storage](./workspace-storage.md) — **rootPath-only** hard rule
+- [Prefer-builtin agent routing](./grose-modules-agent-routing.md) — Module Registry + `<grose_modules>` context
+- [Workbench RSS UI mock](./workbench-rss-ui.md) — panel contract the backend must feed
+- [Workbench Sites UI](./workbench-sites-ui.md) — Chat \| Files \| Preview, `/api/sites`, `sites_*`
+- [Workbench Workflows contract](./workbench-workflows-contract.md) — frozen graph model, node configs, `/api/workflows`, MCP `wf_*`
+- [Workbench Workflows UI mock](./workbench-workflows-ui.md) — editor shell (mock until RPC)
+- [OpenConnector sidecar](./open-connector.md) — lifecycle / health / MCP source pattern to mirror
+- Reference implementations (exploration only): `test/yarr`, `test/feedoverflow`, `test/grose-agents-oss-old/examples/apps/rss`, `test/kandev` Design, `test/Doable` editor
+
+---
+
+## 1. Goals
+
+| Goal | Meaning |
+|------|---------|
+| Independent data plane | Fetch, parse, persist, and background jobs live outside the Bun/Electron agent runtime |
+| One process | RSS + Sites (+ later KB / workflows) share one binary — not separate sidecars |
+| Dual consumers | Workbench UI via domain RPC; Grose AI via MCP tools on the same store |
+| Dual hosts | Electron desktop and headless `@grose-agent/server` can both start (or attach to) the sidecar |
+| Align with conventions | Workspace data under `{rootPath}/modules/...` (see [workspace-storage.md](./workspace-storage.md)); MCP as a normal workspace Source |
+
+## 2. Non-goals (v1)
+
+- Replacing SessionManager, agent backends (Claude / Pi), or chat RPC with Go
+- Putting LLM / embedding calls inside the Go process (Go stores and retrieves; Grose agents call models)
+- Three separate Go services for rss / knowledge / workflows
+- Renderer talking directly to Go over HTTP (always go through `domain-*` RPC)
+- Shipping a full yarr/feedoverflow UI inside Grose (Workbench panels stay React)
+- Migrating OpenConnector into this binary
+
+---
+
+## 3. Ownership boundary
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Grose (TypeScript / Bun / Electron)                             │
+│  • Workbench UI (React)                                         │
+│  • domain-rss | domain-sites | domain-knowledge | domain-workflows │
+│  • SessionManager, models, skills, Sources registry             │
+│  • Sidecar lifecycle (spawn / health / stop / MCP source)       │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ loopback HTTP (+ optional token)
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ grose-modules (Go) — single long-lived process                  │
+│  • SQLite + file layout per workspace module                    │
+│  • RSS fetch / parse / refresh worker                           │
+│  • Sites scaffold / Vite preview manager / visual-edit writeback│
+│  • HTTP JSON API (UI + internal)                                │
+│  • MCP endpoint (Streamable HTTP) — thin wrappers over HTTP API │
+│  • Later: knowledge index / workflow job runners (same binary)  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+| Concern | Owner |
+|---------|--------|
+| Panel layout, Jotai UI state, dock presets | Electron renderer |
+| RPC channel names, routing, auth to workspace | `packages/shared` + `server-core` |
+| Proxy: RPC → Go HTTP | `packages/domain-*` |
+| Spawn, port, health, secrets, MCP Source upsert | Electron main **and** headless server bootstrap (shared helper preferred) |
+| Feed/article persistence, OPML, refresh schedule | Go |
+| MCP tool schemas + handlers | Go (`/mcp`) |
+| Agent tool selection / prompting | Prefer-builtin registry + `<grose_modules>` context — see [grose-modules-agent-routing.md](./grose-modules-agent-routing.md); optional Skills later |
+| Embedding model choice / LLM steps (incl. workflow `agent` nodes) | Grose agents (TS `server-core`); Go only exposes search / CRUD / run-accept |
+
+**Hard rule:** one authoritative store. Do not keep a parallel TS feed cache that can diverge from Go SQLite (avoid the old Grose App split where UI used `@grose-agent/shared/feed` and MCP used workspace files separately).
+
+---
+
+## 4. Process model
+
+### 4.1 Name and packaging
+
+| Item | Value |
+|------|--------|
+| Binary name | `grose-modules` |
+| Repo location (planned) | `services/grose-modules/` (Go module; **not** a bun workspace package) |
+| Packaged path | `apps/electron/resources/grose-modules/{platform-arch}/grose-modules[.exe]` via `extraResources` |
+| Dev attach | `GROSE_MODULES_URL=http://127.0.0.1:{port}` skips spawn (same idea as `GROSE_OPENCONNECTOR_URL`) |
+
+### 4.2 Lifecycle (mirror OpenConnector)
+
+1. Allocate ephemeral loopback port (or reuse attach URL).
+2. Spawn binary with env: data root, bind address, optional auth token, log dir.
+3. Poll `GET /health` until ready (timeout ~60s); start failure is **non-fatal** (Workbench shows degraded state; Agents simply lack the MCP source).
+4. Idempotently upsert workspace MCP Source (slug `grose-modules`, HTTP transport → `{baseUrl}/mcp`).
+5. Add `grose-modules` to workspace `defaults.enabledSourceSlugs` so **new sessions auto-activate** the Source (prefer-builtin). SessionManager also merges usable preferred builtins into existing sessions — see [Session activation](./grose-modules-agent-routing.md#12-session-activation-配置了但未激活). Users should not need a manual Sources toggle for RSS MCP tools.
+5. On app / server quit: SIGTERM → wait → SIGKILL.
+
+Headless `@grose-agent/server` must use the same helper (or a shared package under `packages/` that only knows spawn + health — no Electron APIs).
+
+### 4.3 Network posture
+
+| Listener | Bind | Auth | Serves |
+|----------|------|------|--------|
+| Primary (only) | `127.0.0.1` | Optional shared bearer (Grose-generated, stored under `~/.grose-agent/grose-modules/`) | `/health`, `/api/*`, `/mcp` |
+
+No public / LAN bind in v1. If a second “public” listener is ever needed (remote server deploy), add it behind an explicit flag — default remains loopback-only.
+
+---
+
+## 5. Data layout
+
+Aligned with [workspace-storage.md](./workspace-storage.md) (**rootPath-only**):
+
+```text
+~/.grose-agent/
+  grose-modules/
+    sidecar-secrets.json     # bearer token (mode 0600), process-level only
+  config.json                # registry: workspace id → absolute rootPath
+
+{rootPath}/                  # never assume basename === workspaceId
+  modules/
+    rss/
+      rss.db                 # SQLite (WAL)
+    sites/
+      sites.db               # site metadata
+      {slug}/                # Vite + React project
+    workflows/
+      workflows.db
+      definitions/           # preferred file SoT (future); DB is SoT today
+    knowledge/               # reserved
+    tables/                  # plydb (separate sidecar) — see grose-tables-sidecar.md
+```
+
+Multi-workspace: single Go process; every API/MCP call carries `X-Grose-Workspace-Id`. Prefer also sending absolute `X-Grose-Workspace-Root` from Electron/TS. When the root header is omitted, Go looks up `id → rootPath` in `config.json`. Switching workspaces does not require a grose-modules restart.
+
+---
+
+## 6. API surfaces
+
+### 6.1 HTTP (source of truth for UI)
+
+Consumed only by `domain-*` RPC handlers (and by MCP handlers inside Go via loopback self-calls, as in feedoverflow).
+
+Sketch for RSS v1 (names freeze at implementation time; shape matches Workbench mock):
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | `{ ok, version, modules: ["rss"] }` |
+| GET | `/api/rss/feeds` | List feeds |
+| POST | `/api/rss/feeds` | Subscribe `{ url, name? }` |
+| PATCH | `/api/rss/feeds/{id}` | Rename |
+| DELETE | `/api/rss/feeds/{id}` | Unsubscribe |
+| POST | `/api/rss/feeds/import-opml` | Bulk import |
+| GET | `/api/rss/feeds/export-opml` | Export all feeds as OPML XML |
+| GET | `/api/rss/articles` | Query: `view`, `feedId`, `mode`, `q`, `limit` |
+| GET | `/api/rss/articles/fetch-content` | Readability full text: `?url=` (SSRF-guarded) |
+| GET | `/api/rss/articles/{id}` | Full article body |
+| POST | `/api/rss/articles/star` | Star / unstar |
+| POST | `/api/rss/refresh` | Refresh one feed or all |
+
+Folder CRUD can land in the same `/api/rss/folders*` set when UI needs it.
+
+### 6.1b Sites HTTP (`internal/sites`)
+
+Consumed only by `domain-sites` RPC (renderer never talks to Go HTTP). Preview ports start at **5400**.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET/POST | `/api/sites` | List / create (template: `blank` \| `landing` \| `website`) |
+| GET/PATCH/DELETE | `/api/sites/{id}` | Read / rename / delete |
+| GET/PUT | `/api/sites/{id}/files…` | List / read / write project files |
+| POST | `/api/sites/{id}/preview/start` | Start Vite (port 5400+) |
+| POST | `/api/sites/{id}/preview/stop` | Stop preview |
+| GET | `/api/sites/{id}/preview` | Preview URL / status |
+| POST | `/api/sites/{id}/visual-edit` | Visual-edit MVP writeback |
+
+Go package layout: `services/grose-modules/internal/sites/` (`models`, `store`, `scaffold`, `devserver`, `handlers`, `visualedit`, MCP wrappers).
+
+### 6.2 Domain RPC (Workbench)
+
+Keep channels under `RPC_CHANNELS.rss.*`. Handlers in `@grose-agent/domain-rss` become thin HTTP clients to the sidecar.
+
+| RPC (planned) | Maps to |
+|---------------|---------|
+| `rss:ping` | `/health` |
+| `rss:listFeeds` | `GET /api/rss/feeds` |
+| `rss:addFeed` | `POST /api/rss/feeds` |
+| `rss:renameFeed` / `rss:deleteFeed` | `PATCH` / `DELETE /api/rss/feeds/{id}` |
+| `rss:listArticles` | `GET /api/rss/articles` |
+| `rss:getArticle` | `GET /api/rss/articles/{id}` |
+| `rss:fetchArticleContent` | `GET .../articles/fetch-content?url=` |
+| `rss:toggleStar` / `rss:starredCount` | Star APIs |
+| `rss:refresh` | `POST /api/rss/refresh` |
+| `rss:importOpml` / `rss:exportOpml` | OPML import / export |
+
+Renderer continues to use existing preload/RPC paths — **no new IPC style** for RSS data. Optional sidecar status IPC (`groseModules:getStatus`) may mirror OpenConnector for Settings / degraded banners only.
+
+### 6.3 MCP (Agents)
+
+- Transport: HTTP MCP at `{baseUrl}/mcp` (Streamable HTTP; match Grose’s existing HTTP MCP client).
+- Tools are thin wrappers over the same HTTP API (feedoverflow pattern).
+- Source slug: `grose-modules` (or `grose-modules-rss` if we later split registration; prefer one source with namespaced tool names).
+
+**RSS tool set (v1 target):**
+
+| Tool | Role |
+|------|------|
+| `rss_list_feeds` | List subscriptions |
+| `rss_add_feed` | Subscribe by URL |
+| `rss_rename_feed` / `rss_delete_feed` | Manage subscriptions |
+| `rss_import_opml` / `rss_export_opml` | Bulk import / export OPML |
+| `rss_get_*_articles` / `rss_toggle_star` / `rss_refresh_feeds` | Articles + star + refresh |
+| `rss_fetch_article_content` | Readability full text for a URL |
+
+Prefix tools with `rss_` so Knowledge / Sites / Workflows can add `kb_*` / `sites_*` / `wf_*` in the same MCP server without collision.
+
+**Sites tool set (v1 target):**
+
+| Tool | Role |
+|------|------|
+| `sites_list` / `sites_create` | List / scaffold projects |
+| `sites_list_files` / `sites_read_file` / `sites_write_file` | Module-aware FS |
+| `sites_preview_start` | Start / ensure Vite preview |
+| `sites_run_command` | Restricted project commands |
+
+Optional bundled skill (later): `skills/rss-reader` that documents tools + when to call them. Prefer-builtin routing (registry + context) is specified in [grose-modules-agent-routing.md](./grose-modules-agent-routing.md).
+
+---
+
+## 7. TypeScript integration points
+
+| Package / file | Change |
+|----------------|--------|
+| `services/grose-modules/` | New Go module |
+| `packages/domain-rss` | Replace ping-only stubs with HTTP proxy + types shared with UI |
+| `packages/shared` protocol | Add real `rss:*` channels beyond `PING` |
+| `packages/server-core` | Keep mounting `registerRssRpcHandlers`; ensure sidecar URL reachable from both hosts |
+| `apps/electron/src/main/grose-modules-sidecar.ts` | New lifecycle module (clone OpenConnector patterns) |
+| Headless server entry | Same start/attach helper |
+| `apps/electron/.../workbench/modules/rss/` | Swap mock atoms for RPC-backed queries; keep panel IDs / layout preset |
+| `electron-builder.yml` | `extraResources` for per-arch binaries |
+| CI | Cross-compile `darwin-arm64`, `darwin-x64`, `linux-x64`, `win-x64` |
+
+---
+
+## 8. Knowledge, Sites & Workflows (boundaries)
+
+Same binary, separate packages under Go (`internal/rss`, `internal/sites`, `internal/knowledge`, `internal/workflows`), separate SQLite/dirs, same `/health` module list.
+
+| Module | Go owns | Grose (TS) still owns |
+|--------|---------|------------------------|
+| **Sites** | Project CRUD, template scaffold, Vite preview manager (5400+), file R/W, visual-edit writeback, `sites_*` MCP | Workbench panels, session/`cwd` binding, Agent chat |
+| **Knowledge** | Document ingest, chunk metadata, local index/search tools, file blobs under `modules/knowledge/` | Embedding provider selection, chat RAG orchestration, UI |
+| **Workflows** | Durable job defs, cron/triggers, step run log, calling HTTP/MCP actions as steps | Agent sessions as a step type, human-in-the-loop UI, model picks |
+
+Sites UI contract: [workbench-sites-ui.md](./workbench-sites-ui.md). Sites v1 does **not** include Doable data plane, custom-domain publish, PPT, or Next.js.
+
+Workflows Phase 2 freezes the shared graph + CRUD surface in [workbench-workflows-contract.md](./workbench-workflows-contract.md) (`Workflow` / `Node.type` / `Edge`, `/api/workflows*`, MCP `wf_list`…`wf_run` / `wf_deploy`). **Deploy** snapshots the draft as live (`deployed_definition_json` + version); schedule/webhook triggers are recorded as armed but runners remain stub. Executor for non-agent nodes remains deferred; UI uses `domain-workflows` RPC.
+
+Do **not** start Knowledge implementation until RSS HTTP + MCP + Workbench path is stable. Sites and Workflows CRUD may proceed against their contracts in parallel with UI work.
+
+---
+
+## 9. Reference mapping
+
+| Reference | Take | Leave |
+|-----------|------|-------|
+| `test/feedoverflow/server-go` | Loopback API + `/mcp` self-call, SQLite, refresh jobs | Standalone product UI, public auth port |
+| `test/yarr` | Parser/storage simplicity, single-binary ops feel | No MCP; different UI model |
+| Old `examples/apps/rss` Go MCP | Tool naming / agent-facing surface | Dual storage (TS + Go); stdio-only; iframe Grose App shell |
+| OpenConnector sidecar | Spawn, health, secrets, MCP Source upsert, attach URL | Node runtime, admin console scope |
+
+---
+
+## 10. Phased delivery
+
+| Phase | Deliverable | Exit criteria |
+|-------|-------------|----------------|
+| **A0 — Boundary** | This doc + links from workbench docs | Reviewed / accepted |
+| **A1 — Skeleton** | `grose-modules` with `/health`, empty RSS routes, Electron spawn + attach env | Health green in Electron; failure non-fatal |
+| **A2 — RSS core** | SQLite schema, subscribe/list/refresh/articles/read | CLI or HTTP smoke tests; no UI yet |
+| **A3 — MCP** | `/mcp` tools + auto Source registration | Agent can list/add feeds via tools |
+| **A4 — Domain RPC + UI** | `domain-rss` proxy; Workbench drops mock for live data | RSS panels work end-to-end offline-capable with real DB |
+| **A5 — Packaging** | Cross-compile + `extraResources` + headless parity | Packaged app starts sidecar without Go toolchain — **done** (`bun run build:grose-modules`) |
+| **B / C** | Knowledge / Sites / Workflows modules in-process | Separate design addenda; Sites: [workbench-sites-ui.md](./workbench-sites-ui.md) |
+
+---
+
+## 11. Risks & mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| Dual-language CI / notarization cost | Single binary matrix; start with macOS arm64 in A1, expand in A5 |
+| Sidecar down → broken UI | Non-fatal start; UI empty/error state; `rss:ping` reports degraded |
+| Workspace switch races | Require `X-Grose-Workspace-Id` on every mutating call; document isolation |
+| MCP vs RPC drift | MCP tools only call internal HTTP; one OpenAPI-ish list maintained in Go |
+| Scope creep into agent runtime | Explicit non-goals; workflow “run LLM step” delegates back to Grose |
+
+---
+
+## 12. Open decisions (resolve at A1 kickoff)
+
+1. **Auth token:** always-on bearer for loopback vs trust loopback-only until remote deploy exists.  
+   *Recommendation:* always-on token (cheap, matches OpenConnector).
+2. **Workspace routing:** header vs path prefix `/api/workspaces/{id}/rss/...`.  
+   *Decision:* header `X-Grose-Workspace-Id` + optional `X-Grose-Workspace-Root`; persistence resolves via registry (see [workspace-storage.md](./workspace-storage.md)).
+3. **Repo path:** `services/grose-modules` vs `apps/grose-modules`.  
+   *Recommendation:* `services/` to signal “not Electron UI”.
+4. **MCP source slug:** `grose-modules` vs per-module sources.  
+   *Recommendation:* one source, prefixed tool names.
+
+---
+
+## 13. Decision summary
+
+**Accepted:** implement workbench local modules (RSS → KB → workflows) as **one Go sidecar** with loopback HTTP + MCP; Grose TS owns UI, RPC bus, agent runtime, and process lifecycle; Go owns persistence and background work. Follow OpenConnector for lifecycle and feedoverflow for API+MCP co-location.

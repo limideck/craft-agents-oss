@@ -379,16 +379,16 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
       });
 
       const result = await manager.getSourcesNeedingRefresh([source]);
       expect(result.length).toBe(1);
-      expect(result[0]!.config.slug).toBe('craft-mcp');
+      expect(result[0]!.config.slug).toBe('grose-mcp');
     });
 
     test('excludes source without refresh token', async () => {
@@ -403,10 +403,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
       });
 
@@ -429,10 +429,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
         connectionError: 'Token expired',
@@ -445,7 +445,7 @@ describe('TokenRefreshManager', () => {
       expect(isSourceUsable(source)).toBe(true);
       expect(source.config.connectionStatus).toBe('connected');
       expect(source.config.connectionError).toBeUndefined();
-      expect(mockMarkSourceAuthenticated).toHaveBeenCalledWith('/mock/workspace', 'craft-mcp');
+      expect(mockMarkSourceAuthenticated).toHaveBeenCalledWith('/mock/workspace', 'grose-mcp');
     });
 
     test('does NOT restore auth on failed refresh', async () => {
@@ -461,10 +461,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
       });
@@ -492,10 +492,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: true,
         connectionStatus: 'connected',
       });
@@ -523,10 +523,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: true,
         connectionStatus: 'connected',
       });
@@ -557,10 +557,10 @@ describe('TokenRefreshManager', () => {
 
       const manager = new TokenRefreshManager(credManager);
       const source = createMockSource({
-        slug: 'craft-mcp',
+        slug: 'grose-mcp',
         type: 'mcp',
-        provider: 'craft',
-        mcp: { url: 'https://mcp.craft.do/my/mcp', authType: 'oauth' },
+        provider: 'grose',
+        mcp: { url: 'https://mcp.grose.do/my/mcp', authType: 'oauth' },
         isAuthenticated: false,
         connectionStatus: 'needs_auth',
         connectionError: 'Token expired',
@@ -579,7 +579,7 @@ describe('TokenRefreshManager', () => {
       expect(isSourceUsable(source)).toBe(true);
       expect(source.config.connectionStatus).toBe('connected');
       expect(source.config.connectionError).toBeUndefined();
-      expect(mockMarkSourceAuthenticated).toHaveBeenCalledWith('/mock/workspace', 'craft-mcp');
+      expect(mockMarkSourceAuthenticated).toHaveBeenCalledWith('/mock/workspace', 'grose-mcp');
     });
   });
 

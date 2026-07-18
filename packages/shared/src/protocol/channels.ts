@@ -461,7 +461,7 @@ export const RPC_CHANNELS = {
     SET_BINDING_ACCESS: 'messaging:access:setBindingAccess',
   },
   /**
-   * RSS domain — proxies to craft-modules Go sidecar (see docs/craft-modules-sidecar.md).
+   * RSS domain — proxies to grose-modules Go sidecar (see docs/grose-modules-sidecar.md).
    */
   rss: {
     PING: 'rss:ping',
@@ -484,7 +484,7 @@ export const RPC_CHANNELS = {
     PING: 'knowledge:ping',
   },
   /**
-   * Sites (建站) domain — proxies to craft-modules Go sidecar.
+   * Sites (建站) domain — proxies to grose-modules Go sidecar.
    */
   sites: {
     PING: 'sites:ping',
@@ -520,11 +520,11 @@ export const RPC_CHANNELS = {
     RESTART: 'openConnector:restart',
     FETCH: 'openConnector:fetch',
   },
-  /** craft-modules Go sidecar lifecycle (Electron main / status). */
-  craftModules: {
-    GET_STATUS: 'craftModules:getStatus',
-    GET_CONFIG: 'craftModules:getConfig',
-    RESTART: 'craftModules:restart',
+  /** grose-modules Go sidecar lifecycle (Electron main / status). */
+  groseModules: {
+    GET_STATUS: 'groseModules:getStatus',
+    GET_CONFIG: 'groseModules:getConfig',
+    RESTART: 'groseModules:restart',
   },
   /** Tables (plydb fork) sidecar lifecycle + admin HTTP proxy. */
   tables: {
@@ -532,6 +532,18 @@ export const RPC_CHANNELS = {
     GET_CONFIG: 'tables:getConfig',
     RESTART: 'tables:restart',
     FETCH: 'tables:fetch',
+  },
+  /** Voice input (local speech-to-text via sherpa-onnx SenseVoice). */
+  voice: {
+    GET_STATUS: 'voice:getStatus',
+    DOWNLOAD: 'voice:download',
+    CANCEL_DOWNLOAD: 'voice:cancelDownload',
+    DELETE: 'voice:delete',
+    TRANSCRIBE: 'voice:transcribe',
+    TRANSCRIBE_INTERIM: 'voice:transcribeInterim',
+    REQUEST_MIC_PERMISSION: 'voice:requestMicPermission',
+    OPEN_MIC_SETTINGS: 'voice:openMicSettings',
+    DOWNLOAD_PROGRESS: 'voice:downloadProgress',
   },
 } as const
 

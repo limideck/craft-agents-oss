@@ -121,7 +121,7 @@ function JsonNode({
   )
 }
 
-/** Expandable structured JSON tree with type tags (Sim-inspired, Craft tokens). */
+/** Expandable structured JSON tree with type tags (Sim-inspired, Grose tokens). */
 export function JsonTree({ data, className }: { data: unknown; className?: string }) {
   if (data === undefined) {
     return <div className={cn('p-3 text-sm text-muted-foreground', className)}>No data</div>

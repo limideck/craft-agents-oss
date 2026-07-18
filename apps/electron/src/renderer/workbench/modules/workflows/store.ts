@@ -44,7 +44,7 @@ export const workflowLoadingAtom = atom(true)
 export const workflowErrorAtom = atom<string | null>(null)
 
 /** MIME type for toolbar → canvas block drag. */
-export const WORKFLOW_BLOCK_DND_MIME = 'application/craft-workflow-block'
+export const WORKFLOW_BLOCK_DND_MIME = 'application/grose-workflow-block'
 
 let nodeSeq = 0
 let edgeSeq = 0

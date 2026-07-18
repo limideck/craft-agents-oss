@@ -9,12 +9,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Copy, Eye, EyeOff, AlertTriangle, RotateCw } from 'lucide-react'
 import { toast } from 'sonner'
-import { PanelHeader } from '@/components/app-shell/PanelHeader'
+import { PanelHeader } from '@/components/ui/panel-header'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@craft-agent/ui'
+import { Spinner } from '@grose-agent/ui'
 import type { DetailsPageMeta } from '@/lib/navigation-registry'
-import type { ServerConfig, ServerStatus } from '@craft-agent/shared/config/server-config'
+import type { ServerConfig, ServerStatus } from '@grose-agent/shared/config/server-config'
 
 import {
   SettingsSection,

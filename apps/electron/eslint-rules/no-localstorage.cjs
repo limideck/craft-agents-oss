@@ -1,9 +1,9 @@
 /**
  * ESLint Rule: no-localstorage
  *
- * Warns against using localStorage in Craft Agent codebase.
+ * Warns against using localStorage in Grose Agent codebase.
  * All persistent user settings should be stored in file-based configs
- * (preferences.json, workspace configs) for consistency with Craft Agent
+ * (preferences.json, workspace configs) for consistency with Grose Agent
  * architecture principles.
  *
  * Bad:
@@ -34,7 +34,7 @@ module.exports = {
     },
     messages: {
       noLocalStorage:
-        "Avoid localStorage in Craft Agent. Store settings in ~/.craft-agent/preferences.json using window.electronAPI.readPreferences/writePreferences. See packages/shared/src/config/preferences.ts for the preferences API.",
+        "Avoid localStorage in Grose Agent. Store settings in ~/.grose-agent/preferences.json using window.electronAPI.readPreferences/writePreferences. See packages/shared/src/config/preferences.ts for the preferences API.",
     },
     schema: [],
   },

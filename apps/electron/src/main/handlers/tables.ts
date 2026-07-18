@@ -2,10 +2,10 @@
  * Tables sidecar IPC handlers (lifecycle + HTTP proxy).
  */
 
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import { getActiveWorkspace, getWorkspaces } from '@craft-agent/shared/config'
-import { ensureTablesMcpSource } from '@craft-agent/shared/sources'
-import type { RpcServer } from '@craft-agent/server-core/transport'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import { getActiveWorkspace, getWorkspaces } from '@grose-agent/shared/config'
+import { ensureTablesMcpSource } from '@grose-agent/shared/sources'
+import type { RpcServer } from '@grose-agent/server-core/transport'
 import type { HandlerDeps } from './handler-deps'
 import type { TablesFetchRequest } from '../tables-sidecar'
 import {

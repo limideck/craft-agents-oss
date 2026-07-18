@@ -1,5 +1,5 @@
 /**
- * Bootstrap the nested plydb fork for Craft Tables sidecar development.
+ * Bootstrap the nested plydb fork for Grose Tables sidecar development.
  *
  * Usage (from repo root):
  *   bun run scripts/setup-tables.ts

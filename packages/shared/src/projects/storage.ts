@@ -358,7 +358,7 @@ export function projectExists(workspaceRootPath: string, projectSlug: string): b
  * Strips path separators and leading dots; falls back to a uuid name if empty.
  */
 export function sanitizeAssetFilename(filename: string): string {
-  // Strip path separators AND control chars (NUL/newlines/DEL) so a crafted upload name can't
+  // Strip path separators AND control chars (NUL/newlines/DEL) so a groseed upload name can't
   // escape the assets dir or, once listed, forge new lines in the <project_assets> prompt block.
   // eslint-disable-next-line no-control-regex
   const base = basename(filename).replace(/[\\/\x00-\x1f\x7f]+/g, '').replace(/^\.+/, '');

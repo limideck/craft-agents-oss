@@ -2,10 +2,10 @@
  * OpenConnector IPC handlers (local sidecar lifecycle + HTTP proxy).
  */
 
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import { getWorkspaces } from '@craft-agent/shared/config'
-import { ensureOpenConnectorMcpSource } from '@craft-agent/shared/sources'
-import type { RpcServer } from '@craft-agent/server-core/transport'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import { getWorkspaces } from '@grose-agent/shared/config'
+import { ensureOpenConnectorMcpSource } from '@grose-agent/shared/sources'
+import type { RpcServer } from '@grose-agent/server-core/transport'
 import type { HandlerDeps } from './handler-deps'
 import type { OpenConnectorFetchRequest } from '../open-connector-sidecar'
 import {

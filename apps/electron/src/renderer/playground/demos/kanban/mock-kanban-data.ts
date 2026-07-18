@@ -18,7 +18,7 @@ import type {
   KanbanProject,
   KanbanSubtask,
   KanbanTask,
-} from '@/components/app-shell/kanban/types'
+} from '@/components/kanban/types'
 
 // Model ids (from the centralized registry — see @config/models).
 const OPUS = 'claude-opus-4-7'

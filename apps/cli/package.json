@@ -1,12 +1,12 @@
 {
-  "name": "@craft-agent/cli",
+  "name": "@grose-agent/cli",
   "version": "0.11.1",
   "license": "Apache-2.0",
-  "description": "Terminal client for Craft Agent server",
+  "description": "Terminal client for Grose Agent server",
   "type": "module",
   "main": "src/index.ts",
   "bin": {
-    "craft-cli": "src/index.ts"
+    "grose-cli": "src/index.ts"
   },
   "scripts": {
     "start": "bun run src/index.ts",
@@ -14,8 +14,8 @@
     "test": "bun test src/"
   },
   "dependencies": {
-    "@craft-agent/shared": "workspace:*",
-    "@craft-agent/server-core": "workspace:*"
+    "@grose-agent/shared": "workspace:*",
+    "@grose-agent/server-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.2",

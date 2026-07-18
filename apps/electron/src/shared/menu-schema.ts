@@ -13,7 +13,7 @@
  */
 
 import { RPC_CHANNELS } from './types'
-import { FEATURE_FLAGS } from '@craft-agent/shared/feature-flags'
+import { FEATURE_FLAGS } from '@grose-agent/shared/feature-flags'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -228,7 +228,7 @@ export const MENU_SECTIONS: MenuSection[] = [EDIT_MENU, VIEW_MENU, WINDOW_MENU]
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Root-level leaf actions exposed in the Craft logo menu.
+ * Root-level leaf actions exposed in the Grose logo menu.
  *
  * Both DesktopAppMenu (dropdown) and MobileAppMenu (full-screen sheet) read from
  * this collection. Desktop renders all four directly inline. Mobile filters out
@@ -276,7 +276,7 @@ export const ROOT_MENU = {
     type: 'action',
     id: 'quit',
     actionId: 'app.quit',
-    labelKey: 'menu.quitCraftAgents',
+    labelKey: 'menu.quitGroseAgents',
     shortcut: 'CmdOrCtrl+Q',
     shortcutDisplayMac: '⌘Q',
     shortcutDisplayOther: 'Ctrl+Q',
@@ -299,7 +299,7 @@ export const HELP_LINKS: MenuItemUrl[] = [
     type: 'url',
     id: 'helpAndDocs',
     labelKey: 'menu.helpAndDocs',
-    url: 'https://agents.craft.do/docs',
+    url: 'https://agents.grose.do/docs',
     icon: 'HelpCircle',
   },
 ]
@@ -383,6 +383,7 @@ const SETTINGS_ICONS: Record<SettingsSubpage, string> = {
   ai: 'Sparkles',
   appearance: 'Palette',
   input: 'Keyboard',
+  voice: 'Mic',
   workspace: 'Building2',
   permissions: 'ShieldCheck',
   labels: 'Tag',

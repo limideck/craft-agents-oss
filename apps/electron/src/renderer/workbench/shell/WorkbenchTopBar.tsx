@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react'
 import { useSetAtom } from 'jotai'
-import { TopBar } from '@/components/app-shell/TopBar'
+import { TopBar } from '@/components/shell/top-bar'
 import { useAppShellContext } from '@/context/AppShellContext'
 import { useNavigation } from '@/contexts/NavigationContext'
 import type { SettingsMenuItem } from '../../../shared/menu-schema'

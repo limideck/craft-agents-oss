@@ -12,13 +12,13 @@ import type { PreparedOAuthFlow } from '../oauth-flow-types.ts';
 describe('oauth relay state', () => {
   it('round-trips the relay callback target and inner state', () => {
     const encoded = encodeOAuthRelayState(
-      'https://ghalmos.craftdocs-cf-t1.com/api/oauth/callback',
+      'https://ghalmos.grosedocs-cf-t1.com/api/oauth/callback',
       'inner-state-123',
     );
 
     expect(isOAuthRelayState(encoded)).toBe(true);
     expect(decodeOAuthRelayState(encoded)).toEqual({
-      returnTo: 'https://ghalmos.craftdocs-cf-t1.com/api/oauth/callback',
+      returnTo: 'https://ghalmos.grosedocs-cf-t1.com/api/oauth/callback',
       innerState: 'inner-state-123',
     });
   });
@@ -43,7 +43,7 @@ describe('wrapPreparedOAuthFlowForRelay', () => {
 
     const wrapped = wrapPreparedOAuthFlowForRelay(
       prepared,
-      'https://ghalmos.craftdocs-cf-t1.com/api/oauth/callback',
+      'https://ghalmos.grosedocs-cf-t1.com/api/oauth/callback',
     );
 
     expect(wrapped.state).toBe('inner-state-123');
@@ -57,7 +57,7 @@ describe('wrapPreparedOAuthFlowForRelay', () => {
     expect(outerState).not.toBe('inner-state-123');
     expect(isOAuthRelayState(outerState!)).toBe(true);
     expect(decodeOAuthRelayState(outerState!)).toEqual({
-      returnTo: 'https://ghalmos.craftdocs-cf-t1.com/api/oauth/callback',
+      returnTo: 'https://ghalmos.grosedocs-cf-t1.com/api/oauth/callback',
       innerState: 'inner-state-123',
     });
   });

@@ -4,19 +4,19 @@ import type { ComponentEntry } from './types'
 import { cn } from '@/lib/utils'
 import { getModelShortName } from '@config/models'
 import type { ProjectColorTreatment } from '@/utils/project-colors'
-import { KanbanBoard } from '@/components/app-shell/kanban/KanbanBoard'
-import { TaskTile } from '@/components/app-shell/kanban/TaskTile'
-import { TaskChatPreview } from '@/components/app-shell/kanban/TaskChatPreview'
-import { StatusBadge } from '@/components/app-shell/kanban/StatusBadge'
-import { ModelChip } from '@/components/app-shell/kanban/ModelChip'
-import { KANBAN_COLUMNS, statusToColumn } from '@/components/app-shell/kanban/status-column'
+import { KanbanBoard } from '@/components/kanban/KanbanBoard'
+import { TaskTile } from '@/components/kanban/TaskTile'
+import { TaskChatPreview } from '@/components/kanban/TaskChatPreview'
+import { StatusBadge } from '@/components/kanban/StatusBadge'
+import { ModelChip } from '@/components/kanban/ModelChip'
+import { KANBAN_COLUMNS, statusToColumn } from '@/components/kanban/status-column'
 import type {
   KanbanColumnId,
   KanbanModelProviderGroup,
   KanbanSubtask,
   KanbanTask,
   SubtaskRunState,
-} from '@/components/app-shell/kanban/types'
+} from '@/components/kanban/types'
 import {
   mockTasks,
   mockProjectsById,

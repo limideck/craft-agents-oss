@@ -1,8 +1,8 @@
 # Workbench Architecture
 
-Craft’s personal workbench shell: **ActivityBar + dockview layout + Module registry**.
+Grose’s personal workbench shell: **ActivityBar + dockview layout + Module registry**.
 
-`frontend/` is a UX mock only — not merged into Electron. Layout engine patterns come from kandev (dockview + portals); session/chat data stays Craft.
+`frontend/` is a UX mock only — not merged into Electron. Layout engine patterns come from kandev (dockview + portals); session/chat data stays Grose.
 
 ## Enable the shell (dual-shell)
 
@@ -10,13 +10,13 @@ Default is the classic `AppShell`. Enable the new `WorkbenchShell` with either:
 
 ```bash
 # Env (Electron / Vite process)
-CRAFT_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
 ```
 
 Or in DevTools:
 
 ```js
-localStorage.setItem('craft-feature-workbench-shell', '1')
+localStorage.setItem('grose-feature-workbench-shell', '1')
 location.reload()
 ```
 
@@ -33,7 +33,7 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 | Connectors | Open Connector console (Overview/Providers/Actions/Runs/Access) |
 | Settings | ActivityBar footer |
 | RSS | UI mock (no RPC) — [workbench-rss-ui.md](./workbench-rss-ui.md) |
-| Tables | Browse/upload/preview UI + plydb sidecar — [workbench-tables-ui.md](./workbench-tables-ui.md), [craft-tables-sidecar.md](./craft-tables-sidecar.md) |
+| Tables | Browse/upload/preview UI + plydb sidecar — [workbench-tables-ui.md](./workbench-tables-ui.md), [grose-tables-sidecar.md](./grose-tables-sidecar.md) |
 | Knowledge | Placeholder only |
 | Sites | Agent site IDE (Chat \| Files \| Preview) — [workbench-sites-ui.md](./workbench-sites-ui.md) |
 
@@ -46,7 +46,7 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 bun run setup:open-connector
 
 # Or attach to an already-running instance
-CRAFT_OPENCONNECTOR_URL=http://127.0.0.1:PORT CRAFT_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+GROSE_OPENCONNECTOR_URL=http://127.0.0.1:PORT GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
 ```
 
 With the workbench flag on, open the **Connectors** ActivityBar icon. Sidecar start failures are non-fatal; when ready, workspaces get an `open-connector` MCP source automatically.
@@ -65,7 +65,7 @@ apps/electron/src/renderer/workbench/
     DockviewHost.tsx           # DockviewReact + portal host
     panel-portal-*.ts(x)       # Persist panel React trees across fromJSON
     panel-primitives.tsx       # PanelRoot / PanelBody / bars
-    dockview-theme.*           # --dv-* → Craft theme vars
+    dockview-theme.*           # --dv-* → Grose theme vars
     layout-manager/            # Slim presets + apply + localStorage persist
   registry/
     types.ts                   # WorkbenchModule / PanelContribution (frozen)
@@ -92,7 +92,7 @@ Domain packages (backend skeletons):
 
 Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping` / `knowledge:ping` / `workflows:ping` / `sites:*`).
 
-Phase 3+ backend direction: a single Go sidecar (`craft-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [craft-modules-sidecar.md](./craft-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<craft_modules>` context) — see [craft-modules-agent-routing.md](./craft-modules-agent-routing.md).
+Phase 3+ backend direction: a single Go sidecar (`grose-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [grose-modules-sidecar.md](./grose-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<grose_modules>` context) — see [grose-modules-agent-routing.md](./grose-modules-agent-routing.md).
 
 Workspace data (see [workspace-storage.md](./workspace-storage.md)):
 
@@ -100,7 +100,7 @@ Workspace data (see [workspace-storage.md](./workspace-storage.md)):
 {rootPath}/modules/{rss|tables|knowledge|sites|workflows}/
 ```
 
-Never key module data by `workspaceId` folder name under `~/.craft-agent/workspaces/{id}/` when `rootPath` is slug-named.
+Never key module data by `workspaceId` folder name under `~/.grose-agent/workspaces/{id}/` when `rootPath` is slug-named.
 
 ## Register a module
 
@@ -136,7 +136,7 @@ type PanelContribution = {
 
 ## Layout persistence
 
-- Key: `craft-panel-layout:workbench:{workspaceId}` (via renderer `localStorage` helper).
+- Key: `grose-panel-layout:workbench:{workspaceId}` (via renderer `localStorage` helper).
 - Debounced on `api.onDidLayoutChange` (~400ms).
 - On first open: `agents-default` preset — session-list | chat | files+changes / terminal (~18/38/44).
 
@@ -146,7 +146,7 @@ URL / deep link restores focus only; it does **not** serialize the full dock tre
 
 | Panel | Component | Role |
 |-------|-----------|------|
-| `session-list` | `session-list` | Left — Craft sessions atom (thin list) |
+| `session-list` | `session-list` | Left — Grose sessions atom (thin list) |
 | `chat` | `chat` | Center — existing `ChatPage` |
 | `files` | `files` | Right — file tree (lazy expand, create/rename/delete, drag-move) |
 | `file-editor` | `file-editor` | Center preview slot (`preview:file-editor`) — click file to open; double-click pins |
@@ -163,4 +163,4 @@ Heavy panels (chat, future browser/canvas/editors) render through `PanelPortalHo
 | 0 Scaffold (dockview, theme, portals, registries) | Done |
 | 1 Dock shell + Agents + feature flag | Done |
 | 2 Contracts + placeholder modules + domain skeletons | Done |
-| 3+ RSS / KB / Sites / workflows business logic | UI: [workbench-rss-ui.md](./workbench-rss-ui.md), [workbench-sites-ui.md](./workbench-sites-ui.md), [workbench-workflows-ui.md](./workbench-workflows-ui.md); workflows graph/HTTP/MCP freeze: [workbench-workflows-contract.md](./workbench-workflows-contract.md); backend design: [craft-modules-sidecar.md](./craft-modules-sidecar.md); agent prefer-builtin: [craft-modules-agent-routing.md](./craft-modules-agent-routing.md) |
+| 3+ RSS / KB / Sites / workflows business logic | UI: [workbench-rss-ui.md](./workbench-rss-ui.md), [workbench-sites-ui.md](./workbench-sites-ui.md), [workbench-workflows-ui.md](./workbench-workflows-ui.md); workflows graph/HTTP/MCP freeze: [workbench-workflows-contract.md](./workbench-workflows-contract.md); backend design: [grose-modules-sidecar.md](./grose-modules-sidecar.md); agent prefer-builtin: [grose-modules-agent-routing.md](./grose-modules-agent-routing.md) |

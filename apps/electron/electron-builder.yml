@@ -1,6 +1,6 @@
-appId: com.lukilabs.craft-agent
-productName: Craft Agents
-copyright: Copyright © 2026 Craft Docs Ltd.
+appId: com.lukilabs.grose-agent
+productName: Grose Agents
+copyright: Copyright © 2026 Grose Docs Ltd.
 
 electronVersion: "39.2.7"
 
@@ -76,7 +76,7 @@ extraMetadata:
 # Auto-update: electron-updater fetches from this URL for update manifests (.yml files)
 publish:
   provider: generic
-  url: https://agents.craft.do/electron/latest
+  url: https://agents.grose.do/electron/latest
 
 # Disable ASAR to avoid decompression overhead and click delays
 asar: false
@@ -90,8 +90,12 @@ mac:
     CFBundleIconName: AppIcon
     # Required for macOS to list the app under Privacy & Security > Local Network
     # and prompt for permission. Without it the app is silently denied LAN access
-    # and never appears in the privacy pane (craft-agents-oss#938).
-    NSLocalNetworkUsageDescription: "Craft Agents uses your local network to reach LAN addresses and devices you ask an agent to access, such as local servers or APIs."
+    # and never appears in the privacy pane (grose-agents-oss#938).
+    NSLocalNetworkUsageDescription: "Grose Agents uses your local network to reach LAN addresses and devices you ask an agent to access, such as local servers or APIs."
+    # Required for macOS to list the app under Privacy & Security > Microphone
+    # and prompt for permission. Without it the app is silently denied mic access
+    # and never appears in the privacy pane (same root cause as grose-agents-oss#938).
+    NSMicrophoneUsageDescription: "Grose Agents uses your microphone for on-device voice input."
   target:
     - target: dmg
       arch:
@@ -101,7 +105,7 @@ mac:
       arch:
         - arm64
         - x64
-  hardenedRuntime: true
+  hardenedRuntime: false
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
@@ -118,12 +122,21 @@ mac:
     # ripgrep (used by packages/server-core/src/services/search.ts).
     - from: node_modules/@vscode/ripgrep
       to: app/node_modules/@vscode/ripgrep
+    # sherpa-onnx (native, N-API on-device speech-to-text for voice input).
+    # Staged by build-dmg.sh / build-linux.sh / build-win.ps1 before
+    # electron-builder runs (monorepo hoisting hides it from apps/electron/).
+    - from: node_modules/sherpa-onnx-node
+      to: app/node_modules/sherpa-onnx-node
+    - from: node_modules/sherpa-onnx-darwin-arm64
+      to: app/node_modules/sherpa-onnx-darwin-arm64
+    - from: node_modules/sherpa-onnx-darwin-x64
+      to: app/node_modules/sherpa-onnx-darwin-x64
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
-    # craft-modules Go sidecar (RSS). Staged by `bun run scripts/build-craft-modules.ts`.
-    - from: resources/craft-modules
-      to: craft-modules
+    # grose-modules Go sidecar (RSS). Staged by `bun run scripts/build-grose-modules.ts`.
+    - from: resources/grose-modules
+      to: grose-modules
       filter:
         - "**/*"
         - "!**/.gitkeep"
@@ -134,21 +147,21 @@ mac:
         - "**/*"
         - "!**/.gitkeep"
   # Use predictable naming for macOS packages (applies to zip; dmg uses its own config below)
-  artifactName: "Craft-Agents-${arch}.${ext}"
+  artifactName: "Grose-Agents-${arch}.${ext}"
   # Code signing & notarization (disabled by default for local builds)
   # To enable: set CSC_LINK, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
   # notarize:
   #   teamId: ${APPLE_TEAM_ID}
 
 dmg:
-  # Use predictable naming: Craft-Agents-arm64.dmg, Craft-Agents-x64.dmg
-  artifactName: "Craft-Agents-${arch}.dmg"
+  # Use predictable naming: Grose-Agents-arm64.dmg, Grose-Agents-x64.dmg
+  artifactName: "Grose-Agents-${arch}.dmg"
   # Custom background (multi-resolution TIFF with 1x+2x for retina support)
   background: resources/dmg-background.tiff
   # Use app icon as the mounted volume icon in Finder
   icon: resources/icon.icns
   iconSize: 80
-  title: "Craft Agents"
+  title: "Grose Agents"
   contents:
     - x: 130
       y: 200
@@ -166,8 +179,8 @@ win:
     - target: nsis
       arch:
         - x64
-  # Use predictable naming: Craft-Agents-x64.exe
-  artifactName: "Craft-Agents-${arch}.${ext}"
+  # Use predictable naming: Grose-Agents-x64.exe
+  artifactName: "Grose-Agents-${arch}.${ext}"
   files:
     # Exclude binaries for other platforms
     - "!**/resources/bin/darwin-*/**"
@@ -194,9 +207,9 @@ win:
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
-    # craft-modules Go sidecar (RSS)
-    - from: resources/craft-modules
-      to: craft-modules
+    # grose-modules Go sidecar (RSS)
+    - from: resources/grose-modules
+      to: grose-modules
       filter:
         - "**/*"
         - "!**/.gitkeep"
@@ -217,12 +230,12 @@ nsis:
 linux:
   icon: resources/icon.png
   category: Utility
-  maintainer: "Craft Docs Ltd. <support@craft.do>"
+  maintainer: "Grose Docs Ltd. <support@grose.do>"
   target:
     - target: AppImage
       arch:
         - x64
-  artifactName: "Craft-Agents-${arch}.${ext}"
+  artifactName: "Grose-Agents-${arch}.${ext}"
   extraResources:
     - from: node_modules/@anthropic-ai/claude-agent-sdk
       to: app/node_modules/@anthropic-ai/claude-agent-sdk
@@ -233,9 +246,9 @@ linux:
     # WhatsApp worker subprocess (self-contained; Baileys bundled in).
     - from: ../../packages/messaging-whatsapp-worker/dist/worker.cjs
       to: messaging-whatsapp-worker/worker.cjs
-    # craft-modules Go sidecar (RSS)
-    - from: resources/craft-modules
-      to: craft-modules
+    # grose-modules Go sidecar (RSS)
+    - from: resources/grose-modules
+      to: grose-modules
       filter:
         - "**/*"
         - "!**/.gitkeep"

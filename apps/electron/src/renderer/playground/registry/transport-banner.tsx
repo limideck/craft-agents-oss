@@ -1,6 +1,6 @@
 import * as React from 'react'
 import type { ComponentEntry } from './types'
-import { TransportConnectionBanner } from '@/components/app-shell/TransportConnectionBanner'
+import { TransportConnectionBanner } from '@/components/TransportConnectionBanner'
 import type { TransportConnectionState } from '../../../shared/types'
 import { HelpCircle, Plus } from 'lucide-react'
 
@@ -65,7 +65,7 @@ const failedAuthState: TransportConnectionState = {
   status: 'failed',
   url: 'wss://remote.example.com',
   attempt: 5,
-  lastError: { kind: 'auth', message: 'Authentication failed. Verify CRAFT_SERVER_TOKEN.' },
+  lastError: { kind: 'auth', message: 'Authentication failed. Verify GROSE_SERVER_TOKEN.' },
   updatedAt: Date.now(),
 }
 

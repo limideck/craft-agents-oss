@@ -13,7 +13,7 @@
 
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
-import type { KanbanColumnId, TaskEditorTarget } from '@/components/app-shell/kanban/types'
+import type { KanbanColumnId, TaskEditorTarget } from '@/components/kanban/types'
 
 /** Selected project ids to filter the board by. Empty array = all projects. */
 export const kanbanProjectFilterAtom = atom<string[]>([])
@@ -32,12 +32,12 @@ export const kanbanEditorTargetAtom = atom<TaskEditorTarget | null>(null)
  * column in Settings deletes its key here.
  */
 export const kanbanColumnColorsAtom = atomWithStorage<Partial<Record<KanbanColumnId, string>>>(
-  'craft-kanban-column-colors',
+  'grose-kanban-column-colors',
   {}
 )
 
 /** Whether active (in-progress) tiles get the live-pulse treatment. Default on. */
-export const kanbanLivePulseAtom = atomWithStorage<boolean>('craft-kanban-live-pulse', true)
+export const kanbanLivePulseAtom = atomWithStorage<boolean>('grose-kanban-live-pulse', true)
 
 /**
  * Per-column status auto-applied when a task is dropped into that column. A
@@ -45,6 +45,6 @@ export const kanbanLivePulseAtom = atomWithStorage<boolean>('craft-kanban-live-p
  * leaves the task's status untouched on move.
  */
 export const kanbanColumnStatusAtom = atomWithStorage<Partial<Record<KanbanColumnId, string>>>(
-  'craft-kanban-column-status',
+  'grose-kanban-column-status',
   {}
 )

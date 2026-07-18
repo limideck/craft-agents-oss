@@ -18,7 +18,7 @@ export type {
   ExecutionResult,
   RuntimeActionResponse,
   AuthSession,
-} from '@craft-agent/open-connector-client'
+} from '@grose-agent/open-connector-client'
 
 import type {
   ActionDefinition,
@@ -30,7 +30,7 @@ import type {
   ProviderDefinition,
   RunLog,
   RuntimeTokenSummary,
-} from '@craft-agent/open-connector-client'
+} from '@grose-agent/open-connector-client'
 
 export interface AppData {
   providers: ProviderDefinition[]

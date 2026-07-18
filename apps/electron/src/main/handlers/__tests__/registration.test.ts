@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
-import type { RpcServer } from '@craft-agent/server-core/transport'
+import type { RpcServer } from '@grose-agent/server-core/transport'
 import type { HandlerDeps } from '../handler-deps'
 
 const registeredChannels: string[] = []
@@ -109,35 +109,35 @@ async function getExpectedChannels(): Promise<Set<string>> {
     projects,
     domainStubs,
   ] = await Promise.all([
-    import('@craft-agent/server-core/handlers/rpc/auth'),
-    import('@craft-agent/server-core/handlers/rpc/automations'),
-    import('@craft-agent/server-core/handlers/rpc/files'),
-    import('@craft-agent/server-core/handlers/rpc/labels'),
-    import('@craft-agent/server-core/handlers/rpc/llm-connections'),
-    import('@craft-agent/server-core/handlers/rpc/oauth'),
-    import('@craft-agent/server-core/handlers/rpc/sessions'),
-    import('@craft-agent/server-core/handlers/rpc/settings'),
-    import('@craft-agent/server-core/handlers/rpc/skills'),
-    import('@craft-agent/server-core/handlers/rpc/sources'),
-    import('@craft-agent/server-core/handlers/rpc/statuses'),
-    import('@craft-agent/server-core/handlers/rpc/system'),
-    import('@craft-agent/server-core/handlers/rpc/workspace'),
-    import('@craft-agent/server-core/handlers/rpc/onboarding'),
-    import('@craft-agent/server-core/handlers/rpc/resources'),
-    import('@craft-agent/server-core/handlers/rpc/transfer'),
-    import('@craft-agent/server-core/handlers/rpc/tasks'),
-    import('@craft-agent/server-core/handlers/rpc/projects'),
-    import('@craft-agent/server-core/handlers/rpc/domain-stubs'),
+    import('@grose-agent/server-core/handlers/rpc/auth'),
+    import('@grose-agent/server-core/handlers/rpc/automations'),
+    import('@grose-agent/server-core/handlers/rpc/files'),
+    import('@grose-agent/server-core/handlers/rpc/labels'),
+    import('@grose-agent/server-core/handlers/rpc/llm-connections'),
+    import('@grose-agent/server-core/handlers/rpc/oauth'),
+    import('@grose-agent/server-core/handlers/rpc/sessions'),
+    import('@grose-agent/server-core/handlers/rpc/settings'),
+    import('@grose-agent/server-core/handlers/rpc/skills'),
+    import('@grose-agent/server-core/handlers/rpc/sources'),
+    import('@grose-agent/server-core/handlers/rpc/statuses'),
+    import('@grose-agent/server-core/handlers/rpc/system'),
+    import('@grose-agent/server-core/handlers/rpc/workspace'),
+    import('@grose-agent/server-core/handlers/rpc/onboarding'),
+    import('@grose-agent/server-core/handlers/rpc/resources'),
+    import('@grose-agent/server-core/handlers/rpc/transfer'),
+    import('@grose-agent/server-core/handlers/rpc/tasks'),
+    import('@grose-agent/server-core/handlers/rpc/projects'),
+    import('@grose-agent/server-core/handlers/rpc/domain-stubs'),
   ])
 
   // GUI handler channels (remain in electron)
-  const [browser, guiSystem, guiWorkspace, guiSettings, openConnector, craftModules, tables] = await Promise.all([
+  const [browser, guiSystem, guiWorkspace, guiSettings, openConnector, groseModules, tables] = await Promise.all([
     import('../browser'),
     import('../system'),
     import('../workspace'),
     import('../settings'),
     import('../open-connector'),
-    import('../craft-modules'),
+    import('../grose-modules'),
     import('../tables'),
   ])
 
@@ -166,7 +166,7 @@ async function getExpectedChannels(): Promise<Set<string>> {
     ...guiWorkspace.GUI_HANDLED_CHANNELS,
     ...guiSettings.GUI_HANDLED_CHANNELS,
     ...openConnector.GUI_HANDLED_CHANNELS,
-    ...craftModules.GUI_HANDLED_CHANNELS,
+    ...groseModules.GUI_HANDLED_CHANNELS,
     ...tables.GUI_HANDLED_CHANNELS,
   ])
 }
@@ -205,7 +205,7 @@ describe('RPC handler registration', () => {
   })
 
   it('keeps onboarding channels in registration coverage', async () => {
-    const { HANDLED_CHANNELS } = await import('@craft-agent/server-core/handlers/rpc/onboarding')
+    const { HANDLED_CHANNELS } = await import('@grose-agent/server-core/handlers/rpc/onboarding')
     const { registerAllRpcHandlers } = await import('../index')
 
     registerAllRpcHandlers(createMockServer(), createMockDeps())

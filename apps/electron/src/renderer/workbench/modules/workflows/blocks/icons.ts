@@ -83,7 +83,7 @@ export const CATEGORY_SECTIONS: { id: BlockCategory; label: string }[] = [
   { id: 'action', label: 'Action' },
 ]
 
-/** Dot next to section headers (z8run-style, Craft light colors). */
+/** Dot next to section headers (z8run-style, Grose light colors). */
 export const ACCENT_DOT: Record<string, string> = {
   sky: 'bg-sky-500',
   teal: 'bg-teal-500',

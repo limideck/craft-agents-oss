@@ -31,7 +31,7 @@ type WorkbenchShellProps = {
 
 /**
  * Feature-flagged workbench shell: TopBar + ActivityBar + dockview layout.
- * Dual-shell parallel with AppShell — enable via CRAFT_FEATURE_WORKBENCH_SHELL.
+ * Dual-shell parallel with AppShell — enable via GROSE_FEATURE_WORKBENCH_SHELL.
  */
 export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
   ensureWorkbenchModulesRegistered()

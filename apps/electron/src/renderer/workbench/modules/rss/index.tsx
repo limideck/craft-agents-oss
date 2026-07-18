@@ -4,7 +4,7 @@ import { FeedsPanel } from './panels/feeds-panel'
 import { ArticleListPanel } from './panels/article-list-panel'
 import { ReaderPanel } from './panels/reader-panel'
 
-/** RSS workbench module — live data via craft-modules Go sidecar. */
+/** RSS workbench module — live data via grose-modules Go sidecar. */
 export const rssModule: WorkbenchModule = {
   id: 'rss',
   title: 'RSS',

@@ -1,13 +1,13 @@
 /**
- * Tables (plydb fork) sidecar lifecycle for Craft Agents Electron.
+ * Tables (plydb fork) sidecar lifecycle for Grose Agents Electron.
  *
  * Spawns `plydb serve` with a **per-workspace** data dir:
  *   `{workspaceRootPath}/modules/tables`
  *
- * Process secrets stay global under `~/.craft-agent/tables/sidecar-secrets.json`.
+ * Process secrets stay global under `~/.grose-agent/tables/sidecar-secrets.json`.
  * Uploads/catalog must never land in that global folder.
  *
- * Set CRAFT_TABLES_URL to attach to an already-running instance
+ * Set GROSE_TABLES_URL to attach to an already-running instance
  * (skips spawn — useful when iterating on test/plydb).
  */
 
@@ -17,11 +17,11 @@ import { randomBytes } from 'crypto'
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
-import { CONFIG_DIR, getActiveWorkspace } from '@craft-agent/shared/config'
+import { CONFIG_DIR, getActiveWorkspace } from '@grose-agent/shared/config'
 import {
   ensureWorkspaceModuleDirs,
   getWorkspaceTablesDataPath,
-} from '@craft-agent/shared/workspaces'
+} from '@grose-agent/shared/workspaces'
 import type {
   TablesFetchRequest,
   TablesFetchResponse,
@@ -133,7 +133,7 @@ function platformArchDir(): string {
 
 /** Resolve plydb / tables binary for spawn. */
 export function resolveTablesBinary(): string | null {
-  const fromEnv = process.env.CRAFT_TABLES_BIN?.trim()
+  const fromEnv = process.env.GROSE_TABLES_BIN?.trim()
   if (fromEnv && existsSync(fromEnv)) return fromEnv
 
   const name = binaryName()
@@ -215,7 +215,7 @@ export type StartTablesSidecarOptions = {
 }
 
 /**
- * Start the sidecar (or attach to CRAFT_TABLES_URL). Idempotent for the same
+ * Start the sidecar (or attach to GROSE_TABLES_URL). Idempotent for the same
  * workspace data dir; restarts when the active workspace data dir changes.
  */
 export async function startTablesSidecar(
@@ -238,7 +238,7 @@ export async function startTablesSidecar(
     secrets = loadOrCreateSecrets()
     mkdirSync(tablesDir, { recursive: true })
 
-    const externalUrl = process.env.CRAFT_TABLES_URL?.trim()
+    const externalUrl = process.env.GROSE_TABLES_URL?.trim()
     if (externalUrl) {
       external = true
       baseUrl = externalUrl.replace(/\/+$/, '')
@@ -259,7 +259,7 @@ export async function startTablesSidecar(
     const bin = resolveTablesBinary()
     if (!bin) {
       throw new Error(
-        'Tables (plydb) binary not found. Run `bun run setup:tables` or set CRAFT_TABLES_URL / CRAFT_TABLES_BIN.',
+        'Tables (plydb) binary not found. Run `bun run setup:tables` or set GROSE_TABLES_URL / GROSE_TABLES_BIN.',
       )
     }
 

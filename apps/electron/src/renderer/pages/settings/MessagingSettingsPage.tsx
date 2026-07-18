@@ -35,7 +35,7 @@ import {
   Settings2,
   Trash2,
 } from 'lucide-react'
-import { PanelHeader } from '@/components/app-shell/PanelHeader'
+import { PanelHeader } from '@/components/ui/panel-header'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import {

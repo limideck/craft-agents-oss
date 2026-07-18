@@ -1,7 +1,7 @@
 /**
  * Merge preferred-builtin Sources into a session / workspace enabled-slug list.
  *
- * Prefer-builtin MCP sources (today: craft-modules) are real on-disk Sources.
+ * Prefer-builtin MCP sources (today: grose-modules) are real on-disk Sources.
  * Tools only load when the slug is in the session's `enabledSourceSlugs`.
  * This helper adds usable preferred builtins so agents do not see
  * "configured but inactive" and ask the user to activate manually.

@@ -6,7 +6,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@craft-agent/ui'
+} from '@grose-agent/ui'
 
 /**
  * Narrow left activity rail — module switcher.

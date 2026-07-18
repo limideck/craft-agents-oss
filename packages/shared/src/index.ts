@@ -1,22 +1,22 @@
 /**
- * @craft-agent/shared
+ * @grose-agent/shared
  *
- * Shared business logic for Craft Agent.
+ * Shared business logic for Grose Agent.
  * Used by the Electron app.
  *
  * Import specific modules via subpath exports:
- *   import { CraftAgent } from '@craft-agent/shared/agent';
- *   import { loadStoredConfig } from '@craft-agent/shared/config';
- *   import { getCredentialManager } from '@craft-agent/shared/credentials';
- *   import { CraftMcpClient } from '@craft-agent/shared/mcp';
- *   import { debug } from '@craft-agent/shared/utils';
- *   import { loadSource, createSource, getSourceCredentialManager } from '@craft-agent/shared/sources';
- *   import { createWorkspace, loadWorkspace } from '@craft-agent/shared/workspaces';
+ *   import { GroseAgent } from '@grose-agent/shared/agent';
+ *   import { loadStoredConfig } from '@grose-agent/shared/config';
+ *   import { getCredentialManager } from '@grose-agent/shared/credentials';
+ *   import { GroseMcpClient } from '@grose-agent/shared/mcp';
+ *   import { debug } from '@grose-agent/shared/utils';
+ *   import { loadSource, createSource, getSourceCredentialManager } from '@grose-agent/shared/sources';
+ *   import { createWorkspace, loadWorkspace } from '@grose-agent/shared/workspaces';
  *
  * Available modules:
- *   - agent: CraftAgent SDK wrapper, plan tools
+ *   - agent: GroseAgent SDK wrapper, plan tools
  *   - auth: OAuth, token management, auth state
- *   - clients: Craft API client
+ *   - clients: Grose API client
  *   - config: Storage, models, preferences
  *   - credentials: Encrypted credential storage
  *   - mcp: MCP client, connection validation

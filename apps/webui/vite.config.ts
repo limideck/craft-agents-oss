@@ -75,13 +75,13 @@ export default defineConfig({
   define: {
     // Flag to detect web UI context in shared code
     'import.meta.env.IS_WEBUI': 'true',
-    'process.env.CRAFT_FEATURE_WORKBENCH_SHELL': JSON.stringify(
-      process.env.CRAFT_FEATURE_WORKBENCH_SHELL ?? '',
+    'process.env.GROSE_FEATURE_WORKBENCH_SHELL': JSON.stringify(
+      process.env.GROSE_FEATURE_WORKBENCH_SHELL ?? '',
     ),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'jotai'],
-    exclude: ['@craft-agent/ui'],
+    exclude: ['@grose-agent/ui'],
     esbuildOptions: {
       supported: { 'top-level-await': true },
       target: 'esnext',
@@ -92,12 +92,12 @@ export default defineConfig({
     open: false,
     host: true,
     // Proxy API + WS to the headless server so the dev bundle on :5175 works
-    // end-to-end with HMR. Target port follows CRAFT_RPC_PORT (default 9100).
-    // Auto-detects TLS: if the server has CRAFT_RPC_TLS_KEY/CERT set, we proxy
+    // end-to-end with HMR. Target port follows GROSE_RPC_PORT (default 9100).
+    // Auto-detects TLS: if the server has GROSE_RPC_TLS_KEY/CERT set, we proxy
     // over https/wss with secure:false to accept the self-signed dev cert.
     proxy: (() => {
-      const port = process.env.CRAFT_RPC_PORT ?? '9100'
-      const useTls = Boolean(process.env.CRAFT_RPC_TLS_KEY || process.env.CRAFT_RPC_TLS_CERT)
+      const port = process.env.GROSE_RPC_PORT ?? '9100'
+      const useTls = Boolean(process.env.GROSE_RPC_TLS_KEY || process.env.GROSE_RPC_TLS_CERT)
       const httpProto = useTls ? 'https' : 'http'
       const wsProto = useTls ? 'wss' : 'ws'
       const httpTarget = `${httpProto}://127.0.0.1:${port}`

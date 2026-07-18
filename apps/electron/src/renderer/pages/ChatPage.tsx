@@ -9,11 +9,11 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { AlertCircle, Globe, Copy, RefreshCw, Link2Off, Info, Pencil } from 'lucide-react'
-import { ChatDisplay, type ChatDisplayHandle } from '@/components/app-shell/ChatDisplay'
-import { PanelHeader } from '@/components/app-shell/PanelHeader'
-import { SessionMenu } from '@/components/app-shell/SessionMenu'
-import { CompactSessionMenu } from '@/components/app-shell/CompactSessionMenu'
-import { SessionInfoPopover } from '@/components/app-shell/SessionInfoPopover'
+import { ChatDisplay, type ChatDisplayHandle } from '@/components/sessions/ChatDisplay'
+import { PanelHeader } from '@/components/ui/panel-header'
+import { SessionMenu } from '@/components/sessions/SessionMenu'
+import { CompactSessionMenu } from '@/components/sessions/CompactSessionMenu'
+import { SessionInfoPopover } from '@/components/sessions/SessionInfoPopover'
 import { RenameDialog } from '@/components/ui/rename-dialog'
 import { toast } from 'sonner'
 import { PanelHeaderCenterButton } from '@/components/ui/PanelHeaderCenterButton'
@@ -251,8 +251,8 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
         inputValueRef.current = nextText
       }
     }
-    window.addEventListener('craft:restore-input', handler)
-    return () => window.removeEventListener('craft:restore-input', handler)
+    window.addEventListener('grose:restore-input', handler)
+    return () => window.removeEventListener('grose:restore-input', handler)
   }, [sessionId])
 
   const handleInputChange = React.useCallback((value: string) => {
@@ -488,7 +488,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
   const handleOpenInNewWindow = React.useCallback(async () => {
     const route = routes.view.allSessions(sessionId)
     const separator = route.includes('?') ? '&' : '?'
-    const url = `craftagents://${route}${separator}window=focused`
+    const url = `groseagents://${route}${separator}window=focused`
     try {
       await window.electronAPI?.openUrl(url)
     } catch (error) {
@@ -577,7 +577,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
               <span className="flex-1">{t('sessionMenu.stopSharing')}</span>
             </StyledDropdownMenuItem>
             <StyledDropdownMenuSeparator />
-            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs/go-further/sharing')}>
+            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.grose.do/docs/go-further/sharing')}>
               <Info className="h-3.5 w-3.5" />
               <span className="flex-1">{t('chat.learnMore')}</span>
             </StyledDropdownMenuItem>
@@ -591,7 +591,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
               <span className="flex-1">{t('chat.shareOnline')}</span>
             </StyledDropdownMenuItem>
             <StyledDropdownMenuSeparator />
-            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.craft.do/docs/go-further/sharing')}>
+            <StyledDropdownMenuItem onClick={() => window.electronAPI.openUrl('https://agents.grose.do/docs/go-further/sharing')}>
               <Info className="h-3.5 w-3.5" />
               <span className="flex-1">{t('chat.learnMore')}</span>
             </StyledDropdownMenuItem>

@@ -1,4 +1,4 @@
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
 
 /** Minimal server surface so domain packages do not depend on server-core. */
 export type DomainRpcServer = {

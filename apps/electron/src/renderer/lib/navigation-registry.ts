@@ -161,6 +161,7 @@ export const NavigationRegistry = {
       ai: PlaceholderComponent, // AiSettingsPage
       appearance: PlaceholderComponent, // AppearanceSettingsPage
       input: PlaceholderComponent, // InputSettingsPage
+      voice: PlaceholderComponent, // VoiceSettingsPage
       workspace: PlaceholderComponent, // WorkspaceSettingsPage
       permissions: PlaceholderComponent, // PermissionsSettingsPage
       labels: PlaceholderComponent, // LabelsSettingsPage

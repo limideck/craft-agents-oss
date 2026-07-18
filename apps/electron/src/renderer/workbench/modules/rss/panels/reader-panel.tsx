@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useOpenAgentChat } from '../../../chat'
 import { useAppShellContext } from '@/context/AppShellContext'
-import type { CraftModulesRssArticle } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules'
 import {
   rssArticlesAtom,
   rssLoadingAtom,
@@ -20,7 +20,7 @@ import { PodcastPlayer } from '../components/podcast-player'
 type FullContent = null | 'loading' | { html: string } | { error: string }
 
 /**
- * Reader pane — live article body from craft-modules (star / open / ask AI / 全文 / podcast).
+ * Reader pane — live article body from grose-modules (star / open / ask AI / 全文 / podcast).
  */
 export function ReaderPanel() {
   const { workspaceId } = useRssWorkspaceData()
@@ -29,10 +29,10 @@ export function ReaderPanel() {
   const selectedId = useAtomValue(rssSelectedArticleIdAtom)
   const listArticles = useAtomValue(rssArticlesAtom)
   const openAgentChat = useOpenAgentChat()
-  const [detail, setDetail] = useState<CraftModulesRssArticle | null>(null)
+  const [detail, setDetail] = useState<GroseModulesRssArticle | null>(null)
   const [busyStar, setBusyStar] = useState(false)
   const [fullContent, setFullContent] = useState<FullContent>(null)
-  const [playing, setPlaying] = useState<CraftModulesRssArticle | null>(null)
+  const [playing, setPlaying] = useState<GroseModulesRssArticle | null>(null)
 
   const listHit = selectedId ? listArticles.find((a) => a.id === selectedId) : undefined
 

@@ -53,21 +53,19 @@ export default defineConfig({
       '@': resolve(__dirname, 'src/renderer'),
       '@config': resolve(__dirname, '../../packages/shared/src/config'),
       // Force all React imports to use the root node_modules React
-      // Bun hoists deps to root. This prevents "multiple React copies" error from @craft-agent/ui
+      // Bun hoists deps to root. This prevents "multiple React copies" error from @grose-agent/ui
       'react': resolve(__dirname, '../../node_modules/react'),
       'react-dom': resolve(__dirname, '../../node_modules/react-dom'),
     },
     dedupe: ['react', 'react-dom']
   },
   define: {
-    // Expose workbench feature flag to renderer bundles (shared feature-flags reads process.env)
-    'process.env.CRAFT_FEATURE_WORKBENCH_SHELL': JSON.stringify(
-      process.env.CRAFT_FEATURE_WORKBENCH_SHELL ?? '',
-    ),
+    // Legacy GROSE_FEATURE_WORKBENCH_SHELL flag removed: workbench is the sole UI
+    // shell (see docs/refactor-remove-app-shell.md).
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'jotai', 'pdfjs-dist'],
-    exclude: ['@craft-agent/ui'],
+    exclude: ['@grose-agent/ui'],
     esbuildOptions: {
       supported: { 'top-level-await': true },
       target: 'esnext'

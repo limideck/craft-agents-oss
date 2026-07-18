@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink, FileWarning, Loader2 } from 'lucide-react'
-import { classifyFile, Markdown, Spinner } from '@craft-agent/ui'
+import { classifyFile, Markdown, Spinner } from '@grose-agent/ui'
 import { ShikiCodeViewer } from '@/components/shiki'
 import { getLanguageFromPath } from '@/lib/file-utils'
 import { getFileManagerName } from '@/lib/platform'
@@ -18,7 +18,7 @@ type LoadState =
 
 /**
  * Center dock panel — read-only file preview (kandev file-editor slot).
- * Params: `{ path: string }`. Reuses Craft Shiki / Markdown / image readers.
+ * Params: `{ path: string }`. Reuses Grose Shiki / Markdown / image readers.
  */
 export function FileEditorPanel({ params }: { params: Record<string, unknown> }) {
   const path = typeof params.path === 'string' ? params.path : null

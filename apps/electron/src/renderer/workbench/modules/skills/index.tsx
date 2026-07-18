@@ -2,9 +2,9 @@ import * as React from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Zap } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
-import { SkillsListPanel } from '@/components/app-shell/SkillsListPanel'
+import { SkillsListPanel } from '@/components/lists/SkillsListPanel'
 import SkillInfoPage from '@/pages/SkillInfoPage'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { skillsAtom } from '@/atoms/skills'
@@ -94,7 +94,7 @@ function SkillDetailPanel() {
 export const skillsModule: WorkbenchModule = {
   id: 'skills',
   title: 'Skills',
-  icon: <Zap className="h-4 w-4" />,
+  icon: <Sparkles className="h-4 w-4" />,
   order: 30,
   defaultLayout: {
     columns: [

@@ -7,7 +7,7 @@ import {
 } from '../../../components/file-tree'
 import { joinPath } from '../../../components/file-tree-utils'
 import { PanelRoot, PanelBody, PanelHeaderBarSplit } from '../../../dock/panel-primitives'
-import { Spinner } from '@craft-agent/ui'
+import { Spinner } from '@grose-agent/ui'
 import { getFileManagerName } from '@/lib/platform'
 import { useOpenFileEditor } from '../open-file-editor'
 

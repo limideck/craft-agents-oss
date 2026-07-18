@@ -1,9 +1,9 @@
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import * as craftModules from '@craft-agent/shared/craft-modules'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import * as groseModules from '@grose-agent/shared/grose-modules'
 import type {
-  CraftModulesWorkflowCreateInput,
-  CraftModulesWorkflowUpdateInput,
-} from '@craft-agent/shared/craft-modules'
+  GroseModulesWorkflowCreateInput,
+  GroseModulesWorkflowUpdateInput,
+} from '@grose-agent/shared/grose-modules'
 
 /** Minimal server surface so domain packages do not depend on server-core. */
 export type DomainRpcServer = {
@@ -12,17 +12,17 @@ export type DomainRpcServer = {
 
 export type RegisterWorkflowsRpcOptions = {
   /**
-   * When true, skip `workflows:run` so server-core can register a Craft-side
+   * When true, skip `workflows:run` so server-core can register a Grose-side
    * executor that runs real agent sessions (see workflows-run.ts).
    */
   skipRun?: boolean
 }
 
 /**
- * Workflows domain RPC — thin proxy to craft-modules Go sidecar.
+ * Workflows domain RPC — thin proxy to grose-modules Go sidecar.
  * Workspace data: `{rootPath}/modules/workflows/` (see docs/workspace-storage.md).
  *
- * `workflows:run` may be owned by server-core (Craft agent execution). Pass
+ * `workflows:run` may be owned by server-core (Grose agent execution). Pass
  * `skipRun: true` when registering from domain-stubs alongside that handler.
  */
 export function registerWorkflowsRpcHandlers(
@@ -31,27 +31,27 @@ export function registerWorkflowsRpcHandlers(
 ): void {
   server.handle(RPC_CHANNELS.workflows.PING, async () => {
     try {
-      return await craftModules.workflowsPing()
+      return await groseModules.workflowsPing()
     } catch {
       return { ok: false as const, domain: 'workflows' as const }
     }
   })
 
   server.handle(RPC_CHANNELS.workflows.LIST, async (_ctx: unknown, workspaceId: string) => {
-    return craftModules.listWorkflows(workspaceId)
+    return groseModules.listWorkflows(workspaceId)
   })
 
   server.handle(
     RPC_CHANNELS.workflows.GET,
     async (_ctx: unknown, workspaceId: string, workflowId: string) => {
-      return craftModules.getWorkflow(workspaceId, workflowId)
+      return groseModules.getWorkflow(workspaceId, workflowId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.workflows.CREATE,
-    async (_ctx: unknown, workspaceId: string, input: CraftModulesWorkflowCreateInput) => {
-      return craftModules.createWorkflow(workspaceId, input)
+    async (_ctx: unknown, workspaceId: string, input: GroseModulesWorkflowCreateInput) => {
+      return groseModules.createWorkflow(workspaceId, input)
     },
   )
 
@@ -61,16 +61,16 @@ export function registerWorkflowsRpcHandlers(
       _ctx: unknown,
       workspaceId: string,
       workflowId: string,
-      input: CraftModulesWorkflowUpdateInput,
+      input: GroseModulesWorkflowUpdateInput,
     ) => {
-      return craftModules.updateWorkflow(workspaceId, workflowId, input)
+      return groseModules.updateWorkflow(workspaceId, workflowId, input)
     },
   )
 
   server.handle(
     RPC_CHANNELS.workflows.DELETE,
     async (_ctx: unknown, workspaceId: string, workflowId: string) => {
-      await craftModules.deleteWorkflow(workspaceId, workflowId)
+      await groseModules.deleteWorkflow(workspaceId, workflowId)
       return { ok: true as const }
     },
   )
@@ -79,23 +79,23 @@ export function registerWorkflowsRpcHandlers(
     server.handle(
       RPC_CHANNELS.workflows.RUN,
       async (_ctx: unknown, workspaceId: string, workflowId: string) => {
-        return craftModules.runWorkflow(workspaceId, workflowId)
+        return groseModules.runWorkflow(workspaceId, workflowId)
       },
     )
   }
 
-  // Deploy is always Go-owned (unlike RUN which Craft may own).
+  // Deploy is always Go-owned (unlike RUN which Grose may own).
   server.handle(
     RPC_CHANNELS.workflows.DEPLOY,
     async (_ctx: unknown, workspaceId: string, workflowId: string) => {
-      return craftModules.deployWorkflow(workspaceId, workflowId)
+      return groseModules.deployWorkflow(workspaceId, workflowId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.workflows.UNDEPLOY,
     async (_ctx: unknown, workspaceId: string, workflowId: string) => {
-      return craftModules.undeployWorkflow(workspaceId, workflowId)
+      return groseModules.undeployWorkflow(workspaceId, workflowId)
     },
   )
 }

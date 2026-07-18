@@ -1,11 +1,11 @@
 /**
- * Bootstrap the nested open-connector clone for local Craft Agents development.
+ * Bootstrap the nested open-connector clone for local Grose Agents development.
  *
  * Usage (from repo root):
  *   bun run scripts/setup-open-connector.ts
  *
  * Runs `npm install` and `npm run generate:catalog` inside ./open-connector.
- * Does not add open-connector to craft bun workspaces.
+ * Does not add open-connector to grose bun workspaces.
  */
 
 import { existsSync } from 'fs'

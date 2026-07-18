@@ -162,8 +162,8 @@ export const MOCK_ARTICLES: RssArticle[] = [
   {
     id: 'art-7',
     feedId: 'feed-local',
-    title: 'Welcome to the Craft RSS mock',
-    author: 'Craft',
+    title: 'Welcome to the Grose RSS mock',
+    author: 'Grose',
     publishedAt: hoursAgo(1),
     summary: 'UI-only reader: mark read in local state, no backend.',
     contentHtml: `
@@ -179,9 +179,9 @@ export const MOCK_ARTICLES: RssArticle[] = [
     title: 'Shadows and surfaces in desktop UI',
     author: 'Una',
     publishedAt: daysAgo(4),
-    summary: 'Match Craft’s six-color surfaces and minimal shadows — not IDE dark tokens.',
+    summary: 'Match Grose’s six-color surfaces and minimal shadows — not IDE dark tokens.',
     contentHtml: `
-      <p>Craft panels use <code>bg-card</code>, <code>border-border</code>, and soft elevation.</p>
+      <p>Grose panels use <code>bg-card</code>, <code>border-border</code>, and soft elevation.</p>
       <p>Avoid importing alien <code>--ide-*</code> tokens into the workbench RSS module.</p>
     `,
     url: 'https://css-tricks.com/shadows-surfaces',

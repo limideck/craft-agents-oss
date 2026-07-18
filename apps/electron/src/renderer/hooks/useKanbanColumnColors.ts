@@ -10,9 +10,9 @@
 import * as React from 'react'
 import { useAtomValue } from 'jotai'
 import { kanbanColumnColorsAtom } from '@/atoms/kanban'
-import { KANBAN_COLUMNS } from '@/components/app-shell/kanban/status-column'
-import { DEFAULT_KANBAN_COLUMN_COLORS } from '@/components/app-shell/kanban/kanban-colors'
-import type { BuiltInKanbanColumnId, KanbanColumnId } from '@/components/app-shell/kanban/types'
+import { KANBAN_COLUMNS } from '@/components/kanban/status-column'
+import { DEFAULT_KANBAN_COLUMN_COLORS } from '@/components/kanban/kanban-colors'
+import type { BuiltInKanbanColumnId, KanbanColumnId } from '@/components/kanban/types'
 
 export interface KanbanColumnColor {
   /** The accent hex (header pill background, dots). */

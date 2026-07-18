@@ -8,7 +8,7 @@ import { RunsPage } from './RunsPage'
 import { AccessPage } from './AccessPage'
 import { InlineError, StatusDot } from './shared-ui'
 import { Button } from '@/components/ui/button'
-import { PanelHeader } from '@/components/app-shell/PanelHeader'
+import { PanelHeader } from '@/components/ui/panel-header'
 import type { OpenConnectorSection } from './types'
 import { PanelRoot, PanelBody } from '../../dock/panel-primitives'
 

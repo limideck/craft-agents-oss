@@ -232,7 +232,7 @@ function sampleOutput(
       return { received: true, path: input.path, status: 200 }
     case 'agent':
       return {
-        text: `(local fallback) configure Agent + Run via Craft — not a model reply`,
+        text: `(local fallback) configure Agent + Run via Grose — not a model reply`,
         model: input.model,
         sessionId: null,
       }

@@ -14,9 +14,9 @@ describe('validateFilePath', () => {
   })
 
   it('allows paths inside temp directory', async () => {
-    const path = join(tmp, 'craft-test.txt')
+    const path = join(tmp, 'grose-test.txt')
     const result = await validateFilePath(path)
-    expect(result).toContain('craft-test.txt')
+    expect(result).toContain('grose-test.txt')
   })
 
   it('denies paths outside all allowed directories', async () => {

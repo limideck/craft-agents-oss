@@ -18,7 +18,7 @@ function syncChatPanelSession(sessionId: string, api: DockviewApi | null): void 
 }
 
 /**
- * Left-column session list — thin wiring to Craft session atoms / navigation.
+ * Left-column session list — thin wiring to Grose session atoms / navigation.
  * Not a full port of AppShell SessionList (menus, filters, multi-select).
  */
 export function SessionListPanel() {

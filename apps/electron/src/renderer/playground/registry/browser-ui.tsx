@@ -7,7 +7,7 @@ import {
   TurnCard,
   type ActivityItem,
   type ResponseContent,
-} from '@craft-agent/ui'
+} from '@grose-agent/ui'
 import { AnimatePresence, motion } from 'motion/react'
 import { BrowserTabStrip } from '@/components/browser/BrowserTabStrip'
 import { EMPTY_STATE_PROMPT_SAMPLES } from '@/components/browser/empty-state-prompts'
@@ -106,7 +106,7 @@ const WRAPPER_COMMANDS_TURN: ActivityItem[] = [
   { id: 'wrapper-open', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'open' }, intent: 'Wrapper: open browser', timestamp: now - 4200 },
   { id: 'wrapper-navigate', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'navigate https://example.com' }, intent: 'Wrapper: navigate to URL', timestamp: now - 3900 },
   { id: 'wrapper-snapshot', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'snapshot' }, intent: 'Wrapper: list refs', timestamp: now - 3600 },
-  { id: 'wrapper-fill', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'fill @e5 hello@craft.do' }, intent: 'Wrapper: fill text field', timestamp: now - 3300 },
+  { id: 'wrapper-fill', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'fill @e5 hello@grose.do' }, intent: 'Wrapper: fill text field', timestamp: now - 3300 },
   { id: 'wrapper-click', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'click @e8' }, intent: 'Wrapper: click target', timestamp: now - 3000 },
   { id: 'wrapper-scroll', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'scroll down 600' }, intent: 'Wrapper: scroll viewport', timestamp: now - 2700 },
   { id: 'wrapper-evaluate', type: 'tool', status: 'completed', toolName: 'browser_tool', toolInput: { command: 'evaluate document.title' }, intent: 'Wrapper: evaluate expression', timestamp: now - 2400 },
@@ -183,7 +183,7 @@ function getLiveFxPayload(scenario: Scenario, runState: RunState): { active: boo
 
     return {
       active: true,
-      label: 'Craft Agents are working…',
+      label: 'Grose Agents are working…',
       cursor: cursorByScenario[scenario],
     }
   }
@@ -223,7 +223,7 @@ function BrowserAgentEmptyState({
 }) {
   const handlePromptSelect = useCallback(async (prompt: string) => {
     const deepLinkRoute = routes.action.newSession({ input: prompt, send: true })
-    const deepLinkUrl = `craftagents://${deepLinkRoute}`
+    const deepLinkUrl = `groseagents://${deepLinkRoute}`
 
     try {
       if (typeof window !== 'undefined' && window.electronAPI?.openUrl) {
@@ -549,7 +549,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mock-2',
-      url: 'https://linear.app/craft-docs/settings/teams',
+      url: 'https://linear.app/grose-docs/settings/teams',
       title: 'Linear',
       favicon: null,
       isLoading: true,
@@ -564,7 +564,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mock-3',
-      url: 'https://craftdocs.bamboohr.com/employees/pto/?id=132',
+      url: 'https://grosedocs.bamboohr.com/employees/pto/?id=132',
       title: 'BambooHR',
       favicon: null,
       isLoading: false,
@@ -579,7 +579,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mock-4',
-      url: 'https://github.com/lukilabs/craft-agents-oss',
+      url: 'https://github.com/lukilabs/grose-agents-oss',
       title: 'GitHub',
       favicon: null,
       isLoading: false,
@@ -611,8 +611,8 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
   'long-names': [
     {
       id: 'long-1',
-      url: 'https://www.notion.so/Craft-Agents-Multi-Session-Browser-Registry-Design-Review-Thread-2026-Q1',
-      title: 'Craft Agents Multi-Session Browser Registry Design Review Thread (Q1 2026)',
+      url: 'https://www.notion.so/Grose-Agents-Multi-Session-Browser-Registry-Design-Review-Thread-2026-Q1',
+      title: 'Grose Agents Multi-Session Browser Registry Design Review Thread (Q1 2026)',
       favicon: null,
       isLoading: false,
       canGoBack: true,
@@ -626,7 +626,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'long-2',
-      url: 'https://linear.app/craft-docs/issue/CHA-999/very-long-title-to-test-truncation-behavior-in-top-bar-badges',
+      url: 'https://linear.app/grose-docs/issue/CHA-999/very-long-title-to-test-truncation-behavior-in-top-bar-badges',
       title: 'CHA-999 — Extremely Long Issue Title to Validate Ellipsis and Badge Width Constraints',
       favicon: null,
       isLoading: false,
@@ -673,7 +673,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'run-2',
-      url: 'https://linear.app/craft-docs/team/CHA/active',
+      url: 'https://linear.app/grose-docs/team/CHA/active',
       title: 'Linear Active Issues',
       favicon: null,
       isLoading: true,
@@ -688,7 +688,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'run-3',
-      url: 'https://github.com/lukilabs/craft-agents-oss/pulls',
+      url: 'https://github.com/lukilabs/grose-agents-oss/pulls',
       title: 'GitHub PRs',
       favicon: null,
       isLoading: true,
@@ -703,7 +703,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'run-4',
-      url: 'https://craftdocs.bamboohr.com/reports',
+      url: 'https://grosedocs.bamboohr.com/reports',
       title: 'BambooHR Reports',
       favicon: null,
       isLoading: true,
@@ -750,7 +750,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mix-2',
-      url: 'https://linear.app/craft-docs/settings/new-team',
+      url: 'https://linear.app/grose-docs/settings/new-team',
       title: 'Add team',
       favicon: null,
       isLoading: true,
@@ -765,7 +765,7 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mix-3',
-      url: 'https://craftdocs.bamboohr.com/employees/pto/?id=132',
+      url: 'https://grosedocs.bamboohr.com/employees/pto/?id=132',
       title: 'Péter Bobula - Time Off',
       favicon: null,
       isLoading: false,
@@ -780,8 +780,8 @@ const MOCK_BROWSER_PRESETS: Record<BrowserTabStripMockPreset, BrowserInstanceInf
     },
     {
       id: 'mix-4',
-      url: 'https://github.com/lukilabs/craft-agents-oss',
-      title: 'Craft Agents OSS Repo with a Surprisingly Long Branch and Compare View Name',
+      url: 'https://github.com/lukilabs/grose-agents-oss',
+      title: 'Grose Agents OSS Repo with a Surprisingly Long Branch and Compare View Name',
       favicon: null,
       isLoading: false,
       canGoBack: true,

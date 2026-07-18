@@ -317,6 +317,17 @@ export const CHANNEL_MAP = {
   getBrowserToolEnabled: invoke(RPC_CHANNELS.tools.GET_BROWSER_TOOL_ENABLED),
   setBrowserToolEnabled: invoke(RPC_CHANNELS.tools.SET_BROWSER_TOOL_ENABLED),
 
+  // Voice input (local speech-to-text)
+  getVoiceModelStatus: invoke(RPC_CHANNELS.voice.GET_STATUS),
+  downloadVoiceModel: invoke(RPC_CHANNELS.voice.DOWNLOAD),
+  cancelVoiceModelDownload: invoke(RPC_CHANNELS.voice.CANCEL_DOWNLOAD),
+  deleteVoiceModel: invoke(RPC_CHANNELS.voice.DELETE),
+  transcribeVoiceAudio: invoke(RPC_CHANNELS.voice.TRANSCRIBE),
+  transcribeVoiceInterim: invoke(RPC_CHANNELS.voice.TRANSCRIBE_INTERIM),
+  requestMicPermission: invoke(RPC_CHANNELS.voice.REQUEST_MIC_PERMISSION),
+  openMicSettings: invoke(RPC_CHANNELS.voice.OPEN_MIC_SETTINGS),
+  onVoiceDownloadProgress: listener(RPC_CHANNELS.voice.DOWNLOAD_PROGRESS),
+
   // Prompt caching & context
   getExtendedPromptCache: invoke(RPC_CHANNELS.caching.GET_EXTENDED_PROMPT_CACHE),
   setExtendedPromptCache: invoke(RPC_CHANNELS.caching.SET_EXTENDED_PROMPT_CACHE),
@@ -458,10 +469,10 @@ export const CHANNEL_MAP = {
   restartTables: invoke(RPC_CHANNELS.tables.RESTART),
   tablesFetch: invoke(RPC_CHANNELS.tables.FETCH),
 
-  // craft-modules sidecar
-  getCraftModulesStatus: invoke(RPC_CHANNELS.craftModules.GET_STATUS),
-  getCraftModulesConfig: invoke(RPC_CHANNELS.craftModules.GET_CONFIG),
-  restartCraftModules: invoke(RPC_CHANNELS.craftModules.RESTART),
+  // grose-modules sidecar
+  getGroseModulesStatus: invoke(RPC_CHANNELS.groseModules.GET_STATUS),
+  getGroseModulesConfig: invoke(RPC_CHANNELS.groseModules.GET_CONFIG),
+  restartGroseModules: invoke(RPC_CHANNELS.groseModules.RESTART),
 
   // RSS domain
   rssPing: invoke(RPC_CHANNELS.rss.PING),

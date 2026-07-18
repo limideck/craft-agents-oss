@@ -1,10 +1,10 @@
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import * as craftModules from '@craft-agent/shared/craft-modules'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import * as groseModules from '@grose-agent/shared/grose-modules'
 import type {
-  CraftModulesSiteCreateInput,
-  CraftModulesSiteUpdateInput,
-  CraftModulesVisualEditSaveInput,
-} from '@craft-agent/shared/craft-modules'
+  GroseModulesSiteCreateInput,
+  GroseModulesSiteUpdateInput,
+  GroseModulesVisualEditSaveInput,
+} from '@grose-agent/shared/grose-modules'
 
 /** Minimal server surface so domain packages do not depend on server-core. */
 export type DomainRpcServer = {
@@ -12,33 +12,33 @@ export type DomainRpcServer = {
 }
 
 /**
- * Sites domain RPC — thin proxy to craft-modules Go sidecar.
+ * Sites domain RPC — thin proxy to grose-modules Go sidecar.
  * Workspace data: `{rootPath}/modules/sites/` (see docs/workspace-storage.md).
  */
 export function registerSitesRpcHandlers(server: DomainRpcServer): void {
   server.handle(RPC_CHANNELS.sites.PING, async () => {
     try {
-      return await craftModules.sitesPing()
+      return await groseModules.sitesPing()
     } catch {
       return { ok: false as const, domain: 'sites' as const }
     }
   })
 
   server.handle(RPC_CHANNELS.sites.LIST, async (_ctx: unknown, workspaceId: string) => {
-    return craftModules.listSites(workspaceId)
+    return groseModules.listSites(workspaceId)
   })
 
   server.handle(
     RPC_CHANNELS.sites.GET,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      return craftModules.getSite(workspaceId, siteId)
+      return groseModules.getSite(workspaceId, siteId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.CREATE,
-    async (_ctx: unknown, workspaceId: string, input: CraftModulesSiteCreateInput) => {
-      return craftModules.createSite(workspaceId, input)
+    async (_ctx: unknown, workspaceId: string, input: GroseModulesSiteCreateInput) => {
+      return groseModules.createSite(workspaceId, input)
     },
   )
 
@@ -48,16 +48,16 @@ export function registerSitesRpcHandlers(server: DomainRpcServer): void {
       _ctx: unknown,
       workspaceId: string,
       siteId: string,
-      input: CraftModulesSiteUpdateInput,
+      input: GroseModulesSiteUpdateInput,
     ) => {
-      return craftModules.updateSite(workspaceId, siteId, input)
+      return groseModules.updateSite(workspaceId, siteId, input)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.DELETE,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      await craftModules.deleteSite(workspaceId, siteId)
+      await groseModules.deleteSite(workspaceId, siteId)
       return { ok: true as const }
     },
   )
@@ -65,14 +65,14 @@ export function registerSitesRpcHandlers(server: DomainRpcServer): void {
   server.handle(
     RPC_CHANNELS.sites.LIST_FILES,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      return craftModules.listSiteFiles(workspaceId, siteId)
+      return groseModules.listSiteFiles(workspaceId, siteId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.READ_FILE,
     async (_ctx: unknown, workspaceId: string, siteId: string, path: string) => {
-      return craftModules.readSiteFile(workspaceId, siteId, path)
+      return groseModules.readSiteFile(workspaceId, siteId, path)
     },
   )
 
@@ -84,42 +84,42 @@ export function registerSitesRpcHandlers(server: DomainRpcServer): void {
       siteId: string,
       input: { path: string; content: string },
     ) => {
-      return craftModules.writeSiteFile(workspaceId, siteId, input)
+      return groseModules.writeSiteFile(workspaceId, siteId, input)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.PREVIEW_START,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      return craftModules.startSitePreview(workspaceId, siteId)
+      return groseModules.startSitePreview(workspaceId, siteId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.PREVIEW_STOP,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      return craftModules.stopSitePreview(workspaceId, siteId)
+      return groseModules.stopSitePreview(workspaceId, siteId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.PREVIEW_URL,
     async (_ctx: unknown, workspaceId: string, siteId: string) => {
-      return craftModules.getSitePreview(workspaceId, siteId)
+      return groseModules.getSitePreview(workspaceId, siteId)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.VISUAL_EDIT_SAVE,
-    async (_ctx: unknown, workspaceId: string, input: CraftModulesVisualEditSaveInput) => {
-      return craftModules.saveSiteVisualEdit(workspaceId, input)
+    async (_ctx: unknown, workspaceId: string, input: GroseModulesVisualEditSaveInput) => {
+      return groseModules.saveSiteVisualEdit(workspaceId, input)
     },
   )
 
   server.handle(
     RPC_CHANNELS.sites.BIND_SESSION,
     async (_ctx: unknown, workspaceId: string, siteId: string, sessionId: string | null) => {
-      return craftModules.bindSiteSession(workspaceId, siteId, sessionId)
+      return groseModules.bindSiteSession(workspaceId, siteId, sessionId)
     },
   )
 }

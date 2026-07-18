@@ -5,7 +5,7 @@ import { SitesChatPanel } from './panels/chat-panel'
 import { SitesFilesPanel } from './panels/files-panel'
 import { SitesPreviewPanel } from './panels/preview-panel'
 
-/** Sites (建站) workbench module — Chat | Files | Preview via craft-modules. */
+/** Sites (建站) workbench module — Chat | Files | Preview via grose-modules. */
 export const sitesModule: WorkbenchModule = {
   id: 'sites',
   title: 'Sites',

@@ -1,6 +1,6 @@
-# Contributing to Craft Agents
+# Contributing to Grose Agents
 
-Thank you for your interest in contributing to Craft Agents! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Grose Agents! This document provides guidelines and instructions for contributing.
 
 ## Getting Started
 
@@ -14,8 +14,8 @@ Thank you for your interest in contributing to Craft Agents! This document provi
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/lukilabs/craft-agents-oss.git
-   cd craft-agents-oss
+   git clone https://github.com/lukilabs/grose-agents-oss.git
+   cd grose-agents-oss
    ```
 
 2. Install dependencies:
@@ -93,14 +93,14 @@ How you tested these changes
 ## Project Structure
 
 ```
-craft-agents/
+grose-agents/
 ├── apps/
 │   ├── electron/    # Desktop GUI (primary interface)
 │   └── tui/         # Terminal CLI (deprecated)
 └── packages/
-    ├── core/        # @craft-agent/core - Shared types
-    ├── shared/      # @craft-agent/shared - Business logic
-    └── ui/          # @craft-agent/ui - React components
+    ├── core/        # @grose-agent/core - Shared types
+    ├── shared/      # @grose-agent/shared - Business logic
+    └── ui/          # @grose-agent/ui - React components
 ```
 
 ## Key Areas

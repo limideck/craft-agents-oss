@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from 'react'
 import { getDefaultStore, useSetAtom } from 'jotai'
 import type {
-  CraftModulesWorkflow,
-  CraftModulesWorkflowCreateInput,
-} from '@craft-agent/shared/craft-modules'
+  GroseModulesWorkflow,
+  GroseModulesWorkflowCreateInput,
+} from '@grose-agent/shared/grose-modules'
 import { useAppShellContext } from '@/context/AppShellContext'
 import type { WorkflowSummary } from './mock/types'
 import {
@@ -29,7 +29,7 @@ const persistSeq = new Map<string, number>()
 
 const PERSIST_DEBOUNCE_MS = 450
 
-function toSummary(wf: CraftModulesWorkflow): WorkflowSummary {
+function toSummary(wf: GroseModulesWorkflow): WorkflowSummary {
   return {
     id: wf.id,
     name: wf.name,
@@ -65,7 +65,7 @@ export function refreshWorkflowData(): Promise<void> {
 }
 
 /**
- * Debounced PATCH of a workflow's graph to craft-modules.
+ * Debounced PATCH of a workflow's graph to grose-modules.
  * Call after optimistic local mutations (nodes / edges / config / positions).
  */
 export function scheduleWorkflowPersist(workflowId: string, delayMs = PERSIST_DEBOUNCE_MS): void {
@@ -129,10 +129,10 @@ async function flushWorkflowPersist(workflowId: string): Promise<void> {
 
 export async function createWorkflowViaRpc(
   workspaceId: string,
-  input?: Partial<CraftModulesWorkflowCreateInput> & { name?: string },
+  input?: Partial<GroseModulesWorkflowCreateInput> & { name?: string },
 ): Promise<WorkflowSummary> {
   const base = createWorkflowDraft(input?.name)
-  const draft: CraftModulesWorkflowCreateInput = {
+  const draft: GroseModulesWorkflowCreateInput = {
     name: base.name,
     description: input?.description ?? base.description,
     nodes: input?.nodes ?? base.nodes,
@@ -158,7 +158,7 @@ export async function deleteWorkflowViaRpc(
 export async function runWorkflowViaRpc(
   workspaceId: string,
   workflowId: string,
-): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowRunResult> {
+): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowRunResult> {
   await flushPendingWorkflowPersists(workflowId)
   return window.electronAPI.workflowsRun(workspaceId, workflowId)
 }
@@ -166,7 +166,7 @@ export async function runWorkflowViaRpc(
 export async function deployWorkflowViaRpc(
   workspaceId: string,
   workflowId: string,
-): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult> {
+): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowDeployResult> {
   await flushPendingWorkflowPersists(workflowId)
   return window.electronAPI.workflowsDeploy(workspaceId, workflowId)
 }
@@ -176,7 +176,7 @@ type Options = {
   bootstrap?: boolean
 }
 
-/** Load workflows for the active workspace from craft-modules via RPC. */
+/** Load workflows for the active workspace from grose-modules via RPC. */
 export function useWorkflowWorkspaceData(options: Options = {}) {
   const bootstrap = options.bootstrap ?? false
   const { activeWorkspaceId } = useAppShellContext()

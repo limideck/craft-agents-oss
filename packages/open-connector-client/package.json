@@ -1,5 +1,5 @@
 {
-  "name": "@craft-agent/open-connector-client",
+  "name": "@grose-agent/open-connector-client",
   "version": "0.10.5",
   "license": "Apache-2.0",
   "description": "Typed HTTP client for the OpenConnector sidecar (/api, /v1, /health)",

@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { SessionList, type ChatGroupingMode } from '@/components/app-shell/SessionList'
+import { SessionList, type ChatGroupingMode } from '@/components/sessions/SessionList'
 import { MobileWebUIFrame, type MobileDevice } from './MobileWebUIFrame'
 import { MobilePlaygroundProviders } from './MobilePlaygroundProviders'
 import {

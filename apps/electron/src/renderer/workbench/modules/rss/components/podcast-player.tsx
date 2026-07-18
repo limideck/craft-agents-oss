@@ -22,7 +22,7 @@ function fmt(s: number) {
 }
 
 /**
- * Bottom podcast bar — play/pause, seek, skip, speed. Craft styling.
+ * Bottom podcast bar — play/pause, seek, skip, speed. Grose styling.
  */
 export function PodcastPlayer({ episode, onClose }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null)

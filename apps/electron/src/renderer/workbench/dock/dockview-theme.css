@@ -1,6 +1,6 @@
-/* Dockview workbench chrome — wired to Craft theme vars (not frontend --ide-*) */
+/* Dockview workbench chrome — wired to Grose theme vars (not frontend --ide-*) */
 
-.dockview-theme-craft {
+.dockview-theme-grose {
   --dv-background-color: var(--card);
   --dv-group-view-background-color: var(--background);
 
@@ -41,7 +41,7 @@
   --dv-drag-over-border-color: var(--accent);
 }
 
-.dockview-theme-craft .dv-tabs-and-actions-container {
+.dockview-theme-grose .dv-tabs-and-actions-container {
   background: var(--background);
   border-bottom: 1px solid var(--border);
   min-height: 40px;
@@ -50,11 +50,11 @@
   align-items: center;
 }
 
-.dockview-theme-craft .dv-tabs-container.dv-horizontal .dv-tab::before {
+.dockview-theme-grose .dv-tabs-container.dv-horizontal .dv-tab::before {
   display: none !important;
 }
 
-.dockview-theme-craft .dv-tab {
+.dockview-theme-grose .dv-tab {
   padding: 0;
   margin: 0 1px;
   font-size: 12px;
@@ -69,23 +69,23 @@
   cursor: pointer;
 }
 
-.dockview-theme-craft .dv-tab:hover {
+.dockview-theme-grose .dv-tab:hover {
   background: color-mix(in srgb, var(--muted) 50%, transparent);
   color: var(--foreground);
 }
 
-.dockview-theme-craft .dv-active-tab {
+.dockview-theme-grose .dv-active-tab {
   border-bottom: none !important;
 }
 
-.dockview-theme-craft .dv-tab:focus-within,
-.dockview-theme-craft .dv-tab:focus-visible {
+.dockview-theme-grose .dv-tab:focus-within,
+.dockview-theme-grose .dv-tab:focus-visible {
   box-shadow:
     inset 0 0 0 1px var(--ring),
     0 0 0 1px color-mix(in oklab, var(--ring) 20%, transparent);
 }
 
-.dockview-theme-craft .dv-default-tab {
+.dockview-theme-grose .dv-default-tab {
   font-size: 12px;
   font-weight: 500;
   padding: 0 7px;
@@ -94,7 +94,7 @@
   line-height: 1;
 }
 
-.dockview-theme-craft .dv-default-tab .dv-default-tab-action {
+.dockview-theme-grose .dv-default-tab .dv-default-tab-action {
   opacity: 0;
   transition:
     opacity 0.15s ease,
@@ -108,49 +108,49 @@
   cursor: pointer;
 }
 
-.dockview-theme-craft .dv-default-tab .dv-default-tab-action .dv-svg {
+.dockview-theme-grose .dv-default-tab .dv-default-tab-action .dv-svg {
   height: 8px;
   width: 8px;
 }
 
-.dockview-theme-craft .dv-default-tab .dv-default-tab-action:hover {
+.dockview-theme-grose .dv-default-tab .dv-default-tab-action:hover {
   background: color-mix(in srgb, var(--foreground) 12%, transparent);
   color: var(--foreground);
 }
 
-.dockview-theme-craft .dv-default-tab .dv-default-tab-action:focus-visible {
+.dockview-theme-grose .dv-default-tab .dv-default-tab-action:focus-visible {
   outline: 1px solid var(--ring);
   outline-offset: 1px;
 }
 
-.dockview-theme-craft .dv-tab:hover .dv-default-tab .dv-default-tab-action,
-.dockview-theme-craft .dv-active-tab .dv-default-tab .dv-default-tab-action {
+.dockview-theme-grose .dv-tab:hover .dv-default-tab .dv-default-tab-action,
+.dockview-theme-grose .dv-active-tab .dv-default-tab .dv-default-tab-action {
   opacity: 1;
 }
 
-.dockview-theme-craft .dv-content-container {
+.dockview-theme-grose .dv-content-container {
   background: var(--card);
 }
 
-.dockview-theme-craft .dv-resize-container > .sash-container .sash {
+.dockview-theme-grose .dv-resize-container > .sash-container .sash {
   background: transparent;
   transition: background-color 0.15s ease;
 }
 
-.dockview-theme-craft .dv-resize-container > .sash-container .sash:hover,
-.dockview-theme-craft .dv-resize-container > .sash-container .sash.active {
+.dockview-theme-grose .dv-resize-container > .sash-container .sash:hover,
+.dockview-theme-grose .dv-resize-container > .sash-container .sash.active {
   background: var(--accent);
 }
 
-.dockview-theme-craft .dv-void-container {
+.dockview-theme-grose .dv-void-container {
   flex: 1;
 }
 
-.dockview-theme-craft .dv-watermark {
+.dockview-theme-grose .dv-watermark {
   background: transparent;
 }
 
-.dockview-theme-craft .drop-target-dropzone > .drop-target-selection {
+.dockview-theme-grose .drop-target-dropzone > .drop-target-selection {
   border: 2px solid var(--accent);
   background: color-mix(in oklab, var(--accent) 8%, transparent);
   border-radius: 4px;

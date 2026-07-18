@@ -1,6 +1,6 @@
 /**
  * Sample workflow graphs for local UI demos / Storybook only.
- * Production UI loads from craft-modules via `workflows:*` RPC — do not seed the store from here.
+ * Production UI loads from grose-modules via `workflows:*` RPC — do not seed the store from here.
  */
 import type { WorkflowLogLine, WorkflowSummary } from './types'
 

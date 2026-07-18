@@ -5,11 +5,11 @@
  * These sources are not shown in the sources list UI but are available
  * for the agent to use.
  *
- * NOTE: craft-agents-docs is now an always-available MCP server configured
- * directly in craft-agent.ts, not a source. This file is kept for backwards
+ * NOTE: grose-agents-docs is now an always-available MCP server configured
+ * directly in grose-agent.ts, not a source. This file is kept for backwards
  * compatibility but returns empty results.
  *
- * Prefer-builtin MCP: `craft-modules` is a real on-disk workspace Source
+ * Prefer-builtin MCP: `grose-modules` is a real on-disk workspace Source
  * (upserted by sidecar lifecycle). It is marked preferred via
  * {@link isPreferredBuiltinSource} — do NOT treat it as a virtual builtin
  * in {@link isBuiltinSource} / {@link getBuiltinSources} or loadSource breaks.
@@ -17,8 +17,8 @@
 
 import type { LoadedSource, FolderSourceConfig } from './types.ts';
 
-/** Prefer-builtin MCP source slug (must match craft-modules/mcp-source.ts). Inline to avoid circular import via storage. */
-const PREFERRED_BUILTIN_SOURCE_SLUGS = new Set(['craft-modules']);
+/** Prefer-builtin MCP source slug (must match grose-modules/mcp-source.ts). Inline to avoid circular import via storage. */
+const PREFERRED_BUILTIN_SOURCE_SLUGS = new Set(['grose-modules']);
 
 /**
  * Preferred builtin source slugs that sessions should enable by default
@@ -31,8 +31,8 @@ export function listPreferredBuiltinSourceSlugs(): string[] {
 /**
  * Get all built-in sources for a workspace.
  *
- * Currently returns empty array - craft-agents-docs has been moved to
- * an always-available MCP server in craft-agent.ts.
+ * Currently returns empty array - grose-agents-docs has been moved to
+ * an always-available MCP server in grose-agent.ts.
  *
  * @param _workspaceId - The workspace ID (unused)
  * @param _workspaceRootPath - Absolute path to workspace root folder (unused)
@@ -43,27 +43,27 @@ export function getBuiltinSources(_workspaceId: string, _workspaceRootPath: stri
 }
 
 /**
- * Get the built-in Craft Agents docs source.
+ * Get the built-in Grose Agents docs source.
  *
- * @deprecated craft-agents-docs is now an always-available MCP server
- * configured directly in craft-agent.ts. This function is kept for
+ * @deprecated grose-agents-docs is now an always-available MCP server
+ * configured directly in grose-agent.ts. This function is kept for
  * backwards compatibility but returns a placeholder.
  */
 export function getDocsSource(workspaceId: string, workspaceRootPath: string): LoadedSource {
   // Return a placeholder - this shouldn't be called anymore
   const placeholderConfig: FolderSourceConfig = {
-    id: 'builtin-craft-agents-docs',
-    name: 'Craft Agents Docs',
-    slug: 'craft-agents-docs',
+    id: 'builtin-grose-agents-docs',
+    name: 'Grose Agents Docs',
+    slug: 'grose-agents-docs',
     enabled: false,
     provider: 'mintlify',
     type: 'mcp',
     mcp: {
       transport: 'http',
-      url: 'https://agents.craft.do/docs/mcp',
+      url: 'https://agents.grose.do/docs/mcp',
       authType: 'none',
     },
-    tagline: 'Search Craft Agents documentation and source setup guides',
+    tagline: 'Search Grose Agents documentation and source setup guides',
     icon: '📚',
     isAuthenticated: true,
     connectionStatus: 'connected',
@@ -82,8 +82,8 @@ export function getDocsSource(workspaceId: string, workspaceRootPath: string): L
 /**
  * Check if a source slug is a virtual built-in source (not on disk).
  *
- * Returns false - craft-agents-docs is now an always-available MCP server,
- * not a source in the sources system. Prefer-builtin `craft-modules` is a
+ * Returns false - grose-agents-docs is now an always-available MCP server,
+ * not a source in the sources system. Prefer-builtin `grose-modules` is a
  * normal disk Source — use {@link isPreferredBuiltinSource} instead.
  *
  * @param _slug - Source slug to check (unused)
@@ -95,7 +95,7 @@ export function isBuiltinSource(_slug: string): boolean {
 
 /**
  * Preferred builtin MCP sources that agents should favor for matching intents
- * (see docs/craft-modules-agent-routing.md). These still live on disk.
+ * (see docs/grose-modules-agent-routing.md). These still live on disk.
  */
 export function isPreferredBuiltinSource(slug: string): boolean {
   return PREFERRED_BUILTIN_SOURCE_SLUGS.has(slug);

@@ -646,7 +646,7 @@ export function FileTreeToolbar({
   )
 }
 
-/** Thin adapter: lazy-load workspace entries + mutations via Craft fs RPC. */
+/** Thin adapter: lazy-load workspace entries + mutations via Grose fs RPC. */
 export function useWorkspaceFileTree(rootPath: string | null) {
   const [root, setRoot] = useState<FileTreeNode | null>(null)
   const [loading, setLoading] = useState(false)

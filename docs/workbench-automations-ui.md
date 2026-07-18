@@ -9,7 +9,7 @@ See also: [workbench-architecture.md](./workbench-architecture.md), [workbench-w
 | User intent | Surface | Implementation |
 |-------------|---------|----------------|
 | Schedule / label changed / start an Agent | **Rules** | `automations.json` + RPC (`useAutomations`) |
-| Multi-step branch / HTTP / approval / canvas | **Flows** | `workflows:*` + craft-modules |
+| Multi-step branch / HTTP / approval / canvas | **Flows** | `workflows:*` + grose-modules |
 
 ActivityBar shows a single **Automations** icon (Zap). There is no separate Workflows ActivityBar item.
 
@@ -17,7 +17,7 @@ ActivityBar shows a single **Automations** icon (Zap). There is no separate Work
 
 ## How to open
 
-1. Enable workbench: `CRAFT_FEATURE_WORKBENCH_SHELL=1` or `localStorage` flag (see architecture doc).
+1. Enable workbench: `GROSE_FEATURE_WORKBENCH_SHELL=1` or `localStorage` flag (see architecture doc).
 2. ActivityBar → **Automations**.
 3. Default surface is **Rules** (single-column `automation-detail`).
 4. Switch segment to **Flows** → dock applies `workflow-edit` (canvas + logs + right).
@@ -40,7 +40,7 @@ Same-module surface switches call `applyLayout` / `resolveModuleLayout` from the
 ## Data
 
 - Rules: `useAutomations` mounted in `WorkspaceDataProvider` → `automationsAtom` + AppShellContext handlers (test / toggle / duplicate / delete / history).
-- Flows: existing `use-workflow-data.ts` / craft-modules RPC (unchanged under `modules/workflows/`).
+- Flows: existing `use-workflow-data.ts` / grose-modules RPC (unchanged under `modules/workflows/`).
 
 Storage stays split in Phase 1 (`automations.json` vs workflow SQLite).
 

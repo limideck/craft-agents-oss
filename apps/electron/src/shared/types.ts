@@ -1,7 +1,7 @@
 // =============================================================================
 // Protocol re-exports (channels, DTOs, events, wire types)
 // =============================================================================
-export * from '@craft-agent/shared/protocol'
+export * from '@grose-agent/shared/protocol'
 
 // =============================================================================
 // Package re-exports (convenience for renderer imports)
@@ -20,17 +20,17 @@ import type {
   ContentBadge,
   ToolDisplayMeta,
   AnnotationV1,
-} from '@craft-agent/core/types';
+} from '@grose-agent/core/types';
 
 // Mode types from dedicated subpath export (avoids pulling in SDK)
-import type { PermissionMode } from '@craft-agent/shared/agent/modes';
+import type { PermissionMode } from '@grose-agent/shared/agent/modes';
 export type { PermissionMode };
-export { PERMISSION_MODE_CONFIG } from '@craft-agent/shared/agent/modes';
+export { PERMISSION_MODE_CONFIG } from '@grose-agent/shared/agent/modes';
 
 // Thinking level types
-import type { ThinkingLevel } from '@craft-agent/shared/agent/thinking-levels';
+import type { ThinkingLevel } from '@grose-agent/shared/agent/thinking-levels';
 export type { ThinkingLevel };
-export { THINKING_LEVELS, DEFAULT_THINKING_LEVEL } from '@craft-agent/shared/agent/thinking-levels';
+export { THINKING_LEVELS, DEFAULT_THINKING_LEVEL } from '@grose-agent/shared/agent/thinking-levels';
 
 export type {
   CoreMessage as Message,
@@ -47,28 +47,28 @@ export type {
 };
 
 // Auth types for onboarding
-import type { AuthState, SetupNeeds } from '@craft-agent/shared/auth/types';
-import type { AuthType } from '@craft-agent/shared/config/types';
+import type { AuthState, SetupNeeds } from '@grose-agent/shared/auth/types';
+import type { AuthType } from '@grose-agent/shared/config/types';
 export type { AuthState, SetupNeeds, AuthType };
 
 // Credential health types
-import type { CredentialHealthStatus, CredentialHealthIssue, CredentialHealthIssueType } from '@craft-agent/shared/credentials/types';
+import type { CredentialHealthStatus, CredentialHealthIssue, CredentialHealthIssueType } from '@grose-agent/shared/credentials/types';
 export type { CredentialHealthStatus, CredentialHealthIssue, CredentialHealthIssueType };
 
 // Source types for session source selection
-import type { LoadedSource, FolderSourceConfig, SourceConnectionStatus } from '@craft-agent/shared/sources/types';
+import type { LoadedSource, FolderSourceConfig, SourceConnectionStatus } from '@grose-agent/shared/sources/types';
 export type { LoadedSource, FolderSourceConfig, SourceConnectionStatus };
 
 // Skill types
-import type { LoadedSkill, SkillMetadata } from '@craft-agent/shared/skills/types';
+import type { LoadedSkill, SkillMetadata } from '@grose-agent/shared/skills/types';
 export type { LoadedSkill, SkillMetadata };
 
 // Resource bundle types (cross-workspace export/import)
-import type { ExportResourcesOptions, ExportResult, ResourceImportMode, ResourceBundle, ResourceImportResult } from '@craft-agent/shared/resources';
+import type { ExportResourcesOptions, ExportResult, ResourceImportMode, ResourceBundle, ResourceImportResult } from '@grose-agent/shared/resources';
 export type { ExportResourcesOptions, ExportResult, ResourceImportMode, ResourceBundle, ResourceImportResult };
 
 // LLM connection types
-import type { LlmConnection, LlmConnectionWithStatus, LlmAuthType, LlmProviderType, NetworkProxySettings } from '@craft-agent/shared/config';
+import type { LlmConnection, LlmConnectionWithStatus, LlmAuthType, LlmProviderType, NetworkProxySettings } from '@grose-agent/shared/config';
 export type { LlmConnection, LlmConnectionWithStatus, LlmAuthType, LlmProviderType, NetworkProxySettings };
 
 // =============================================================================
@@ -173,7 +173,7 @@ export interface TransportConnectionState {
 // =============================================================================
 
 // Re-import types for ElectronAPI
-import type { WorkspaceInfo, Workspace, SessionMetadata, StoredAttachment as StoredAttachmentType } from '@craft-agent/core/types';
+import type { WorkspaceInfo, Workspace, SessionMetadata, StoredAttachment as StoredAttachmentType } from '@grose-agent/core/types';
 
 // Import protocol types used by ElectronAPI (they come through the `export *` above,
 // but we need them in scope for the interface definition)
@@ -221,7 +221,7 @@ import type {
   DirectoryListingResult,
   RemoteSessionTransferPayload,
   ImportRemoteSessionTransferResult,
-} from '@craft-agent/shared/protocol'
+} from '@grose-agent/shared/protocol'
 
 export interface ElectronAPI {
   // Session management
@@ -260,9 +260,9 @@ export interface ElectronAPI {
   getServerHomeDir(): Promise<string>
 
   // Server mode configuration
-  getServerConfig(): Promise<import('@craft-agent/shared/config/server-config').ServerConfig>
-  setServerConfig(config: import('@craft-agent/shared/config/server-config').ServerConfig): Promise<void>
-  getServerStatus(): Promise<import('@craft-agent/shared/config/server-config').ServerStatus>
+  getServerConfig(): Promise<import('@grose-agent/shared/config/server-config').ServerConfig>
+  setServerConfig(config: import('@grose-agent/shared/config/server-config').ServerConfig): Promise<void>
+  getServerStatus(): Promise<import('@grose-agent/shared/config/server-config').ServerStatus>
 
   // App lifecycle
   relaunchApp(): Promise<void>
@@ -347,7 +347,7 @@ export interface ElectronAPI {
   // Server filesystem browsing (remote mode)
   listServerDirectory(dirPath: string): Promise<DirectoryListingResult>
   /** List files + directories for the workbench file tree (workspace-scoped). */
-  listServerEntries(dirPath: string): Promise<import('@craft-agent/shared/protocol').FsListEntriesResult>
+  listServerEntries(dirPath: string): Promise<import('@grose-agent/shared/protocol').FsListEntriesResult>
   createServerFile(filePath: string): Promise<{ path: string }>
   createServerDirectory(dirPath: string): Promise<{ path: string }>
   renameServerPath(oldPath: string, newPath: string): Promise<{ path: string }>
@@ -405,7 +405,7 @@ export interface ElectronAPI {
   onMenuToggleFocusMode(callback: () => void): () => void
   onMenuToggleSidebar(callback: () => void): () => void
 
-  // Deep link navigation listener (for external craftagents:// URLs)
+  // Deep link navigation listener (for external groseagents:// URLs)
   onDeepLinkNavigate(callback: (nav: DeepLinkNavigation) => void): () => void
 
   // Auth
@@ -466,10 +466,10 @@ export interface ElectronAPI {
   writePreferences(content: string): Promise<{ success: boolean; error?: string }>
 
   // Session Drafts (persisted composer state — text + attachment refs)
-  getDraft(sessionId: string): Promise<import('@craft-agent/shared/config').SessionDraft | null>
-  setDraft(sessionId: string, draft: import('@craft-agent/shared/config').SessionDraft): Promise<void>
+  getDraft(sessionId: string): Promise<import('@grose-agent/shared/config').SessionDraft | null>
+  setDraft(sessionId: string, draft: import('@grose-agent/shared/config').SessionDraft): Promise<void>
   deleteDraft(sessionId: string): Promise<void>
-  getAllDrafts(): Promise<Record<string, import('@craft-agent/shared/config').SessionDraft>>
+  getAllDrafts(): Promise<Record<string, import('@grose-agent/shared/config').SessionDraft>>
 
   // Session Info Panel
   getSessionFiles(sessionId: string): Promise<SessionFile[]>
@@ -485,9 +485,9 @@ export interface ElectronAPI {
   deleteSource(workspaceId: string, sourceSlug: string): Promise<void>
   startSourceOAuth(workspaceId: string, sourceSlug: string): Promise<{ success: boolean; error?: string }>
   saveSourceCredentials(workspaceId: string, sourceSlug: string, credential: string): Promise<void>
-  getSourcePermissionsConfig(workspaceId: string, sourceSlug: string): Promise<import('@craft-agent/shared/agent').PermissionsConfigFile | null>
-  getWorkspacePermissionsConfig(workspaceId: string): Promise<import('@craft-agent/shared/agent').PermissionsConfigFile | null>
-  getDefaultPermissionsConfig(): Promise<{ config: import('@craft-agent/shared/agent').PermissionsConfigFile | null; path: string }>
+  getSourcePermissionsConfig(workspaceId: string, sourceSlug: string): Promise<import('@grose-agent/shared/agent').PermissionsConfigFile | null>
+  getWorkspacePermissionsConfig(workspaceId: string): Promise<import('@grose-agent/shared/agent').PermissionsConfigFile | null>
+  getDefaultPermissionsConfig(): Promise<{ config: import('@grose-agent/shared/agent').PermissionsConfigFile | null; path: string }>
   getMcpTools(workspaceId: string, sourceSlug: string): Promise<McpToolsResult>
 
   // OAuth (server-owned credentials, client-orchestrated flow)
@@ -514,13 +514,13 @@ export interface ElectronAPI {
   onSkillsChanged(callback: (workspaceId: string, skills: LoadedSkill[]) => void): () => void
 
   // Statuses (workspace-scoped)
-  listStatuses(workspaceId: string): Promise<import('@craft-agent/shared/statuses').StatusConfig[]>
+  listStatuses(workspaceId: string): Promise<import('@grose-agent/shared/statuses').StatusConfig[]>
   reorderStatuses(workspaceId: string, orderedIds: string[]): Promise<void>
   onStatusesChanged(callback: (workspaceId: string) => void): () => void
 
   // Labels (workspace-scoped)
-  listLabels(workspaceId: string): Promise<import('@craft-agent/shared/labels').LabelConfig[]>
-  createLabel(workspaceId: string, input: import('@craft-agent/shared/labels').CreateLabelInput): Promise<import('@craft-agent/shared/labels').LabelConfig>
+  listLabels(workspaceId: string): Promise<import('@grose-agent/shared/labels').LabelConfig[]>
+  createLabel(workspaceId: string, input: import('@grose-agent/shared/labels').CreateLabelInput): Promise<import('@grose-agent/shared/labels').LabelConfig>
   deleteLabel(workspaceId: string, labelId: string): Promise<{ stripped: number }>
   onLabelsChanged(callback: (workspaceId: string) => void): () => void
 
@@ -528,8 +528,8 @@ export interface ElectronAPI {
   onLlmConnectionsChanged(callback: () => void): () => void
 
   // Views (workspace-scoped, stored in views.json)
-  listViews(workspaceId: string): Promise<import('@craft-agent/shared/views').ViewConfig[]>
-  saveViews(workspaceId: string, views: import('@craft-agent/shared/views').ViewConfig[]): Promise<void>
+  listViews(workspaceId: string): Promise<import('@grose-agent/shared/views').ViewConfig[]>
+  saveViews(workspaceId: string, views: import('@grose-agent/shared/views').ViewConfig[]): Promise<void>
 
   // Generic workspace image loading/saving
   readWorkspaceImage(workspaceId: string, relativePath: string): Promise<string>
@@ -566,6 +566,17 @@ export interface ElectronAPI {
   setSendMessageKey(key: 'enter' | 'cmd-enter'): Promise<void>
   getSpellCheck(): Promise<boolean>
   setSpellCheck(enabled: boolean): Promise<void>
+
+  // Voice input (local speech-to-text)
+  getVoiceModelStatus(): Promise<{ installed: boolean; modelDir: string; modelSize?: number; missingFiles?: string[] }>
+  downloadVoiceModel(): Promise<{ success: boolean; message?: string; error?: string; alreadyInstalled?: boolean }>
+  cancelVoiceModelDownload(): Promise<{ success: boolean }>
+  deleteVoiceModel(): Promise<{ success: boolean; error?: string }>
+  transcribeVoiceAudio(audioBase64: string): Promise<{ success: boolean; text?: string; error?: string }>
+  transcribeVoiceInterim(audioBase64: string): Promise<{ success: boolean; text?: string; error?: string }>
+  requestMicPermission(): Promise<{ granted: boolean }>
+  openMicSettings(): Promise<{ success: boolean }>
+  onVoiceDownloadProgress(callback: (progress: number) => void): () => void
 
   // Power settings
   getKeepAwakeWhileRunning(): Promise<boolean>
@@ -668,11 +679,11 @@ export interface ElectronAPI {
   // Projects (workspace-scoped)
   getProjects(workspaceId: string): Promise<unknown>
   getProject(workspaceId: string, projectIdOrSlug: string): Promise<unknown | null>
-  createProject(workspaceId: string, input: import('@craft-agent/shared/projects/types').CreateProjectInput): Promise<import('@craft-agent/shared/projects/types').ProjectConfig>
-  updateProject(workspaceId: string, projectSlug: string, patch: Partial<Omit<import('@craft-agent/shared/projects/types').ProjectConfig, 'id' | 'slug' | 'createdAt'>>): Promise<import('@craft-agent/shared/projects/types').ProjectConfig>
+  createProject(workspaceId: string, input: import('@grose-agent/shared/projects/types').CreateProjectInput): Promise<import('@grose-agent/shared/projects/types').ProjectConfig>
+  updateProject(workspaceId: string, projectSlug: string, patch: Partial<Omit<import('@grose-agent/shared/projects/types').ProjectConfig, 'id' | 'slug' | 'createdAt'>>): Promise<import('@grose-agent/shared/projects/types').ProjectConfig>
   deleteProject(workspaceId: string, projectSlug: string): Promise<void>
   listProjectAssets(workspaceId: string, projectSlug: string): Promise<unknown>
-  uploadProjectAsset(workspaceId: string, projectSlug: string, input: { filename: string; base64?: string; text?: string; sourcePath?: string }): Promise<import('@craft-agent/shared/projects/types').ProjectAsset>
+  uploadProjectAsset(workspaceId: string, projectSlug: string, input: { filename: string; base64?: string; text?: string; sourcePath?: string }): Promise<import('@grose-agent/shared/projects/types').ProjectAsset>
   deleteProjectAsset(workspaceId: string, projectSlug: string, filename: string): Promise<void>
   onProjectsChanged(callback: (workspaceId: string, projects: unknown) => void): () => void
 
@@ -760,18 +771,18 @@ export interface ElectronAPI {
     request: import('./tables').TablesFetchRequest,
   ): Promise<import('./tables').TablesFetchResponse>
 
-  // craft-modules Go sidecar (RSS)
-  getCraftModulesStatus(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarStatus>
-  getCraftModulesConfig(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarConfig>
-  restartCraftModules(): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSidecarConfig>
+  // grose-modules Go sidecar (RSS)
+  getGroseModulesStatus(): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSidecarStatus>
+  getGroseModulesConfig(): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSidecarConfig>
+  restartGroseModules(): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSidecarConfig>
 
-  // RSS domain (proxied to craft-modules)
+  // RSS domain (proxied to grose-modules)
   rssPing(): Promise<{ ok: boolean; domain: 'rss'; version?: string }>
-  rssListFeeds(workspaceId: string): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssFeed[]>
+  rssListFeeds(workspaceId: string): Promise<import('@grose-agent/shared/grose-modules').GroseModulesRssFeed[]>
   rssAddFeed(
     workspaceId: string,
     input: { url: string; name?: string },
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssFeed>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesRssFeed>
   rssRenameFeed(workspaceId: string, feedId: string, name: string): Promise<{ ok: true }>
   rssDeleteFeed(workspaceId: string, feedId: string): Promise<{ ok: true }>
   rssImportOpml(
@@ -780,34 +791,34 @@ export interface ElectronAPI {
   ): Promise<{
     imported: number
     skipped: number
-    feeds: import('@craft-agent/shared/craft-modules').CraftModulesRssFeed[]
+    feeds: import('@grose-agent/shared/grose-modules').GroseModulesRssFeed[]
   }>
   rssExportOpml(workspaceId: string): Promise<string>
   rssListArticles(
     workspaceId: string,
     input?: {
-      view?: import('@craft-agent/shared/craft-modules').CraftModulesRssView
+      view?: import('@grose-agent/shared/grose-modules').GroseModulesRssView
       feedId?: string
-      mode?: import('@craft-agent/shared/craft-modules').CraftModulesRssListMode
+      mode?: import('@grose-agent/shared/grose-modules').GroseModulesRssListMode
       q?: string
       limit?: number
     },
   ): Promise<{
-    articles: import('@craft-agent/shared/craft-modules').CraftModulesRssArticle[]
+    articles: import('@grose-agent/shared/grose-modules').GroseModulesRssArticle[]
     cacheReady?: boolean
     query?: string
   }>
   rssGetArticle(
     workspaceId: string,
     articleId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesRssArticle>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesRssArticle>
   rssFetchArticleContent(
     workspaceId: string,
     articleUrl: string,
   ): Promise<{ content: string; title: string; byline: string }>
   rssToggleStar(
     workspaceId: string,
-    article: import('@craft-agent/shared/craft-modules').CraftModulesRssArticle,
+    article: import('@grose-agent/shared/grose-modules').GroseModulesRssArticle,
     starred: boolean,
   ): Promise<{ ok: true; isStarred: boolean }>
   rssStarredCount(workspaceId: string): Promise<{ count: number }>
@@ -818,32 +829,32 @@ export interface ElectronAPI {
     input: { rsshub_base_url: string },
   ): Promise<{ ok: true }>
 
-  // Sites domain (proxied to craft-modules)
+  // Sites domain (proxied to grose-modules)
   sitesPing(): Promise<{
     ok: boolean
     domain: 'sites'
     version?: string
     modules?: string[]
   }>
-  sitesList(workspaceId: string): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite[]>
+  sitesList(workspaceId: string): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSite[]>
   sitesGet(
     workspaceId: string,
     siteId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSite>
   sitesCreate(
     workspaceId: string,
-    input: import('@craft-agent/shared/craft-modules').CraftModulesSiteCreateInput,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+    input: import('@grose-agent/shared/grose-modules').GroseModulesSiteCreateInput,
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSite>
   sitesDelete(workspaceId: string, siteId: string): Promise<{ ok: true }>
   sitesUpdate(
     workspaceId: string,
     siteId: string,
-    input: import('@craft-agent/shared/craft-modules').CraftModulesSiteUpdateInput,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+    input: import('@grose-agent/shared/grose-modules').GroseModulesSiteUpdateInput,
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSite>
   sitesListFiles(
     workspaceId: string,
     siteId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSiteFileNode[]>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSiteFileNode[]>
   sitesReadFile(
     workspaceId: string,
     siteId: string,
@@ -857,23 +868,23 @@ export interface ElectronAPI {
   sitesPreviewStart(
     workspaceId: string,
     siteId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSitePreviewResult>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSitePreviewResult>
   sitesPreviewStop(workspaceId: string, siteId: string): Promise<{ ok: true }>
   sitesPreviewUrl(
     workspaceId: string,
     siteId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSitePreviewResult>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSitePreviewResult>
   sitesVisualEditSave(
     workspaceId: string,
-    input: import('@craft-agent/shared/craft-modules').CraftModulesVisualEditSaveInput,
+    input: import('@grose-agent/shared/grose-modules').GroseModulesVisualEditSaveInput,
   ): Promise<{ ok: true }>
   sitesBindSession(
     workspaceId: string,
     siteId: string,
     sessionId: string | null,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesSite>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesSite>
 
-  // Workflows domain (proxied to craft-modules)
+  // Workflows domain (proxied to grose-modules)
   workflowsPing(): Promise<{
     ok: boolean
     domain: 'workflows'
@@ -882,33 +893,33 @@ export interface ElectronAPI {
   }>
   workflowsList(
     workspaceId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow[]>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflow[]>
   workflowsGet(
     workspaceId: string,
     workflowId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflow>
   workflowsCreate(
     workspaceId: string,
-    input: import('@craft-agent/shared/craft-modules').CraftModulesWorkflowCreateInput,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+    input: import('@grose-agent/shared/grose-modules').GroseModulesWorkflowCreateInput,
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflow>
   workflowsUpdate(
     workspaceId: string,
     workflowId: string,
-    input: import('@craft-agent/shared/craft-modules').CraftModulesWorkflowUpdateInput,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflow>
+    input: import('@grose-agent/shared/grose-modules').GroseModulesWorkflowUpdateInput,
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflow>
   workflowsDelete(workspaceId: string, workflowId: string): Promise<{ ok: true }>
   workflowsRun(
     workspaceId: string,
     workflowId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowRunResult>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowRunResult>
   workflowsDeploy(
     workspaceId: string,
     workflowId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowDeployResult>
   workflowsUndeploy(
     workspaceId: string,
     workflowId: string,
-  ): Promise<import('@craft-agent/shared/craft-modules').CraftModulesWorkflowDeployResult>
+  ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowDeployResult>
 }
 
 export interface MessagingPlatformRuntimeInfo {
@@ -923,7 +934,7 @@ export interface MessagingPlatformRuntimeInfo {
 
 /**
  * Workspace-level access policy for a messaging platform.
- * Mirrors the canonical type in `@craft-agent/messaging-gateway`.
+ * Mirrors the canonical type in `@grose-agent/messaging-gateway`.
  */
 export type MessagingPlatformAccessMode = 'open' | 'owner-only'
 

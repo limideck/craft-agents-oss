@@ -56,7 +56,7 @@ function getBuildDefines(): string[] {
     "MICROSOFT_OAUTH_CLIENT_ID",
     "MICROSOFT_OAUTH_CLIENT_SECRET",
     "SENTRY_ELECTRON_INGEST_URL",
-    "CRAFT_DEV_RUNTIME",
+    "GROSE_DEV_RUNTIME",
   ];
 
   return definedVars.map((varName) => {
@@ -285,7 +285,7 @@ async function buildWhatsAppWorker(): Promise<void> {
       `--outfile=${WA_WORKER_OUTPUT}`,
       "--external:electron",
       // Baileys' runtime-optional features — wrapped in try/catch at the
-      // call site and not used by Craft Agent (we send text + documents, no
+      // call site and not used by Grose Agent (we send text + documents, no
       // link previews, no inline image processing, no terminal QR).
       "--external:link-preview-js",
       "--external:qrcode-terminal",
@@ -354,6 +354,10 @@ async function main(): Promise<void> {
       // Electron 39 ships Node 22.x which supports require() of ESM without TLA, so the
       // bundled main.cjs's `require('@anthropic-ai/claude-agent-sdk')` works.
       "--external:@anthropic-ai/claude-agent-sdk",
+      // Native speech-to-text engine. Kept external so esbuild doesn't try to
+      // bundle the prebuilt .node binary; it's resolved at runtime from the
+      // app's node_modules (staged by electron-builder's files glob).
+      "--external:sherpa-onnx-node",
       // Replace grammY's bundled polyfills (node-fetch@2 + abort-controller@3)
       // with native Node globals. esbuild otherwise renames the polyfill's
       // `class AbortSignal` to `_AbortSignal` to dodge collision with the

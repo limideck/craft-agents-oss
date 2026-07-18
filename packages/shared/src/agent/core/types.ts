@@ -98,9 +98,9 @@ export interface PromptBuilderConfig {
   project?: import('../../projects/types.ts').ProjectPromptContext;
   /**
    * Workbench ActivityBar module id (rss | knowledge | workflows | …).
-   * Injected into volatile craft-modules context when set.
+   * Injected into volatile grose-modules context when set.
    */
-  activeCraftModuleId?: string | null;
+  activeGroseModuleId?: string | null;
 }
 
 /**

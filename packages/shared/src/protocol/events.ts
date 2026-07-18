@@ -44,6 +44,9 @@ export interface BroadcastEventMap {
   [RPC_CHANNELS.update.AVAILABLE]: [info: UpdateInfo]
   [RPC_CHANNELS.update.DOWNLOAD_PROGRESS]: [progress: number]
 
+  // Voice model download progress (global)
+  [RPC_CHANNELS.voice.DOWNLOAD_PROGRESS]: [progress: number]
+
   // Badge broadcasts (global)
   [RPC_CHANNELS.badge.DRAW]: [data: { count: number; iconDataUrl: string }]
   [RPC_CHANNELS.badge.DRAW_WINDOWS]: [data: { count: number }]

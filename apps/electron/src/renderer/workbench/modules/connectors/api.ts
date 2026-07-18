@@ -1,10 +1,10 @@
 /**
  * OpenConnector API client for the Electron renderer.
- * Uses `@craft-agent/open-connector-client` with an IPC-backed fetch so the
+ * Uses `@grose-agent/open-connector-client` with an IPC-backed fetch so the
  * Vite origin can talk to the local sidecar without CORS.
  */
 
-import { ApiError, OpenConnectorClient } from '@craft-agent/open-connector-client'
+import { ApiError, OpenConnectorClient } from '@grose-agent/open-connector-client'
 import type {
   AuthSession,
   ConnectionRecord,

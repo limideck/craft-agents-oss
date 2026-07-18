@@ -17,6 +17,7 @@ import {
   Tag,
   ToggleRight,
   UserCircle,
+  Mic,
 } from 'lucide-react'
 import type { SettingsSubpage } from '../../../shared/types'
 
@@ -26,6 +27,7 @@ export const AppSettingsIcon = ({ className }: IconProps) => <ToggleRight classN
 export const AiSettingsIcon = ({ className }: IconProps) => <Sparkles className={className} />
 export const AppearanceIcon = ({ className }: IconProps) => <Palette className={className} />
 export const InputIcon = ({ className }: IconProps) => <Keyboard className={className} />
+export const VoiceIcon = ({ className }: IconProps) => <Mic className={className} />
 export const WorkspaceIcon = ({ className }: IconProps) => <Building2 className={className} />
 export const PermissionsIcon = ({ className }: IconProps) => <ShieldCheck className={className} />
 export const LabelsIcon = ({ className }: IconProps) => <Tag className={className} />
@@ -43,6 +45,7 @@ export const SETTINGS_ICONS: Record<SettingsSubpage, React.ComponentType<IconPro
   ai: AiSettingsIcon,
   appearance: AppearanceIcon,
   input: InputIcon,
+  voice: VoiceIcon,
   workspace: WorkspaceIcon,
   permissions: PermissionsIcon,
   labels: LabelsIcon,

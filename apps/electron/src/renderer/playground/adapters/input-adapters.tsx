@@ -6,7 +6,7 @@
  */
 
 import type { PermissionRequest } from '../../../shared/types'
-import type { AdminApprovalRequestData } from '@/components/app-shell/input/structured/AdminApprovalRequest'
+import type { AdminApprovalRequestData } from '@/components/composer/structured/AdminApprovalRequest'
 
 // ============================================================================
 // Mock Data Generators

@@ -1,0 +1,4 @@
+#!/bin/sh
+ENTRY="${GROSE_COMMANDS_ENTRY:-$GROSE_CLI_ENTRY}"
+export GROSE_CLI_JSON_ONLY="${GROSE_CLI_JSON_ONLY:-1}"
+exec "${GROSE_BUN:-bun}" run "$ENTRY" "$@"

@@ -1,16 +1,16 @@
 # Workbench Tables UI
 
-Spreadsheet browse/upload/preview for the Craft workbench shell. Backend is the **Tables** (plydb fork) sidecar; UI uses `@craft-agent/datagrid` and Admin HTTP via Electron IPC only (never direct `fetch` from the renderer).
+Spreadsheet browse/upload/preview for the Grose workbench shell. Backend is the **Tables** (plydb fork) sidecar; UI uses `@grose-agent/datagrid` and Admin HTTP via Electron IPC only (never direct `fetch` from the renderer).
 
-See [craft-tables-sidecar.md](./craft-tables-sidecar.md) for process / Admin / MCP contracts.
+See [grose-tables-sidecar.md](./grose-tables-sidecar.md) for process / Admin / MCP contracts.
 
 ## How to open
 
 1. Build the binary once: `bun run setup:tables` (or `bun run build:tables`)
 2. Enable the workbench shell:
-   - DevTools: `localStorage.setItem('craft-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `CRAFT_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev`). Main spawns `plydb serve` (or attach with `CRAFT_TABLES_URL`).
+   - DevTools: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
+   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
+3. Start Electron (`bun run electron:dev`). Main spawns `plydb serve` (or attach with `GROSE_TABLES_URL`).
 4. ActivityBar → **Tables**.
 
 ## Regions
@@ -35,7 +35,7 @@ Upload uses the native file dialog (`openFileDialog`) then `tablesFetch` with `m
 
 ## On-disk layout
 
-`{rootPath}/modules/tables/` — see [workspace-storage.md](./workspace-storage.md) and [craft-tables-sidecar.md](./craft-tables-sidecar.md).
+`{rootPath}/modules/tables/` — see [workspace-storage.md](./workspace-storage.md) and [grose-tables-sidecar.md](./grose-tables-sidecar.md).
 
 ## Phase 1 scope
 

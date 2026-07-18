@@ -4,7 +4,7 @@ import { useAtom, useAtomValue } from 'jotai'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
-import type { CraftModulesRssFeed } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesRssFeed } from '@grose-agent/shared/grose-modules'
 import { rssFeedsAtom, rssManageFeedsOpenAtom } from '../store'
 import { refreshRssData } from '../use-rss-data'
 
@@ -113,7 +113,7 @@ function ManageFeedRow({
   feed,
 }: {
   workspaceId: string
-  feed: CraftModulesRssFeed
+  feed: GroseModulesRssFeed
 }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(feed.name)

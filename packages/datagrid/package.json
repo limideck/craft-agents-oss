@@ -1,8 +1,8 @@
 {
-  "name": "@craft-agent/datagrid",
+  "name": "@grose-agent/datagrid",
   "version": "0.11.1",
   "license": "Apache-2.0",
-  "description": "Airtable-like spreadsheet data grid for Craft Agents — virtualized editing, column types, filter/sort",
+  "description": "Airtable-like spreadsheet data grid for Grose Agents — virtualized editing, column types, filter/sort",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

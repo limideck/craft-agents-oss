@@ -194,7 +194,7 @@ export function ProvidersPage(props: ProvidersPageProps): ReactNode {
                 title={props.data.providers.length === 0 ? 'No providers loaded' : 'No providers match'}
                 description={
                   props.data.providers.length === 0
-                    ? 'The sidecar catalog is empty or failed to load. Run `bun run setup:open-connector`, then restart Craft Agents.'
+                    ? 'The sidecar catalog is empty or failed to load. Run `bun run setup:open-connector`, then restart Grose Agents.'
                     : 'Try a different search or clear filters.'
                 }
               />

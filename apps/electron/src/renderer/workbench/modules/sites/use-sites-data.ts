@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
-import type { CraftModulesSite } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesSite } from '@grose-agent/shared/grose-modules'
 import { useAppShellContext } from '@/context/AppShellContext'
 import { activeModuleIdAtom } from '../../store/workbench-store'
 import {
@@ -166,8 +166,8 @@ export function useSitesFilesData() {
 }
 
 function findFirstFile(
-  nodes: import('@craft-agent/shared/craft-modules').CraftModulesSiteFileNode[],
-): import('@craft-agent/shared/craft-modules').CraftModulesSiteFileNode | null {
+  nodes: import('@grose-agent/shared/grose-modules').GroseModulesSiteFileNode[],
+): import('@grose-agent/shared/grose-modules').GroseModulesSiteFileNode | null {
   for (const n of nodes) {
     if (n.type === 'file') return n
     if (n.children?.length) {
@@ -179,9 +179,9 @@ function findFirstFile(
 }
 
 export function upsertSiteInList(
-  list: CraftModulesSite[],
-  site: CraftModulesSite,
-): CraftModulesSite[] {
+  list: GroseModulesSite[],
+  site: GroseModulesSite,
+): GroseModulesSite[] {
   const idx = list.findIndex((s) => s.id === site.id)
   if (idx < 0) return [site, ...list]
   const next = list.slice()

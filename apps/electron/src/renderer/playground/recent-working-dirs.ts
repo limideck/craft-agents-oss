@@ -3,20 +3,20 @@ export type RecentDirScenario = 'none' | 'few' | 'many'
 const RECENT_DIR_SCENARIO_DATA: Record<RecentDirScenario, string[]> = {
   none: [],
   few: [
-    '/Users/demo/projects/craft-agent',
-    '/Users/demo/projects/craft-agent/apps/electron',
-    '/Users/demo/projects/craft-agent/packages/shared',
+    '/Users/demo/projects/grose-agent',
+    '/Users/demo/projects/grose-agent/apps/electron',
+    '/Users/demo/projects/grose-agent/packages/shared',
   ],
   many: [
-    '/Users/demo/projects/craft-agent',
-    '/Users/demo/projects/craft-agent/apps/electron',
-    '/Users/demo/projects/craft-agent/apps/viewer',
-    '/Users/demo/projects/craft-agent/apps/cli',
-    '/Users/demo/projects/craft-agent/packages/shared',
-    '/Users/demo/projects/craft-agent/packages/server-core',
-    '/Users/demo/projects/craft-agent/packages/pi-agent-server',
-    '/Users/demo/projects/craft-agent/packages/ui',
-    '/Users/demo/projects/craft-agent/scripts',
+    '/Users/demo/projects/grose-agent',
+    '/Users/demo/projects/grose-agent/apps/electron',
+    '/Users/demo/projects/grose-agent/apps/viewer',
+    '/Users/demo/projects/grose-agent/apps/cli',
+    '/Users/demo/projects/grose-agent/packages/shared',
+    '/Users/demo/projects/grose-agent/packages/server-core',
+    '/Users/demo/projects/grose-agent/packages/pi-agent-server',
+    '/Users/demo/projects/grose-agent/packages/ui',
+    '/Users/demo/projects/grose-agent/scripts',
   ],
 }
 

@@ -6,7 +6,7 @@ import {
   DataGridSkeleton,
   DataGridSkeletonGrid,
   DataGridSkeletonToolbar,
-} from '@craft-agent/datagrid'
+} from '@grose-agent/datagrid'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
 import { cn } from '@/lib/utils'
 import {

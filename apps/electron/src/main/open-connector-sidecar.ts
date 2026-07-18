@@ -1,11 +1,11 @@
 /**
- * OpenConnector sidecar lifecycle for Craft Agents Electron.
+ * OpenConnector sidecar lifecycle for Grose Agents Electron.
  *
  * Spawns the nested open-connector Node server (system Node in dev;
  * ELECTRON_RUN_AS_NODE fallback / packaged entry), polls GET /health,
  * and exposes config/tokens to the renderer via IPC.
  *
- * Set CRAFT_OPENCONNECTOR_URL to attach to an already-running instance
+ * Set GROSE_OPENCONNECTOR_URL to attach to an already-running instance
  * (skips spawn — useful for `cd open-connector && npm run start`).
  */
 
@@ -15,8 +15,8 @@ import { randomBytes } from 'crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { app } from 'electron'
-import { CONFIG_DIR } from '@craft-agent/shared/config'
-import { OpenConnectorClient } from '@craft-agent/open-connector-client'
+import { CONFIG_DIR } from '@grose-agent/shared/config'
+import { OpenConnectorClient } from '@grose-agent/open-connector-client'
 import type {
   OpenConnectorFetchRequest,
   OpenConnectorFetchResponse,
@@ -112,7 +112,7 @@ async function allocateEphemeralPort(): Promise<number> {
 }
 
 function resolveSystemNode(): string | null {
-  const fromEnv = process.env.CRAFT_OPENCONNECTOR_NODE?.trim()
+  const fromEnv = process.env.GROSE_OPENCONNECTOR_NODE?.trim()
   if (fromEnv && existsSync(fromEnv)) return fromEnv
   // Common PATH locations — avoid relying on shell resolution inside Electron.
   const candidates =
@@ -173,7 +173,7 @@ function assertCatalogPresent(cwd: string): void {
   if (count > 0) return
   throw new Error(
     'OpenConnector provider catalog is empty or missing (catalog/apps/*.json). ' +
-      'Run `bun run setup:open-connector` from the repo root, then restart Craft Agents.',
+      'Run `bun run setup:open-connector` from the repo root, then restart Grose Agents.',
   )
 }
 
@@ -221,7 +221,7 @@ function buildConfig(): OpenConnectorSidecarConfig | null {
 }
 
 /**
- * Start the sidecar (or attach to CRAFT_OPENCONNECTOR_URL). Idempotent.
+ * Start the sidecar (or attach to GROSE_OPENCONNECTOR_URL). Idempotent.
  */
 export async function startOpenConnectorSidecar(): Promise<OpenConnectorSidecarConfig> {
   if (ready && baseUrl && secrets) {
@@ -239,7 +239,7 @@ export async function startOpenConnectorSidecar(): Promise<OpenConnectorSidecarC
     lastError = null
     secrets = loadOrCreateSecrets()
 
-    const externalUrl = process.env.CRAFT_OPENCONNECTOR_URL?.trim()
+    const externalUrl = process.env.GROSE_OPENCONNECTOR_URL?.trim()
     if (externalUrl) {
       external = true
       baseUrl = externalUrl.replace(/\/+$/, '')
@@ -265,7 +265,7 @@ export async function startOpenConnectorSidecar(): Promise<OpenConnectorSidecarC
     if (!entry) {
       throw new Error(
         'OpenConnector server entry not found. Run `bun run scripts/setup-open-connector.ts` ' +
-          'or set CRAFT_OPENCONNECTOR_URL to a running instance.',
+          'or set GROSE_OPENCONNECTOR_URL to a running instance.',
       )
     }
 
@@ -288,7 +288,7 @@ export async function startOpenConnectorSidecar(): Promise<OpenConnectorSidecarC
     // Prefer system Node (open-connector needs Node 22+ for .ts strip + node:sqlite).
     // Packaged builds should ship a prebuilt JS entry and may use ELECTRON_RUN_AS_NODE.
     const nodeBin =
-      process.env.CRAFT_OPENCONNECTOR_NODE ||
+      process.env.GROSE_OPENCONNECTOR_NODE ||
       (!app.isPackaged ? resolveSystemNode() : null) ||
       process.execPath
 

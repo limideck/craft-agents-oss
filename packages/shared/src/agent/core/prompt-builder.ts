@@ -18,9 +18,9 @@ import { formatSessionState } from '../mode-manager.ts';
 import { getDateTimeContext, getWorkingDirectoryContext } from '../../prompts/system.ts';
 import { getSessionPlansPath, getSessionDataPath, getSessionPath } from '../../sessions/storage.ts';
 import {
-  formatCraftModulesActiveLine,
-  formatCraftModulesContextBlock,
-} from '../../craft-modules/registry.ts';
+  formatGroseModulesActiveLine,
+  formatGroseModulesContextBlock,
+} from '../../grose-modules/registry.ts';
 import type {
   PromptBuilderConfig,
   ContextBlockOptions,
@@ -98,7 +98,7 @@ export class PromptBuilder {
    *     modeChangedAt/modeVersion and **consumes** the one-shot mode-change user
    *     signal — see {@link formatSessionState})
    *  3. source state (auth/connection status), when provided
-   *  4. craft-modules active workbench module line, when known
+   *  4. grose-modules active workbench module line, when known
    *
    * MUST be called exactly once per turn, because it consumes one-shot mode
    * state. Never call it a second time to compute a cache-debug hash — hash the
@@ -134,12 +134,12 @@ export class PromptBuilder {
       parts.push(sourceStateBlock);
     }
 
-    // Active workbench module (volatile; catalog lives in stable craft_modules)
+    // Active workbench module (volatile; catalog lives in stable grose_modules)
     const activeModuleId =
       options.activeModuleId !== undefined
         ? options.activeModuleId
-        : this.config.activeCraftModuleId;
-    const activeLine = formatCraftModulesActiveLine(activeModuleId);
+        : this.config.activeGroseModuleId;
+    const activeLine = formatGroseModulesActiveLine(activeModuleId);
     if (activeLine) {
       parts.push(activeLine);
     }
@@ -153,7 +153,7 @@ export class PromptBuilder {
    *
    * Blocks (in order):
    *  1. workspace capabilities
-   *  2. craft-modules prefer-builtin catalog (stable; active line is volatile)
+   *  2. grose-modules prefer-builtin catalog (stable; active line is volatile)
    *  3. working directory, when available
    *
    * Pure and idempotent: holds no one-shot state, so it is safe to call any
@@ -165,8 +165,8 @@ export class PromptBuilder {
     // Workspace capabilities
     parts.push(this.formatWorkspaceCapabilities());
 
-    // Prefer-builtin craft-modules catalog (active module line is volatile)
-    parts.push(this.formatCraftModulesContext());
+    // Prefer-builtin grose-modules catalog (active module line is volatile)
+    parts.push(this.formatGroseModulesContext());
 
     // Working directory context
     const workingDirContext = this.getWorkingDirectoryContext();
@@ -196,22 +196,22 @@ export class PromptBuilder {
   }
 
   /**
-   * Prefer-builtin craft modules catalog (stable half of the split).
+   * Prefer-builtin grose modules catalog (stable half of the split).
    * Active workbench module is injected separately in volatile context.
-   * See docs/craft-modules-agent-routing.md.
+   * See docs/grose-modules-agent-routing.md.
    */
-  formatCraftModulesContext(): string {
-    return formatCraftModulesContextBlock({
+  formatGroseModulesContext(): string {
+    return formatGroseModulesContextBlock({
       omitActiveLine: true,
       workspaceId: this.config.workspace?.id,
     });
   }
 
   /**
-   * Update the workbench active module id used for volatile craft_modules context.
+   * Update the workbench active module id used for volatile grose_modules context.
    */
-  setActiveCraftModuleId(activeCraftModuleId: string | null | undefined): void {
-    this.config.activeCraftModuleId = activeCraftModuleId ?? null;
+  setActiveGroseModuleId(activeGroseModuleId: string | null | undefined): void {
+    this.config.activeGroseModuleId = activeGroseModuleId ?? null;
   }
 
   /**

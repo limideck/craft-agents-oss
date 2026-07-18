@@ -1,13 +1,13 @@
 # Workbench Workflows — shared contract (Phase 2 freeze + Phase 2.5 blocks)
 
-Frozen graph model, node configs, HTTP, and MCP surfaces for parallel UI (`@xyflow/react`) and Go (`craft-modules` / `internal/workflows`) work.
+Frozen graph model, node configs, HTTP, and MCP surfaces for parallel UI (`@xyflow/react`) and Go (`grose-modules` / `internal/workflows`) work.
 
-**Status:** Graph persistence via `workflows:*` RPC → Go CRUD. **Run:** Go accepts `POST .../run` (runId); Craft (`server-core`) executes `agent` nodes via SessionManager and returns real step I/O. Other node types remain lightweight stubs. **Deploy:** Go `POST .../deploy` snapshots the current draft as the live version (`status: deployed`, version bump); schedule/webhook triggers are recorded as armed but do not fire yet. **Phase 2.5+** BlockConfig registry (~29 types) for editor/palette.
+**Status:** Graph persistence via `workflows:*` RPC → Go CRUD. **Run:** Go accepts `POST .../run` (runId); Grose (`server-core`) executes `agent` nodes via SessionManager and returns real step I/O. Other node types remain lightweight stubs. **Deploy:** Go `POST .../deploy` snapshots the current draft as the live version (`status: deployed`, version bump); schedule/webhook triggers are recorded as armed but do not fire yet. **Phase 2.5+** BlockConfig registry (~29 types) for editor/palette.
 
 Related:
 
 - [Workbench Workflows UI](./workbench-workflows-ui.md) — Phase 2 `@xyflow/react` editor (aligned `type` / `position` / `edges`)
-- [Craft Modules sidecar](./craft-modules-sidecar.md) — Go owns persistence; MCP `wf_*` tools
+- [Grose Modules sidecar](./grose-modules-sidecar.md) — Go owns persistence; MCP `wf_*` tools
 - [Workbench architecture](./workbench-architecture.md) — module shell + domain stubs
 
 ---
@@ -16,8 +16,8 @@ Related:
 
 | Concern | Owner |
 |---------|--------|
-| Graph persistence (SQLite), CRUD HTTP, MCP `wf_*`, run enqueue (accept + runId), **deploy snapshot** | **Go** (`craft-modules` / `internal/workflows`) |
-| Agent / LLM / HITL steps when a run hits those types | **Craft** (TS `server-core` SessionManager; `workflows:run` orchestrates) |
+| Graph persistence (SQLite), CRUD HTTP, MCP `wf_*`, run enqueue (accept + runId), **deploy snapshot** | **Go** (`grose-modules` / `internal/workflows`) |
+| Agent / LLM / HITL steps when a run hits those types | **Grose** (TS `server-core` SessionManager; `workflows:run` orchestrates) |
 | Canvas, BlockConfig registry, Editor forms | **Electron Workbench UI** |
 | Thin RPC → Go HTTP (CRUD + deploy); run orchestration | `packages/domain-workflows` + `server-core` workflows-run |
 
@@ -25,7 +25,7 @@ Related:
 
 - One authoritative store in Go. Do not keep a divergent TS persistence layer.
 - Renderer never talks to Go HTTP directly — always `domain-workflows` RPC (same as RSS).
-- Graph **execution** for agent nodes is owned by Craft. Go `POST .../run` accepts the run and may synthesize stub steps for non-LLM tooling; Craft replaces/rebuilds steps with real agent output.
+- Graph **execution** for agent nodes is owned by Grose. Go `POST .../run` accepts the run and may synthesize stub steps for non-LLM tooling; Grose replaces/rebuilds steps with real agent output.
 - Storage is opaque `definition_json` — **new node `type` values need no schema migration**. Create/update accept arbitrary `type` strings in nodes.
 
 ---
@@ -131,14 +131,14 @@ Phase 2 UI mock store uses contract field names directly.
 
 ## 3. Node types (Phase 2.5+ — ~29)
 
-Prefer core / control-flow / AI / data / action primitives (old Craft palette groups). **Not** an OAuth SaaS catalog.
+Prefer core / control-flow / AI / data / action primitives (old Grose palette groups). **Not** an OAuth SaaS catalog.
 
 | Category | `type` | Role |
 |----------|--------|------|
 | Triggers | `start` | Manual / chat / API entry |
 | Triggers | `schedule` | Cron / interval trigger |
 | Triggers | `webhook` | Inbound HTTP webhook trigger |
-| AI | `agent` | Craft agent / LLM turn |
+| AI | `agent` | Grose agent / LLM turn |
 | AI | `generate-image` | Text-to-image |
 | AI | `parameter-extractor` | LLM structured field extract |
 | AI | `question-classifier` | LLM multi-way classify + route |
@@ -165,9 +165,9 @@ Prefer core / control-flow / AI / data / action primitives (old Craft palette gr
 | Action | `debug` | Log payload to debug / logs panel |
 | Action | `subworkflow` | Invoke another workflow |
 
-### Reference mapping (old Craft / z8run → Craft `type`)
+### Reference mapping (old Grose / z8run → Grose `type`)
 
-| Old Craft `kind` / z8run `node_type` | Craft `type` | Notes |
+| Old Grose `kind` / z8run `node_type` | Grose `type` | Notes |
 |--------------------------------------|--------------|-------|
 | `manual-trigger` | `start` | |
 | `schedule-trigger` / `cron-trigger` / `timer` | `schedule` | |
@@ -205,8 +205,8 @@ Documented for discovery; **not** in the current registry:
 
 | Source | Types deferred |
 |--------|----------------|
-| Old Craft data | `sort`, `limit` |
-| Old Craft | `custom` (user modules / presets) |
+| Old Grose data | `sort`, `limit` |
+| Old Grose | `custom` (user modules / presets) |
 | z8run AI / media | `embeddings`, `vector-store`, `tts`, `stt`, `summarizer`, `conversation-memory` |
 | z8run integrations | `crm`, `mqtt`, `twilio`, `whatsapp`, `database` |
 | z8run misc | `http-out` (as distinct from `response`) |
@@ -292,7 +292,7 @@ Defaults below are suggestions for create-from-palette; empty/`{}` is valid unti
 
 | Key | Field type | Required | Notes |
 |-----|------------|----------|-------|
-| `agent` | `string` | yes | Skill slug or agent label. Use `default` for the workspace default agent (no skill mention). Non-`default` values are passed as `[skill:…]` + `skillSlugs` on the Craft session. |
+| `agent` | `string` | yes | Skill slug or agent label. Use `default` for the workspace default agent (no skill mention). Non-`default` values are passed as `[skill:…]` + `skillSlugs` on the Grose session. |
 | `model` | `select` | no | `default` \| `fast` \| … (resolved by SessionManager) |
 | `prompt` | `textarea` | no | Instruction for the turn (plus upstream JSON context) |
 | `requireHitl` | `switch` | no | Inline HITL flag (prefer dedicated `human-approval` for branching) |
@@ -499,7 +499,7 @@ Defaults below are suggestions for create-from-palette; empty/`{}` is valid unti
 
 ## 6. HTTP API sketch
 
-Base: craft-modules loopback (`X-Craft-Workspace-Id` as for RSS). Paths freeze here; status codes may refine at implementation.
+Base: grose-modules loopback (`X-Grose-Workspace-Id` as for RSS). Paths freeze here; status codes may refine at implementation.
 
 | Method | Path | Purpose | Body / notes |
 |--------|------|---------|--------------|
@@ -508,7 +508,7 @@ Base: craft-modules loopback (`X-Craft-Workspace-Id` as for RSS). Paths freeze h
 | GET | `/api/workflows/:id` | Get one | `200` + `Workflow` / `404` |
 | PATCH | `/api/workflows/:id` | Update | Partial: `{ name?, description?, nodes?, edges? }` → `200` + `Workflow` (draft graph only; does not change live snapshot) |
 | DELETE | `/api/workflows/:id` | Delete | `204` / `404` |
-| POST | `/api/workflows/:id/run` | Run (one-shot) | Returns `{ accepted: true, runId, steps?: RunStep[] }` — steps synthesized by `type`; Craft RPC path runs real agents |
+| POST | `/api/workflows/:id/run` | Run (one-shot) | Returns `{ accepted: true, runId, steps?: RunStep[] }` — steps synthesized by `type`; Grose RPC path runs real agents |
 | POST | `/api/workflows/:id/deploy` | Deploy (publish live) | Snapshots current `definition_json` → `deployed_definition_json`; bumps `version`; sets `status: deployed`. Returns `{ id, version, deployedAt, status, triggersArmed? }` |
 | POST | `/api/workflows/:id/undeploy` | Undeploy | Clears live snapshot / armed triggers; `status: draft`. Keeps last `version` / `deployedAt`. Returns same deploy-result shape |
 
@@ -523,7 +523,7 @@ Persistence hint (Go): table `workflows (id, name, definition_json, updated_at, 
 | | **Run** | **Deploy** |
 |--|---------|------------|
 | Meaning | One-shot try of the **current draft** | Publish draft as the **live** version |
-| Who executes | Craft (agent nodes) + lightweight stubs | Go persistence only |
+| Who executes | Grose (agent nodes) + lightweight stubs | Go persistence only |
 | Triggers | Not involved | Schedule/webhook nodes recorded in `triggersArmed` (runners **stub** — do not fire yet) |
 
 ### Deploy result shape
@@ -564,7 +564,7 @@ type RunResult = {
 
 ## 7. MCP tools
 
-Same MCP server as RSS (`craft-modules`); prefix `wf_`. Thin wrappers over HTTP.
+Same MCP server as RSS (`grose-modules`); prefix `wf_`. Thin wrappers over HTTP.
 
 | Tool | Maps to | Notes |
 |------|---------|-------|
@@ -573,7 +573,7 @@ Same MCP server as RSS (`craft-modules`); prefix `wf_`. Thin wrappers over HTTP.
 | `wf_create` | `POST /api/workflows` | Args: name + optional graph |
 | `wf_update` | `PATCH /api/workflows/:id` | Args: `id` + patch fields |
 | `wf_delete` | `DELETE /api/workflows/:id` | Args: `id` |
-| `wf_run` | `POST /api/workflows/:id/run` | Accept + stub steps in Go; Craft RPC path runs real agents |
+| `wf_run` | `POST /api/workflows/:id/run` | Accept + stub steps in Go; Grose RPC path runs real agents |
 | `wf_deploy` | `POST /api/workflows/:id/deploy` | Publish live snapshot; arms schedule/webhook metadata (runners stub) |
 | `wf_undeploy` | `POST /api/workflows/:id/undeploy` | Clear live status → draft |
 
@@ -590,7 +590,7 @@ Channels under `RPC_CHANNELS.workflows.*` mirror HTTP (same pattern as `domain-r
 | `workflows:create` | `POST /api/workflows` |
 | `workflows:update` | `PATCH /api/workflows/:id` |
 | `workflows:delete` | `DELETE /api/workflows/:id` |
-| `workflows:run` | Go accept + Craft agent execution for `agent` nodes |
+| `workflows:run` | Go accept + Grose agent execution for `agent` nodes |
 | `workflows:deploy` | `POST /api/workflows/:id/deploy` (Go-owned; domain-workflows proxies) |
 | `workflows:undeploy` | `POST /api/workflows/:id/undeploy` |
 | `workflows:ping` | `/health` |
@@ -611,4 +611,4 @@ Channels under `RPC_CHANNELS.workflows.*` mirror HTTP (same pattern as `domain-r
 
 ## 10. Decision summary
 
-**Accepted:** Workflows share one JSON graph (`Workflow` + `Node.type` + `Edge`) between UI BlockConfig, Go SQLite, HTTP, and MCP. Phase 2.5 expands to ~29 primitive node types. **Run:** Go accepts; Craft executes `agent` steps via SessionManager and returns real Logs Output; other types stay stub/passthrough. **Deploy:** Go snapshots draft → live (`deployed_definition_json` + version); UI shows Deployed · vN. Schedule/webhook armed metadata is recorded but runners remain stub. Workbench UI uses `workflows:*` RPC.
+**Accepted:** Workflows share one JSON graph (`Workflow` + `Node.type` + `Edge`) between UI BlockConfig, Go SQLite, HTTP, and MCP. Phase 2.5 expands to ~29 primitive node types. **Run:** Go accepts; Grose executes `agent` steps via SessionManager and returns real Logs Output; other types stay stub/passthrough. **Deploy:** Go snapshots draft → live (`deployed_definition_json` + version); UI shows Deployed · vN. Schedule/webhook armed metadata is recorded but runners remain stub. Workbench UI uses `workflows:*` RPC.

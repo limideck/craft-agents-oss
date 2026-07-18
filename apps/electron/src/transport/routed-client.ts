@@ -11,9 +11,9 @@
  */
 
 import type { WsRpcClient, TransportConnectionState } from './client'
-import type { RpcClient } from '@craft-agent/server-core/transport'
-import type { RemoteServerConfig } from '@craft-agent/core/types'
-import { isLocalOnly, RPC_CHANNELS } from '@craft-agent/shared/protocol'
+import type { RpcClient } from '@grose-agent/server-core/transport'
+import type { RemoteServerConfig } from '@grose-agent/core/types'
+import { isLocalOnly, RPC_CHANNELS } from '@grose-agent/shared/protocol'
 
 // ---------------------------------------------------------------------------
 // Types

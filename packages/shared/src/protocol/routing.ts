@@ -479,7 +479,7 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.messaging.ALLOW_PENDING_SENDER,
   RPC_CHANNELS.messaging.SET_BINDING_ACCESS,
 
-  // RSS domain (craft-modules HTTP proxy)
+  // RSS domain (grose-modules HTTP proxy)
   RPC_CHANNELS.rss.PING,
   RPC_CHANNELS.rss.LIST_FEEDS,
   RPC_CHANNELS.rss.ADD_FEED,
@@ -526,10 +526,10 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.openConnector.RESTART,
   RPC_CHANNELS.openConnector.FETCH,
 
-  // craft-modules sidecar lifecycle
-  RPC_CHANNELS.craftModules.GET_STATUS,
-  RPC_CHANNELS.craftModules.GET_CONFIG,
-  RPC_CHANNELS.craftModules.RESTART,
+  // grose-modules sidecar lifecycle
+  RPC_CHANNELS.groseModules.GET_STATUS,
+  RPC_CHANNELS.groseModules.GET_CONFIG,
+  RPC_CHANNELS.groseModules.RESTART,
 ])
 
 // ---------------------------------------------------------------------------

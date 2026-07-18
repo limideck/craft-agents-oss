@@ -1,8 +1,8 @@
 import { themeAbyss, type DockviewTheme } from 'dockview-react'
 
-/** Craft dockview theme — abyss base + Craft CSS chrome class. */
-export const themeCraft: DockviewTheme = {
+/** Grose dockview theme — abyss base + Grose CSS chrome class. */
+export const themeGrose: DockviewTheme = {
   ...themeAbyss,
-  className: `${themeAbyss.className} dockview-theme-craft`,
+  className: `${themeAbyss.className} dockview-theme-grose`,
   gap: 0,
 }

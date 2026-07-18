@@ -1,22 +1,22 @@
 # Workbench Workflows editor (UI)
 
-Phase 2 Flows editor for the Craft workbench shell (under **Automations → Flows**). Canvas uses `@xyflow/react`; graph CRUD is persisted through **craft-modules** via `domain-workflows` RPC (`workflows:*`). Shapes align with [workbench-workflows-contract.md](./workbench-workflows-contract.md).
+Phase 2 Flows editor for the Grose workbench shell (under **Automations → Flows**). Canvas uses `@xyflow/react`; graph CRUD is persisted through **grose-modules** via `domain-workflows` RPC (`workflows:*`). Shapes align with [workbench-workflows-contract.md](./workbench-workflows-contract.md).
 
 Product entry and Rules vs Flows IA: [workbench-automations-ui.md](./workbench-automations-ui.md).
 
 ## How to open
 
-1. Build the Go sidecar once: `bun run build:craft-modules`
+1. Build the Go sidecar once: `bun run build:grose-modules`
 2. Enable the workbench shell:
-   - DevTools console: `localStorage.setItem('craft-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `CRAFT_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev` / usual app entry). Main spawns `craft-modules` (or attach with `CRAFT_MODULES_URL`).
+   - DevTools console: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
+   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
+3. Start Electron (`bun run electron:dev` / usual app entry). Main spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
 4. In the ActivityBar (far left), click **Automations**, then the **Flows** segment.
 5. Left aside shows the flow list; dock applies the `workflow-edit` preset.
 
-If you previously opened an older Workflows layout, clear the saved dock layout for that workspace (or wipe `craft-panel-layout:workbench:*` keys in localStorage) so the preset applies.
+If you previously opened an older Workflows layout, clear the saved dock layout for that workspace (or wipe `grose-panel-layout:workbench:*` keys in localStorage) so the preset applies.
 
-If the list shows a sidecar / connection error, build/start craft-modules or set `CRAFT_MODULES_URL` (same as RSS).
+If the list shows a sidecar / connection error, build/start grose-modules or set `GROSE_MODULES_URL` (same as RSS).
 
 ## Locked layout (tabs on the right)
 
@@ -36,7 +36,7 @@ Dock preset `workflow-edit`: center column ~0.62 (canvas / logs vertical split) 
 ## Data path
 
 ```
-UI (Jotai cache) → electronAPI.workflows* → domain-workflows RPC → craft-modules HTTP /api/workflows
+UI (Jotai cache) → electronAPI.workflows* → domain-workflows RPC → grose-modules HTTP /api/workflows
 ```
 
 Workspace store: `{rootPath}/modules/workflows/` (see [workspace-storage.md](./workspace-storage.md)). Definitions currently live in `workflows.db`; `definitions/` is reserved for a future file SoT.
@@ -47,7 +47,7 @@ Workspace store: `{rootPath}/modules/workflows/` (see [workspace-storage.md](./w
 | New workflow | `workflows:create` |
 | Graph edits (nodes, edges, config, positions) | `workflows:update` (debounced) |
 | Delete workflow | `workflows:delete` |
-| Run | `workflows:run` (Go accepts; Craft executes `agent` nodes → real Logs output) |
+| Run | `workflows:run` (Go accepts; Grose executes `agent` nodes → real Logs output) |
 | Deploy | `workflows:deploy` (flush pending save → Go publishes live snapshot) |
 
 Hook: `use-workflow-data.ts` (same pattern as RSS `use-rss-data.ts`). Optimistic local updates; authority is the Go store.
@@ -66,7 +66,7 @@ Sample graphs in `mock/data.ts` are **not** seeded into the store (dev/docs only
 - **Delete / Backspace** — removes the selected node (and its edges) or selected edge; persists.
 - **Branching** — `condition` (`true`/`false`), `switch` (case ids + `default`), `filter` (`pass`/`drop`), `loop` (`item`/`done`), `human-approval` (`approved`/`rejected`), `question-classifier` (category ids).
 - **Editor** — writable form from `BlockConfig.fields` → writes `name` / `config` → persist.
-- **Run** — flushes pending persists, calls `workflows:run`. Craft runs `agent` nodes via a real session; Logs show per-node Input / Output (agent Output is model text). Selecting a step highlights the canvas node.
+- **Run** — flushes pending persists, calls `workflows:run`. Grose runs `agent` nodes via a real session; Logs show per-node Input / Output (agent Output is model text). Selecting a step highlights the canvas node.
 - **Logs** — left: step list (icon, name, duration, error); right: **Output** \| **Input** tabs with expandable JSON tree (type tags). Resizable split inside the panel.
 - **Deploy** — flushes pending persists, calls `workflows:deploy`. Canvas header + list show **Deployed · vN**. Logs line on success. Schedule/webhook nodes are armed in metadata only (runners stub).
 - **Chat** — placeholder copy only.
@@ -90,7 +90,7 @@ WorkflowNodeType =
   'http' | 'wait' | 'response' | 'subworkflow'
 ```
 
-Wire types: `@craft-agent/shared/craft-modules` (`CraftModulesWorkflow*`). Block registry: `modules/workflows/blocks/`.
+Wire types: `@grose-agent/shared/grose-modules` (`GroseModulesWorkflow*`). Block registry: `modules/workflows/blocks/`.
 
 ## UI state (Jotai)
 
@@ -114,12 +114,12 @@ WorkflowRunStep {
 
 Synthesized from the graph on Run (Go stub returns the same shape; UI falls back to local synthesis). Not a real executor.
 
-## Craft styling
+## Grose styling
 
-Uses existing electron / Craft tokens (`bg-card`, `border-border`, `text-muted-foreground`, `foreground-5/10`, panel primitives). Does **not** use frontend `--ide-*` tokens. React Flow base stylesheet: `@xyflow/react/dist/style.css`.
+Uses existing electron / Grose tokens (`bg-card`, `border-border`, `text-muted-foreground`, `foreground-5/10`, panel primitives). Does **not** use frontend `--ide-*` tokens. React Flow base stylesheet: `@xyflow/react/dist/style.css`.
 
 ## Out of scope (this phase)
 
 Graph executor for all node types, Loop/Parallel tooling catalog, cron/webhook runners that fire runs, multi-version rollback UI, real Chat, undo stack.
 
-See also: [workbench-workflows-contract.md](./workbench-workflows-contract.md), [workbench-architecture.md](./workbench-architecture.md), [workbench-rss-ui.md](./workbench-rss-ui.md), [craft-modules-sidecar.md](./craft-modules-sidecar.md).
+See also: [workbench-workflows-contract.md](./workbench-workflows-contract.md), [workbench-architecture.md](./workbench-architecture.md), [workbench-rss-ui.md](./workbench-rss-ui.md), [grose-modules-sidecar.md](./grose-modules-sidecar.md).

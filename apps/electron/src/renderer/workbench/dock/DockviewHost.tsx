@@ -6,7 +6,7 @@ import {
 } from 'dockview-react'
 import 'dockview-react/dist/styles/dockview.css'
 import './dockview-theme.css'
-import { themeCraft } from './dockview-theme'
+import { themeGrose } from './dockview-theme'
 import { PanelPortalHost, usePortalSlot } from './panel-portal-host'
 import { panelPortalManager } from './panel-portal-manager'
 import { renderRegisteredPanel, getAllPanels } from '../registry/panel-registry'
@@ -139,7 +139,7 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
     <div className="relative flex-1 min-h-0 min-w-0">
       <DockviewReact
         key={workspaceId}
-        theme={themeCraft}
+        theme={themeGrose}
         components={components}
         onReady={onReady}
         defaultRenderer="always"

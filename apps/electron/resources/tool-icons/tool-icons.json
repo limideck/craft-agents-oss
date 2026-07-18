@@ -1,7 +1,7 @@
 {
   "version": 1,
   "tools": [
-    { "id": "craft-agent", "displayName": "Craft Agent", "icon": "craft-agent.svg", "commands": ["craft-agent"] },
+    { "id": "grose-agent", "displayName": "Grose Agent", "icon": "grose-agent.svg", "commands": ["grose-agent"] },
     { "id": "git", "displayName": "Git", "icon": "git.ico", "commands": ["git"] },
     { "id": "github", "displayName": "GitHub", "icon": "github.png", "commands": ["gh"] },
     { "id": "npm", "displayName": "npm", "icon": "npm.png", "commands": ["npm", "npx"] },

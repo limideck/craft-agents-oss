@@ -2,7 +2,7 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, X, Search } from 'lucide-react'
 
-import { Icon_Home, Icon_Folder } from '@craft-agent/ui'
+import { Icon_Home, Icon_Folder } from '@grose-agent/ui'
 import {
   Drawer,
   DrawerContent,
@@ -10,8 +10,8 @@ import {
   DrawerTitle,
   DrawerClose,
 } from '@/components/ui/drawer'
-import { FreeFormInputContextBadge } from '../app-shell/input/FreeFormInputContextBadge'
-import { useWorkingDirectoryState } from '../app-shell/input/use-working-directory-state'
+import { FreeFormInputContextBadge } from '../composer/FreeFormInputContextBadge'
+import { useWorkingDirectoryState } from '../composer/use-working-directory-state'
 import { ServerDirectoryBrowser } from '@/components/ServerDirectoryBrowser'
 import { PATH_SEP, getPathBasename } from '@/lib/platform'
 import { cn } from '@/lib/utils'

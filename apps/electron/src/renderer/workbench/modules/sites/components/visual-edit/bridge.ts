@@ -1,6 +1,6 @@
 /** postMessage protocol between preview iframe and Sites visual-edit toolbar. */
 
-export const VISUAL_EDIT_MESSAGE_TYPE = 'craft-sites-visual-edit' as const
+export const VISUAL_EDIT_MESSAGE_TYPE = 'grose-sites-visual-edit' as const
 
 export type VisualEditPayload = {
   filePath?: string
@@ -31,7 +31,7 @@ export function postVisualEditCommand(
 ): void {
   try {
     iframe?.contentWindow?.postMessage(
-      { type: 'craft-sites-visual-edit-command', command },
+      { type: 'grose-sites-visual-edit-command', command },
       '*',
     )
   } catch {

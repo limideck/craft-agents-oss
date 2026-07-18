@@ -80,7 +80,7 @@ done
 # Configuration
 BUN_VERSION="bun-v1.3.9"  # Pinned version for reproducible builds
 
-echo "=== Building Craft Agents DMG (${ARCH}) using electron-builder ==="
+echo "=== Building Grose Agents DMG (${ARCH}) using electron-builder ==="
 if [ "$UPLOAD" = true ]; then
     echo "Will upload to S3 after build"
 fi
@@ -188,6 +188,48 @@ mkdir -p "$ELECTRON_DIR/node_modules/@vscode"
 rm -rf "$ELECTRON_DIR/node_modules/@vscode/ripgrep"
 cp -r "$RG_SOURCE" "$ELECTRON_DIR/node_modules/@vscode/"
 
+# 5b. Copy sherpa-onnx-node (native on-device ASR) from root node_modules.
+#     Monorepo hoisting places it at the repo root; electron-builder only sees
+#     apps/electron/, so we stage it here, mirroring the SDK/ripgrep handling
+#     above. The native .node is N-API (abi-stable) so it loads in Electron
+#     without electron-rebuild; the per-arch package (sherpa-onnx-darwin-*)
+#     carries the .node plus its dylibs (libonnxruntime, libsherpa-onnx-c-api).
+SHERPA_SOURCE="$ROOT_DIR/node_modules/sherpa-onnx-node"
+require_path "$SHERPA_SOURCE" "sherpa-onnx-node" "Run 'bun install' from the repository root first."
+echo "Copying sherpa-onnx-node..."
+mkdir -p "$ELECTRON_DIR/node_modules"
+rm -rf "$ELECTRON_DIR/node_modules/sherpa-onnx-node"
+cp -r "$SHERPA_SOURCE" "$ELECTRON_DIR/node_modules/"
+
+# Stage both darwin archs so the (arch-agnostic) extraResources entries in
+# electron-builder.yml always resolve, regardless of which arch is built.
+# The non-target arch is fetched via npm when bun install skipped it
+# (optional deps are platform-matched to the host).
+for SHERPA_ARCH in arm64 x64; do
+  SHERPA_BIN_PKG="sherpa-onnx-darwin-${SHERPA_ARCH}"
+  SHERPA_BIN_SOURCE="$ROOT_DIR/node_modules/${SHERPA_BIN_PKG}"
+  if [ ! -d "$SHERPA_BIN_SOURCE" ]; then
+    echo "Cross-arch: ${SHERPA_BIN_PKG} not in node_modules — fetching from npm..."
+    SHERPA_BIN_VER=$(node -p "require('$SHERPA_SOURCE/package.json').optionalDependencies['$SHERPA_BIN_PKG']" | tr -d '"')
+    PKG_TMP=$(mktemp -d)
+    (
+      cd "$PKG_TMP"
+      npm pack "${SHERPA_BIN_PKG}@${SHERPA_BIN_VER}" >/dev/null
+      TARBALL=$(ls *.tgz | head -1)
+      tar -xzf "$TARBALL"
+    )
+    mkdir -p "$SHERPA_BIN_SOURCE"
+    cp -r "$PKG_TMP/package/." "$SHERPA_BIN_SOURCE/"
+    rm -rf "$PKG_TMP"
+  fi
+  require_path "$SHERPA_BIN_SOURCE" "sherpa-onnx native package (${SHERPA_BIN_PKG})" \
+    "Run 'bun install' from the repository root."
+  echo "Staging ${SHERPA_BIN_PKG}..."
+  mkdir -p "$ELECTRON_DIR/node_modules"
+  rm -rf "$ELECTRON_DIR/node_modules/${SHERPA_BIN_PKG}"
+  cp -r "$SHERPA_BIN_SOURCE" "$ELECTRON_DIR/node_modules/"
+done
+
 # 6. Copy network interceptor sources.
 #    NOTE (Phase 1 of SDK uplift): the Claude native binary doesn't accept
 #    Bun's --preload, so the Claude code path no longer uses these. They're
@@ -245,8 +287,8 @@ fi
 npx electron-builder $BUILDER_ARGS
 
 # 8. Verify the DMG was built
-# electron-builder.yml uses artifactName to output: Craft-Agents-${arch}.dmg
-DMG_NAME="Craft-Agents-${ARCH}.dmg"
+# electron-builder.yml uses artifactName to output: Grose-Agents-${arch}.dmg
+DMG_NAME="Grose-Agents-${ARCH}.dmg"
 DMG_PATH="$ELECTRON_DIR/release/$DMG_NAME"
 
 if [ ! -f "$DMG_PATH" ]; then

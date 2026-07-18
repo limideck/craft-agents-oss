@@ -1,10 +1,10 @@
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import * as rss from '@craft-agent/shared/craft-modules'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import * as rss from '@grose-agent/shared/grose-modules'
 import type {
-  CraftModulesRssArticle,
-  CraftModulesRssListMode,
-  CraftModulesRssView,
-} from '@craft-agent/shared/craft-modules'
+  GroseModulesRssArticle,
+  GroseModulesRssListMode,
+  GroseModulesRssView,
+} from '@grose-agent/shared/grose-modules'
 
 /** Minimal server surface so domain packages do not depend on server-core. */
 export type DomainRpcServer = {
@@ -12,7 +12,7 @@ export type DomainRpcServer = {
 }
 
 /**
- * RSS domain RPC — thin proxy to craft-modules Go sidecar.
+ * RSS domain RPC — thin proxy to grose-modules Go sidecar.
  * Workspace data: `{rootPath}/modules/rss/` (see docs/workspace-storage.md).
  */
 export function registerRssRpcHandlers(server: DomainRpcServer): void {
@@ -66,9 +66,9 @@ export function registerRssRpcHandlers(server: DomainRpcServer): void {
       _ctx: unknown,
       workspaceId: string,
       input?: {
-        view?: CraftModulesRssView
+        view?: GroseModulesRssView
         feedId?: string
-        mode?: CraftModulesRssListMode
+        mode?: GroseModulesRssListMode
         q?: string
         limit?: number
       },
@@ -93,7 +93,7 @@ export function registerRssRpcHandlers(server: DomainRpcServer): void {
 
   server.handle(
     RPC_CHANNELS.rss.TOGGLE_STAR,
-    async (_ctx: unknown, workspaceId: string, article: CraftModulesRssArticle, starred: boolean) => {
+    async (_ctx: unknown, workspaceId: string, article: GroseModulesRssArticle, starred: boolean) => {
       return rss.toggleStar(workspaceId, article, starred)
     },
   )

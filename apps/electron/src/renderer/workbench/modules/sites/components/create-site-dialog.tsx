@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
-import type { CraftModulesSiteTemplate } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesSiteTemplate } from '@grose-agent/shared/grose-modules'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,7 @@ type Props = {
   onCreated: (siteId: string) => void
 }
 
-const TEMPLATES: Array<{ id: CraftModulesSiteTemplate; labelKey: string }> = [
+const TEMPLATES: Array<{ id: GroseModulesSiteTemplate; labelKey: string }> = [
   { id: 'blank', labelKey: 'workbench.sites.templateBlank' },
   { id: 'landing', labelKey: 'workbench.sites.templateLanding' },
   { id: 'website', labelKey: 'workbench.sites.templateWebsite' },
@@ -23,7 +23,7 @@ export function CreateSiteDialog({ workspaceId, onCreated }: Props) {
   const { t } = useTranslation()
   const [open, setOpen] = useAtom(sitesCreateOpenAtom)
   const [name, setName] = useState('')
-  const [template, setTemplate] = useState<CraftModulesSiteTemplate>('blank')
+  const [template, setTemplate] = useState<GroseModulesSiteTemplate>('blank')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

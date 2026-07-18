@@ -1,6 +1,6 @@
 import type { HandlerDeps } from './handler-deps'
-import type { RpcServer } from '@craft-agent/server-core/transport'
-import { registerCoreRpcHandlers, type ServerHandlerContext } from '@craft-agent/server-core/handlers/rpc'
+import type { RpcServer } from '@grose-agent/server-core/transport'
+import { registerCoreRpcHandlers, type ServerHandlerContext } from '@grose-agent/server-core/handlers/rpc'
 export { registerCoreRpcHandlers }
 
 // GUI-only handlers remain local (Electron-specific imports)
@@ -9,8 +9,9 @@ import { registerWorkspaceGuiHandlers } from './workspace'
 import { registerBrowserHandlers } from './browser'
 import { registerSettingsGuiHandlers } from './settings'
 import { registerOpenConnectorHandlers } from './open-connector'
-import { registerCraftModulesHandlers } from './craft-modules'
+import { registerGroseModulesHandlers } from './grose-modules'
 import { registerTablesHandlers } from './tables'
+import { registerVoiceHandlers } from './voice'
 
 export function registerGuiRpcHandlers(server: RpcServer, deps: HandlerDeps): void {
   registerSystemGuiHandlers(server, deps)
@@ -18,8 +19,9 @@ export function registerGuiRpcHandlers(server: RpcServer, deps: HandlerDeps): vo
   registerBrowserHandlers(server, deps)
   registerSettingsGuiHandlers(server, deps)
   registerOpenConnectorHandlers(server, deps)
-  registerCraftModulesHandlers(server, deps)
+  registerGroseModulesHandlers(server, deps)
   registerTablesHandlers(server, deps)
+  registerVoiceHandlers(server, deps)
 }
 
 export function registerAllRpcHandlers(server: RpcServer, deps: HandlerDeps, serverCtx?: ServerHandlerContext): void {

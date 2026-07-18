@@ -1,6 +1,6 @@
-# `@craft-agent/datagrid`
+# `@grose-agent/datagrid`
 
-Airtable-like spreadsheet grid extracted from [`test/ai-datagrid`](../../test/ai-datagrid) for reuse in Electron / web hosts (same packaging style as `@craft-agent/ui`).
+Airtable-like spreadsheet grid extracted from [`test/ai-datagrid`](../../test/ai-datagrid) for reuse in Electron / web hosts (same packaging style as `@grose-agent/ui`).
 
 ## Install
 
@@ -12,7 +12,7 @@ import {
   DatagridToaster,
   getFilterFn,
   useDataGrid,
-} from '@craft-agent/datagrid'
+} from '@grose-agent/datagrid'
 ```
 
 ## Styles
@@ -21,13 +21,13 @@ The grid uses Tailwind utility classes and shadcn-style CSS variables. In the ho
 
 ```css
 @import "tailwindcss";
-@import "@craft-agent/datagrid/styles";
+@import "@grose-agent/datagrid/styles";
 
 /* Ensure Tailwind scans the package source */
 @source "../../../packages/datagrid/src/**/*.{ts,tsx}";
 ```
 
-If the host already defines the same CSS variables (e.g. via `@craft-agent/ui/styles`), you can omit the datagrid `:root` tokens and only keep the `@source` line.
+If the host already defines the same CSS variables (e.g. via `@grose-agent/ui/styles`), you can omit the datagrid `:root` tokens and only keep the `@source` line.
 
 Mount `DatagridToaster` once near the app root for copy/paste / undo toasts.
 
@@ -35,7 +35,7 @@ Mount `DatagridToaster` once near the app root for copy/paste / undo toasts.
 
 ```tsx
 import type { ColumnDef } from '@tanstack/react-table'
-import { DataGridContainer, DatagridToaster, getFilterFn } from '@craft-agent/datagrid'
+import { DataGridContainer, DatagridToaster, getFilterFn } from '@grose-agent/datagrid'
 
 type Row = { id: string; name: string }
 

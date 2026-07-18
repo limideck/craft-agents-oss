@@ -1,13 +1,13 @@
 /**
- * Theme tokens expected by `@craft-agent/datagrid` (shadcn/css-variable style).
+ * Theme tokens expected by `@grose-agent/datagrid` (shadcn/css-variable style).
  *
  * Import in the host app CSS after Tailwind:
  *
  *   @import "tailwindcss";
- *   @import "@craft-agent/datagrid/styles";
+ *   @import "@grose-agent/datagrid/styles";
  *   @source "../../packages/datagrid/src/**/*.{ts,tsx}";
  *
- * Host apps that already define these CSS variables (e.g. via `@craft-agent/ui/styles`)
+ * Host apps that already define these CSS variables (e.g. via `@grose-agent/ui/styles`)
  * can skip the `:root` / `.dark` blocks and only keep the `@source` directive so
  * Tailwind scans this package.
  */

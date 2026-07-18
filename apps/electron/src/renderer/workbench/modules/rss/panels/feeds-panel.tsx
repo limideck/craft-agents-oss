@@ -130,7 +130,7 @@ export function FeedsPanel() {
             <p className="text-destructive/90">{error}</p>
             {/sidecar|unavailable|ECONNREFUSED|fetch failed|not ready/i.test(error) ? (
               <p className="text-xs">
-                Build/start the Go sidecar (`bun run build:craft-modules`) or set `CRAFT_MODULES_URL`.
+                Build/start the Go sidecar (`bun run build:grose-modules`) or set `GROSE_MODULES_URL`.
               </p>
             ) : null}
           </div>

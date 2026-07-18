@@ -5,7 +5,7 @@ import ChatPage from '@/pages/ChatPage'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
 
 /**
- * Center chat panel — wraps existing Craft ChatPage.
+ * Center chat panel — wraps existing Grose ChatPage.
  * Session id from panel params, else nav details, else focused panel atom.
  */
 export function ChatPanel({ params }: { params: Record<string, unknown> }) {

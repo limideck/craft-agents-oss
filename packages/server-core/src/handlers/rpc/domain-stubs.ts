@@ -1,16 +1,16 @@
 /**
  * Domain RPC mount points.
- * Delegates to domain packages; RSS proxies to craft-modules.
+ * Delegates to domain packages; RSS proxies to grose-modules.
  * Workflows CRUD is proxied; `workflows:run` is registered by workflows-run.ts
- * (Craft executes agent nodes via SessionManager).
+ * (Grose executes agent nodes via SessionManager).
  */
 
-import type { RpcServer } from '@craft-agent/server-core/transport'
-import { RPC_CHANNELS } from '@craft-agent/shared/protocol'
-import { registerRssRpcHandlers } from '@craft-agent/domain-rss'
-import { registerKnowledgeRpcHandlers } from '@craft-agent/domain-knowledge'
-import { registerWorkflowsRpcHandlers } from '@craft-agent/domain-workflows'
-import { registerSitesRpcHandlers } from '@craft-agent/domain-sites'
+import type { RpcServer } from '@grose-agent/server-core/transport'
+import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
+import { registerRssRpcHandlers } from '@grose-agent/domain-rss'
+import { registerKnowledgeRpcHandlers } from '@grose-agent/domain-knowledge'
+import { registerWorkflowsRpcHandlers } from '@grose-agent/domain-workflows'
+import { registerSitesRpcHandlers } from '@grose-agent/domain-sites'
 import type { HandlerDeps } from '../handler-deps'
 import { registerWorkflowsRunHandler } from './workflows-run'
 

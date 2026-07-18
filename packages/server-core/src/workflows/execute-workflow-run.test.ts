@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import type { CraftModulesWorkflow } from '@craft-agent/shared/craft-modules'
+import type { GroseModulesWorkflow } from '@grose-agent/shared/grose-modules'
 import type { SessionCompletionEvent } from '../sessions/SessionManager'
 import {
   executeWorkflowRun,
@@ -55,7 +55,7 @@ function makeHost(opts?: {
   }
 }
 
-const startAgentWorkflow = (): CraftModulesWorkflow => ({
+const startAgentWorkflow = (): GroseModulesWorkflow => ({
   id: 'wf-1',
   name: 'Joke',
   updatedAt: new Date().toISOString(),

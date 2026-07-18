@@ -1,5 +1,5 @@
 /**
- * @craft-agent/datagrid — Airtable-like spreadsheet grid
+ * @grose-agent/datagrid — Airtable-like spreadsheet grid
  *
  * Platform-agnostic React components (Electron / web). AI chat from the
  * ai-datagrid template is intentionally excluded; wire your own agent via

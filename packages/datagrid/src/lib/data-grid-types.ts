@@ -133,6 +133,10 @@ declare module "@tanstack/react-table" {
     cell?: CellOpts;
     /** Optional AI prompt for enriching this column's data */
     prompt?: string;
+    /** When true, the column expands to fill remaining width */
+    fillWidth?: boolean;
+    /** When true, cell content is truncated with an ellipsis */
+    truncate?: boolean;
   }
 
   // biome-ignore lint/correctness/noUnusedVariables: TData is used in the TableMeta interface

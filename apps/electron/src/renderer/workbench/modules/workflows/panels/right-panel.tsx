@@ -57,7 +57,7 @@ const CATEGORY_ITEMS: Record<BlockCategory, BlockConfig[]> = {
 
 /**
  * Right column — Chat | Toolbar | Editor (CSS hide/show).
- * Run calls `workflows:run` (Craft executes agent nodes; other nodes stay lightweight).
+ * Run calls `workflows:run` (Grose executes agent nodes; other nodes stay lightweight).
  * Deploy flushes pending saves then calls `workflows:deploy` (Go publishes live snapshot).
  */
 export function RightPanel() {
@@ -145,7 +145,7 @@ export function RightPanel() {
       const summary = hasAgent
         ? agentFailed
           ? `Run finished with agent error: “${name}”${runSuffix} — ${steps.length} step${steps.length === 1 ? '' : 's'}.`
-          : `Run completed: “${name}”${runSuffix} — ${steps.length} step${steps.length === 1 ? '' : 's'} (agent via Craft).`
+          : `Run completed: “${name}”${runSuffix} — ${steps.length} step${steps.length === 1 ? '' : 's'} (agent via Grose).`
         : `Run accepted: “${name}”${runSuffix} — ${steps.length} step${steps.length === 1 ? '' : 's'} (non-agent stubs).`
       setLogs((prev) =>
         appendLogLine(prev, summary, agentFailed ? 'warn' : 'success'),
@@ -226,7 +226,7 @@ export function RightPanel() {
               variant="ghost"
               size="sm"
               className="h-6 px-2 text-xs gap-1"
-              title="Run (agent nodes via Craft)"
+              title="Run (agent nodes via Grose)"
               disabled={!selectedWorkflowId || !activeWorkspaceId}
               onClick={() => void onRun()}
             >
@@ -456,7 +456,7 @@ function EditorTab({
         onConfigChange={(key, value) => onUpdate({ config: { [key]: value } })}
       />
       <p className="text-[11px] text-muted-foreground pt-1">
-        Changes save to craft-modules via <code className="text-[10px]">workflows:update</code>.
+        Changes save to grose-modules via <code className="text-[10px]">workflows:update</code>.
       </p>
     </div>
   )

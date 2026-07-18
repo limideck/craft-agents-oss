@@ -3,7 +3,7 @@ import {
   getDataGridSelectColumn,
   getFilterFn,
   type CellOpts,
-} from '@craft-agent/datagrid'
+} from '@grose-agent/datagrid'
 import type { TablesGridRow, TablesQueryResult, TablesSource } from './types'
 
 const filterFn = getFilterFn<TablesGridRow>()
