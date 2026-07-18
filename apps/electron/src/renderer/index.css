@@ -12,6 +12,7 @@
 @source "../renderer/playground/**/*.{ts,tsx,jsx}";
 @source "../renderer/utils/**/*.{ts,tsx,jsx}";
 @source "../renderer/config/**/*.{ts,tsx,jsx}";
+@source "../renderer/workbench/**/*.{ts,tsx,jsx}";
 @source "../../../../packages/ui/src/components/**/*.{ts,tsx,jsx}";
 @source "../../../../packages/ui/src/lib/**/*.{ts,tsx,jsx}";
 @source "../../../../packages/datagrid/src/**/*.{ts,tsx}";
@@ -205,6 +206,12 @@
   --radius: 0rem;
   --spacing: 0.25rem;
   --tracking-normal: 0em;
+  /* Workbench activity header ↔ dock tab strip seam.
+     Must be px (not rem): html font-size is 15px, so Tailwind h-10 (2.5rem) = 37.5px
+     and misaligns vs dockview's 40px tab bar by 2.5px. Both chrome bars are
+     border-box with a 1px bottom border counted inside this height.
+     Dock side: `.dockview-theme-grose .dv-tabs-and-actions-container` in dockview-theme.css. */
+  --workbench-chrome-height: 40px;
 
   /* === Z-INDEX SCALE ===
      Centralized z-index registry for consistent stacking order.
@@ -479,6 +486,14 @@ html[data-font="inter"] {
   --container-panel-compact: 28rem; /* 448px — PANEL_MIN_WIDTH */
   --container-panel-medium: 40rem;  /* 640px */
   --container-mobile: 48rem;        /* 768px — mobile breakpoint */
+}
+
+/* ActivityShell header — outer height must match dock tab strip (see dockview-theme.css). */
+.workbench-chrome-header {
+  box-sizing: border-box;
+  height: var(--workbench-chrome-height);
+  min-height: var(--workbench-chrome-height);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Global styles - MUST be in @layer base so utilities can override */

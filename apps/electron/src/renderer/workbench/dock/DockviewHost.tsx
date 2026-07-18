@@ -68,7 +68,12 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
       'rss-reader',
       'sites-chat',
       'sites-files',
-      'sites-preview',
+      'sites-changes',
+      'sites-browser',
+      'sites-data',
+      'sites-plan',
+      'sites-terminal',
+      'sites-vscode',
     ]) {
       if (!map[key]) map[key] = PortalSlot
     }

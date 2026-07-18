@@ -19,10 +19,19 @@ function fakeLayout(panelComponents: Record<string, string>): SerializedDockview
 }
 
 describe('layoutMatchesModule', () => {
-  it('accepts sites layouts with sites-* panels', () => {
+  it('accepts sites layouts with sites-browser panels', () => {
     expect(
-      layoutMatchesModule(fakeLayout({ 'sites-chat': 'sites-chat' }), 'sites'),
+      layoutMatchesModule(fakeLayout({ 'sites-browser': 'sites-browser' }), 'sites'),
     ).toBe(true)
+  })
+
+  it('rejects legacy sites-preview layouts so multi-tab default applies', () => {
+    expect(
+      layoutMatchesModule(
+        fakeLayout({ 'sites-chat': 'sites-chat', 'sites-preview': 'sites-preview' }),
+        'sites',
+      ),
+    ).toBe(false)
   })
 
   it('rejects agents dock snapshots stored under sites', () => {
@@ -38,6 +47,18 @@ describe('layoutMatchesModule', () => {
   it('accepts rss layouts', () => {
     expect(
       layoutMatchesModule(fakeLayout({ 'rss-feeds': 'rss-feeds' }), 'rss'),
+    ).toBe(true)
+  })
+
+  it('accepts rss layouts without feeds panel (feeds in activityView)', () => {
+    expect(
+      layoutMatchesModule(
+        fakeLayout({
+          'rss-article-list': 'rss-article-list',
+          'rss-reader': 'rss-reader',
+        }),
+        'rss',
+      ),
     ).toBe(true)
   })
 

@@ -12,11 +12,10 @@ export const AGENTS_DEFAULT_RATIOS = {
   right: 0.44,
 } as const
 
-/** RSS reading layout: feeds | list | reader. */
+/** RSS reading layout: article list | reader (feeds live in activityView). */
 export const RSS_READING_RATIOS = {
-  feeds: 0.2,
-  list: 0.3,
-  reader: 0.5,
+  list: 0.38,
+  reader: 0.62,
 } as const
 
 /** Workflow edit: canvas+logs | right tools (~62 / 38). */

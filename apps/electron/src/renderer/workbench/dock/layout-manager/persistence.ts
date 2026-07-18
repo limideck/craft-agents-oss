@@ -11,7 +11,8 @@ const LAYOUT_SUFFIX_PREFIX = 'workbench'
  */
 const MODULE_LAYOUT_MARKERS: Record<string, readonly string[]> = {
   agents: ['chat', 'session-list', 'files'],
-  sites: ['sites-chat', 'sites-files', 'sites-preview'],
+  // Require sites-browser so pre-multi-tab (sites-preview) layouts fall back to default.
+  sites: ['sites-browser'],
   rss: ['rss-feeds', 'rss-article-list', 'rss-reader'],
   tables: ['tables-grid'],
   automations: ['automation-detail', 'wf-canvas', 'wf-logs', 'wf-right'],

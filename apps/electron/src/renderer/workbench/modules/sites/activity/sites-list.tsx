@@ -2,9 +2,9 @@ import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Globe, Plus, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { PanelRoot, PanelBody, PanelHeaderBar } from '../../../dock/panel-primitives'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { ActivityShell } from '../../../shell/ActivityShell'
 import {
   selectedSiteIdAtom,
   sitesAtom,
@@ -103,22 +103,23 @@ export function SitesListView() {
   }
 
   return (
-    <PanelRoot>
-      <PanelHeaderBar className="justify-between">
-        <span className="font-medium truncate">{t('workbench.sites.title')}</span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          title={t('workbench.sites.newSite')}
-          disabled={!workspaceId}
-          onClick={() => setCreateOpen(true)}
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </Button>
-      </PanelHeaderBar>
-      <PanelBody padding={false} className="p-0">
+    <div className="relative h-full min-h-0">
+      <ActivityShell
+        title={t('workbench.sites.title')}
+        actions={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title={t('workbench.sites.newSite')}
+            disabled={!workspaceId}
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        }
+      >
         {loading && sites.length === 0 ? (
           <SitesListSkeleton />
         ) : error && sites.length === 0 ? (
@@ -181,10 +182,10 @@ export function SitesListView() {
             })}
           </ul>
         )}
-      </PanelBody>
+      </ActivityShell>
       {workspaceId ? (
         <CreateSiteDialog workspaceId={workspaceId} onCreated={(id) => void onCreated(id)} />
       ) : null}
-    </PanelRoot>
+    </div>
   )
 }

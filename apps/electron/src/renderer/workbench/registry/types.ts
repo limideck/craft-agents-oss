@@ -68,7 +68,7 @@ export type WorkbenchModule = {
   order: number
   /**
    * Where the module icon appears in the ActivityBar.
-   * `footer` modules render below a spacer (e.g. Settings).
+   * `footer` modules render below a spacer, sorted by `order` (Settings should stay last).
    */
   placement?: 'default' | 'footer'
   defaultLayout?: LayoutPresetId | LayoutState

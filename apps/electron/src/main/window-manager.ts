@@ -373,8 +373,13 @@ export class WindowManager {
     // In dev mode, retry the Vite dev server (it may not be ready yet) instead of falling back
     // to file:// which doesn't exist during development.
     let failLoadRetries = 0
-    window.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-      windowLog.warn('Failed to load renderer:', errorCode, errorDescription)
+    window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      // Sub-frames (e.g. the Sites preview <iframe> blocked by CSP, or a
+      // failed in-app embed) must NOT be treated as the main window failing to
+      // load — retrying the whole app on a child frame error looks like the
+      // software "restarting". Only react to top-level navigation failures.
+      if (!isMainFrame) return
+      windowLog.warn('Failed to load renderer:', errorCode, errorDescription, 'url=', validatedURL)
       if (VITE_DEV_SERVER_URL && failLoadRetries < 5) {
         failLoadRetries++
         windowLog.info(`Retrying Vite dev server (attempt ${failLoadRetries}/5)...`)

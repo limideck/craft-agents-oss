@@ -6,7 +6,11 @@ import { cn } from '@/lib/utils'
  *
  * PanelRoot — outermost wrapper, fills the dockview content area
  * PanelBody — scrollable (or non-scrollable) content region
- * PanelToolbar / PanelHeaderBar — fixed header strip
+ * PanelToolbar / PanelHeaderBar — fixed header strip (30px, dense in-panel chrome)
+ *
+ * ActivityBar side rails use ActivityShell / ActivityHeaderBar
+ * (var(--workbench-chrome-height), px — not rem) so titles align with the dock
+ * tab bar — do not bump PANEL_BAR_CLASS to match that chrome height.
  */
 
 const PANEL_ROOT_CLASS = 'h-full min-h-0 flex flex-col bg-card text-card-foreground'

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { AlignLeft, ExternalLink, Mic, Sparkles, Star } from 'lucide-react'
 import { PanelRoot, PanelBody, PanelHeaderBarSplit } from '../../../dock/panel-primitives'
 import { Button } from '@/components/ui/button'
@@ -10,12 +10,12 @@ import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules'
 import {
   rssArticlesAtom,
   rssLoadingAtom,
+  rssPlayingEpisodeAtom,
   rssSelectedArticleIdAtom,
 } from '../store'
 import { formatAbsoluteTime } from '../utils'
 import { useRssWorkspaceData, refreshRssData } from '../use-rss-data'
 import { RssSkeletonRows } from '../components/rss-skeleton'
-import { PodcastPlayer } from '../components/podcast-player'
 
 type FullContent = null | 'loading' | { html: string } | { error: string }
 
@@ -32,7 +32,7 @@ export function ReaderPanel() {
   const [detail, setDetail] = useState<GroseModulesRssArticle | null>(null)
   const [busyStar, setBusyStar] = useState(false)
   const [fullContent, setFullContent] = useState<FullContent>(null)
-  const [playing, setPlaying] = useState<GroseModulesRssArticle | null>(null)
+  const [playingEpisode, setPlayingEpisode] = useAtom(rssPlayingEpisodeAtom)
 
   const listHit = selectedId ? listArticles.find((a) => a.id === selectedId) : undefined
 
@@ -232,7 +232,15 @@ export function ReaderPanel() {
                     variant="outline"
                     size="sm"
                     className="ml-auto h-7 px-2 text-xs"
-                    onClick={() => setPlaying(article)}
+                    onClick={() =>
+                      setPlayingEpisode({
+                        id: article.id,
+                        title: article.title,
+                        feedName: article.feedName,
+                        audioUrl: article.audioUrl,
+                        position: playingEpisode?.id === article.id ? playingEpisode.position : 0,
+                      })
+                    }
                   >
                     Play
                   </Button>
@@ -261,17 +269,6 @@ export function ReaderPanel() {
             </article>
           </div>
         )}
-        {playing?.audioUrl ? (
-          <PodcastPlayer
-            episode={{
-              id: playing.id,
-              title: playing.title,
-              feedName: playing.feedName,
-              audioUrl: playing.audioUrl,
-            }}
-            onClose={() => setPlaying(null)}
-          />
-        ) : null}
       </PanelBody>
     </PanelRoot>
   )

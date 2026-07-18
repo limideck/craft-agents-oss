@@ -16,7 +16,8 @@ import {
 import { upsertSiteInList } from '../use-sites-data'
 import { VisualEditToolbar } from '../components/visual-edit/toolbar'
 
-export function SitesPreviewPanel() {
+/** Live site preview iframe — dock tab title is "Browser" (kandev Design parity). */
+export function SitesBrowserPanel() {
   const { t } = useTranslation()
   const { activeWorkspaceId } = useAppShellContext()
   const site = useAtomValue(selectedSiteAtom)
@@ -79,7 +80,7 @@ export function SitesPreviewPanel() {
   return (
     <PanelRoot>
       <PanelHeaderBar className="justify-between">
-        <span className="font-medium truncate">{t('workbench.sites.preview')}</span>
+        <span className="font-medium truncate">{t('workbench.sites.browser')}</span>
         <div className="flex items-center gap-0.5">
           <Button
             type="button"
@@ -113,14 +114,14 @@ export function SitesPreviewPanel() {
         ) : previewUrl ? (
           <iframe
             ref={iframeRef}
-            title={t('workbench.sites.preview')}
+            title={t('workbench.sites.browser')}
             src={previewUrl}
             className="flex-1 min-h-0 w-full border-0 bg-background"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
           />
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 p-4 text-sm text-muted-foreground">
-            <p>{status ? `${t('workbench.sites.preview')} · ${status}` : t('workbench.sites.previewIdle')}</p>
+            <p>{status ? `${t('workbench.sites.browser')} · ${status}` : t('workbench.sites.previewIdle')}</p>
             <Button type="button" size="sm" disabled={busy} onClick={() => void restart()}>
               {t('workbench.sites.restartPreview')}
             </Button>

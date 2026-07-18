@@ -11,7 +11,7 @@ import {
 /**
  * Narrow left activity rail — module switcher.
  * Modules appear here solely via registerModule(); Shell has no module-specific branches.
- * `placement: 'footer'` modules render below a flex spacer (Settings).
+ * `placement: 'footer'` modules render below a flex spacer (Skills/Sources/Connectors, then Settings last).
  */
 export function ActivityBar() {
   const modules = getAllModules()

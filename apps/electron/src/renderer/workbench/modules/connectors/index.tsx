@@ -5,11 +5,13 @@
 
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { atom } from 'jotai'
+import { useTranslation } from 'react-i18next'
 import { Cable } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { OpenConnectorNavigator } from './OpenConnectorNavigator'
 import { OpenConnectorPage } from './OpenConnectorPage'
 import { useOpenConnectorRuntime } from './useOpenConnectorRuntime'
+import { ActivityShell } from '../../shell/ActivityShell'
 import type { OpenConnectorSection } from './types'
 
 export type { OpenConnectorSection } from './types'
@@ -19,18 +21,21 @@ export const connectorSelectedServiceAtom = atom<string | null>(null)
 export const connectorSelectedActionIdAtom = atom<string | null>(null)
 
 function ConnectorsActivityView() {
+  const { t } = useTranslation()
   const [section, setSection] = useAtom(connectorSectionAtom)
   const runtime = useOpenConnectorRuntime(true)
   const ready = runtime.status?.ready === true
   const starting = runtime.status?.starting === true
 
   return (
-    <OpenConnectorNavigator
-      selectedSection={section}
-      runtimeReady={ready}
-      runtimeStarting={starting}
-      onSelectSection={setSection}
-    />
+    <ActivityShell title={t('sidebar.openConnector')} scroll={false} bodyClassName="overflow-hidden">
+      <OpenConnectorNavigator
+        selectedSection={section}
+        runtimeReady={ready}
+        runtimeStarting={starting}
+        onSelectSection={setSection}
+      />
+    </ActivityShell>
   )
 }
 
@@ -56,7 +61,8 @@ export const connectorsModule: WorkbenchModule = {
   id: 'connectors',
   title: 'Connectors',
   icon: <Cable className="h-4 w-4" />,
-  order: 40,
+  order: 92,
+  placement: 'footer',
   defaultLayout: {
     columns: [
       {

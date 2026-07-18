@@ -1,11 +1,18 @@
 import { Globe } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
+import { PanelErrorBoundary } from '../../dock/PanelErrorBoundary'
+import { PlaceholderPanel } from '../agents/panels/placeholder-panel'
 import { SitesListView } from './activity/sites-list'
 import { SitesChatPanel } from './panels/chat-panel'
 import { SitesFilesPanel } from './panels/files-panel'
-import { SitesPreviewPanel } from './panels/preview-panel'
+import { SitesBrowserPanel } from './panels/browser-panel'
+import { SitesDataPanel } from './panels/data-panel'
+import { SitesPlanPanel } from './panels/plan-panel'
 
-/** Sites (建站) workbench module — Chat | Files | Preview via grose-modules. */
+/**
+ * Sites (建站) — matches kandev Design advanced dock:
+ * Activity site list | Chat | right (Files/Changes/Browser/Data/Plan + Terminal/VS Code).
+ */
 export const sitesModule: WorkbenchModule = {
   id: 'sites',
   title: 'Sites',
@@ -16,7 +23,7 @@ export const sitesModule: WorkbenchModule = {
       {
         // Keep column ids module-scoped — do not reuse Agents panel id `chat`.
         id: 'sites-chat-col',
-        width: 0.32,
+        width: 0.55,
         groups: [
           {
             id: 'group-sites-chat',
@@ -25,22 +32,25 @@ export const sitesModule: WorkbenchModule = {
         ],
       },
       {
-        id: 'sites-files-col',
-        width: 0.28,
+        id: 'sites-right',
+        width: 0.45,
         groups: [
           {
-            id: 'group-sites-files',
-            panels: [{ id: 'sites-files', component: 'sites-files', title: 'Files' }],
+            id: 'group-sites-right-top',
+            panels: [
+              { id: 'sites-files', component: 'sites-files', title: 'Files' },
+              { id: 'sites-changes', component: 'sites-changes', title: 'Changes' },
+              { id: 'sites-browser', component: 'sites-browser', title: 'Browser' },
+              { id: 'sites-data', component: 'sites-data', title: 'Data' },
+              { id: 'sites-plan', component: 'sites-plan', title: 'Plan' },
+            ],
           },
-        ],
-      },
-      {
-        id: 'sites-preview-col',
-        width: 0.4,
-        groups: [
           {
-            id: 'group-sites-preview',
-            panels: [{ id: 'sites-preview', component: 'sites-preview', title: 'Preview' }],
+            id: 'group-sites-right-bottom',
+            panels: [
+              { id: 'sites-terminal', component: 'sites-terminal', title: 'Terminal' },
+              { id: 'sites-vscode', component: 'sites-vscode', title: 'VS Code' },
+            ],
           },
         ],
       },
@@ -51,19 +61,84 @@ export const sitesModule: WorkbenchModule = {
       component: 'sites-chat',
       title: 'Chat',
       singleton: true,
-      render: () => <SitesChatPanel />,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Chat">
+          <SitesChatPanel />
+        </PanelErrorBoundary>
+      ),
     },
     {
       component: 'sites-files',
       title: 'Files',
       singleton: true,
-      render: () => <SitesFilesPanel />,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Files">
+          <SitesFilesPanel />
+        </PanelErrorBoundary>
+      ),
     },
     {
-      component: 'sites-preview',
-      title: 'Preview',
+      component: 'sites-changes',
+      title: 'Changes',
       singleton: true,
-      render: () => <SitesPreviewPanel />,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Changes">
+          <PlaceholderPanel
+            title="Changes"
+            description="Git changes for the selected site — coming soon."
+          />
+        </PanelErrorBoundary>
+      ),
+    },
+    {
+      component: 'sites-browser',
+      title: 'Browser',
+      singleton: true,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Browser">
+          <SitesBrowserPanel />
+        </PanelErrorBoundary>
+      ),
+    },
+    {
+      component: 'sites-data',
+      title: 'Data',
+      singleton: true,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Data">
+          <SitesDataPanel />
+        </PanelErrorBoundary>
+      ),
+    },
+    {
+      component: 'sites-plan',
+      title: 'Plan',
+      singleton: true,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Plan">
+          <SitesPlanPanel />
+        </PanelErrorBoundary>
+      ),
+    },
+    {
+      component: 'sites-terminal',
+      title: 'Terminal',
+      singleton: true,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites Terminal">
+          <PlaceholderPanel title="Terminal" description="Site terminal — coming soon." />
+        </PanelErrorBoundary>
+      ),
+    },
+    {
+      component: 'sites-vscode',
+      title: 'VS Code',
+      singleton: true,
+      render: () => (
+        <PanelErrorBoundary panelName="Sites VS Code">
+          <PlaceholderPanel title="VS Code" description="Open site workspace in VS Code — coming soon." />
+        </PanelErrorBoundary>
+      ),
     },
   ],
   activityView: SitesListView,

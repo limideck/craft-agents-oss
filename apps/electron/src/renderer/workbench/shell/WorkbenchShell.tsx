@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { EscapeInterruptProvider } from '@/context/EscapeInterruptContext'
 import { ensureWorkbenchModulesRegistered } from '../modules'
@@ -7,14 +7,18 @@ import { useAutomationsDeepLink } from '../modules/automations'
 import { getModule } from '../registry/module-registry'
 import {
   activeModuleIdAtom,
+  activitySidebarVisibleAtom,
   cancelLayoutPersistAtom,
   dockviewApiAtom,
   layoutModuleIdAtom,
 } from '../store/workbench-store'
 import { WorkspaceDataProvider } from '../providers/WorkspaceDataProvider'
 import { ActivityBar } from './ActivityBar'
+import { ActivitySidebar } from './ActivitySidebar'
 import { WorkbenchTopBar } from './WorkbenchTopBar'
 import { DockviewHost } from '../dock/DockviewHost'
+import { PodcastPlayer } from '../modules/rss/components/podcast-player'
+import { rssPlayingEpisodeAtom, rssPodcastPlayerModeAtom } from '../modules/rss/store'
 import {
   applyLayout,
   loadPersistedLayout,
@@ -35,6 +39,7 @@ type WorkbenchShellProps = {
  */
 export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
   ensureWorkbenchModulesRegistered()
+  const [playingEpisode, setPlayingEpisode] = useAtom(rssPlayingEpisodeAtom)
 
   return (
     <EscapeInterruptProvider>
@@ -44,6 +49,12 @@ export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
           <div className="flex-1 min-h-0">
             <WorkbenchShellInner workspaceId={contextValue.activeWorkspaceId} />
           </div>
+          {playingEpisode?.audioUrl ? (
+            <PodcastPlayer
+              episode={playingEpisode}
+              onClose={() => setPlayingEpisode(null)}
+            />
+          ) : null}
         </div>
       </WorkspaceDataProvider>
     </EscapeInterruptProvider>
@@ -52,6 +63,7 @@ export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
 
 function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
   const activeModuleId = useAtomValue(activeModuleIdAtom)
+  const activitySidebarVisible = useAtomValue(activitySidebarVisibleAtom)
   const api = useAtomValue(dockviewApiAtom)
   const cancelLayoutPersist = useAtomValue(cancelLayoutPersistAtom)
   const setLayoutModuleId = useSetAtom(layoutModuleIdAtom)
@@ -130,10 +142,10 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
   return (
     <div className="h-full flex min-h-0">
       <ActivityBar />
-      {ActivityView ? (
-        <aside className="w-56 shrink-0 border-r border-border overflow-auto">
+      {ActivityView && activitySidebarVisible ? (
+        <ActivitySidebar>
           <ActivityView />
-        </aside>
+        </ActivitySidebar>
       ) : null}
       <DockviewHost workspaceId={workspaceId} />
     </div>

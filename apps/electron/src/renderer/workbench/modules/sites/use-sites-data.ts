@@ -8,6 +8,9 @@ import {
   sitesAtom,
   sitesErrorAtom,
   sitesFileContentAtom,
+  sitesFileDirtyAtom,
+  sitesFileOpeningPathAtom,
+  sitesFileOriginalContentAtom,
   sitesFileTreeAtom,
   sitesFilesLoadingAtom,
   sitesLoadingAtom,
@@ -105,77 +108,53 @@ export function useSitesWorkspaceData(options: Options = {}) {
   return { refresh, workspaceId: activeWorkspaceId }
 }
 
-/** Load file tree + content for the selected site. */
+/** Load file tree for the selected site. File open/save is owned by SitesFilesPanel. */
 export function useSitesFilesData() {
   const { activeWorkspaceId } = useAppShellContext()
   const selectedId = useAtomValue(selectedSiteIdAtom)
-  const selectedPath = useAtomValue(sitesSelectedFilePathAtom)
   const setTree = useSetAtom(sitesFileTreeAtom)
   const setContent = useSetAtom(sitesFileContentAtom)
+  const setOriginal = useSetAtom(sitesFileOriginalContentAtom)
+  const setDirty = useSetAtom(sitesFileDirtyAtom)
+  const setOpeningPath = useSetAtom(sitesFileOpeningPathAtom)
   const setLoading = useSetAtom(sitesFilesLoadingAtom)
   const setSelectedPath = useSetAtom(sitesSelectedFilePathAtom)
 
   const loadTree = useCallback(async () => {
     if (!activeWorkspaceId || !selectedId || !hasSitesApi()) {
       setTree([])
-      setContent(null)
       return
     }
     setLoading(true)
     try {
       const tree = await window.electronAPI.sitesListFiles(activeWorkspaceId, selectedId)
       setTree(tree)
-      setSelectedPath((prev) => {
-        if (prev) return prev
-        const first = findFirstFile(tree)
-        return first?.path ?? null
-      })
     } catch {
       setTree([])
     } finally {
       setLoading(false)
     }
-  }, [activeWorkspaceId, selectedId, setTree, setContent, setLoading, setSelectedPath])
+  }, [activeWorkspaceId, selectedId, setTree, setLoading])
 
   useEffect(() => {
+    // Reset open file when switching sites (kandev: tree-only until click).
     setSelectedPath(null)
     setContent(null)
+    setOriginal(null)
+    setDirty(false)
+    setOpeningPath(null)
     void loadTree()
-  }, [selectedId, loadTree, setSelectedPath, setContent])
-
-  useEffect(() => {
-    if (!activeWorkspaceId || !selectedId || !selectedPath || !hasSitesApi()) {
-      setContent(null)
-      return
-    }
-    let cancelled = false
-    void window.electronAPI
-      .sitesReadFile(activeWorkspaceId, selectedId, selectedPath)
-      .then((res) => {
-        if (!cancelled) setContent(res.content)
-      })
-      .catch(() => {
-        if (!cancelled) setContent(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [activeWorkspaceId, selectedId, selectedPath, setContent])
+  }, [
+    selectedId,
+    loadTree,
+    setSelectedPath,
+    setContent,
+    setOriginal,
+    setDirty,
+    setOpeningPath,
+  ])
 
   return { loadTree, workspaceId: activeWorkspaceId, siteId: selectedId }
-}
-
-function findFirstFile(
-  nodes: import('@grose-agent/shared/grose-modules').GroseModulesSiteFileNode[],
-): import('@grose-agent/shared/grose-modules').GroseModulesSiteFileNode | null {
-  for (const n of nodes) {
-    if (n.type === 'file') return n
-    if (n.children?.length) {
-      const found = findFirstFile(n.children)
-      if (found) return found
-    }
-  }
-  return null
 }
 
 export function upsertSiteInList(

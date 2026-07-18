@@ -1,9 +1,29 @@
 import { atom } from 'jotai'
 import type { DockviewApi } from 'dockview-react'
+import * as storage from '@/lib/local-storage'
 import { focusOrAddPanel, type PanelPlacement } from '../dock/layout-manager'
 
 /** Active workbench module id (ActivityBar selection). */
 export const activeModuleIdAtom = atom<string>('agents')
+
+/**
+ * Secondary activity sidebar (module list / Sessions / Sources, etc.).
+ * ActivityBar icon rail stays visible; this toggles the wider rail next to it.
+ */
+const activitySidebarVisibleBaseAtom = atom<boolean>(
+  storage.get(storage.KEYS.sidebarVisible, true),
+)
+
+export const activitySidebarVisibleAtom = atom(
+  (get) => get(activitySidebarVisibleBaseAtom),
+  (_get, set, next: boolean | ((prev: boolean) => boolean)) => {
+    set(activitySidebarVisibleBaseAtom, (prev) => {
+      const value = typeof next === 'function' ? next(prev) : next
+      storage.set(storage.KEYS.sidebarVisible, value)
+      return value
+    })
+  },
+)
 
 /**
  * Module id that the *current dock layout* belongs to.

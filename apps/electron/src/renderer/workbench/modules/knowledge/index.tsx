@@ -1,6 +1,7 @@
 import { BookOpen } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { PlaceholderPanel } from '../agents/panels/placeholder-panel'
+import { ActivityShell } from '../../shell/ActivityShell'
 
 /** Placeholder Knowledge module — no business logic yet. */
 export const knowledgeModule: WorkbenchModule = {
@@ -51,9 +52,11 @@ export const knowledgeModule: WorkbenchModule = {
   ],
   activityView: function KnowledgeActivity() {
     return (
-      <div className="p-3 text-xs text-muted-foreground">
-        Knowledge bases will appear here.
-      </div>
+      <ActivityShell title="Knowledge">
+        <div className="p-3 text-xs text-muted-foreground">
+          Knowledge bases will appear here.
+        </div>
+      </ActivityShell>
     )
   },
 }

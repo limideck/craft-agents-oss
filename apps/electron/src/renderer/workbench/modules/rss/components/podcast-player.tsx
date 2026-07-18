@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Pause, Play, X } from 'lucide-react'
+import { useAtom } from 'jotai'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { rssPlayingEpisodeAtom, rssPodcastPlayerModeAtom } from '../store'
 
 type Episode = {
   id: string
@@ -11,7 +13,8 @@ type Episode = {
 }
 
 type Props = {
-  episode: Episode
+  /** Persisted playback position in seconds (only read when a new episode loads). */
+  episode: Episode & { position?: number }
   onClose: () => void
 }
 
@@ -22,20 +25,26 @@ function fmt(s: number) {
 }
 
 /**
- * Bottom podcast bar — play/pause, seek, skip, speed. Grose styling.
+ * Podcast player — owns the single persistent <audio> element for the whole
+ * app so audio keeps playing across panel/route navigation and across the
+ * bottom-bar ⇄ floating-ball display modes.
  */
 export function PodcastPlayer({ episode, onClose }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null)
+  const [, setPlayingEpisode] = useAtom(rssPlayingEpisodeAtom)
+  const [mode] = useAtom(rssPodcastPlayerModeAtom)
   const [playing, setPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
+  const [currentTime, setCurrentTime] = useState(episode.position ?? 0)
   const [duration, setDuration] = useState(0)
   const [speed, setSpeed] = useState(1)
 
+  // New episode selected → reset and start playback.
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
+    const resume = episode.position ?? 0
     setPlaying(false)
-    setCurrentTime(0)
+    setCurrentTime(resume)
     setDuration(0)
     setSpeed(1)
     audio.playbackRate = 1
@@ -44,7 +53,24 @@ export function PodcastPlayer({ episode, onClose }: Props) {
       () => setPlaying(true),
       () => setPlaying(false),
     )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [episode.id, episode.audioUrl])
+
+  // Keep the app-level atom's position roughly in sync so closing/restoring
+  // resumes where the user left off.
+  useEffect(() => {
+    const t = setInterval(() => {
+      const audio = audioRef.current
+      if (audio && !audio.paused) {
+        setPlayingEpisode((prev) =>
+          prev && prev.id === episode.id
+            ? { ...prev, position: audio.currentTime }
+            : prev,
+        )
+      }
+    }, 1000)
+    return () => clearInterval(t)
+  }, [episode.id, setPlayingEpisode])
 
   useEffect(() => {
     const audio = audioRef.current
@@ -88,84 +114,136 @@ export function PodcastPlayer({ episode, onClose }: Props) {
   }
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3">
-      <audio ref={audioRef} src={episode.audioUrl} preload="metadata" />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 shrink-0"
-        onClick={toggle}
-        title={playing ? 'Pause' : 'Play'}
-      >
-        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-      </Button>
-      <div className="min-w-0 w-36 shrink-0">
-        <div className="truncate text-xs font-medium leading-snug">{episode.title}</div>
-        {episode.feedName ? (
-          <div className="truncate text-[10px] text-muted-foreground leading-snug">
-            {episode.feedName}
-          </div>
-        ) : null}
-      </div>
-      <button
-        type="button"
-        className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-        onClick={() => skip(-15)}
-        title="-15s"
-      >
-        -15
-      </button>
-      <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
-        {fmt(currentTime)}
-      </span>
-      <input
-        type="range"
-        min={0}
-        max={duration || 100}
-        value={currentTime}
-        step={1}
-        aria-label="Seek"
-        className={cn(
-          'h-1 flex-1 cursor-pointer appearance-none rounded-full bg-muted',
-          '[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none',
-          '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground',
-        )}
-        onChange={(e) => {
-          const t = parseFloat(e.target.value)
-          if (audioRef.current) audioRef.current.currentTime = t
-          setCurrentTime(t)
+    <>
+      <audio
+        ref={audioRef}
+        src={episode.audioUrl}
+        preload="metadata"
+        onLoadedMetadata={() => {
+          const audio = audioRef.current
+          if (audio && episode.position) audio.currentTime = episode.position
         }}
       />
-      <span className="w-8 shrink-0 text-[11px] tabular-nums text-muted-foreground">
-        {fmt(duration)}
-      </span>
+      {mode === 'floating' ? (
+        <FloatingBall
+          title={episode.title}
+          playing={playing}
+          onToggle={toggle}
+          onClose={onClose}
+        />
+      ) : (
+        <div className="flex h-14 shrink-0 items-center gap-2 border-t border-border bg-card/95 px-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 shrink-0"
+            onClick={toggle}
+            title={playing ? 'Pause' : 'Play'}
+          >
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          </Button>
+          <div className="min-w-0 w-36 shrink-0">
+            <div className="truncate text-xs font-medium leading-snug">{episode.title}</div>
+            {episode.feedName ? (
+              <div className="truncate text-[10px] text-muted-foreground leading-snug">
+                {episode.feedName}
+              </div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+            onClick={() => skip(-15)}
+            title="-15s"
+          >
+            -15
+          </button>
+          <span className="w-8 shrink-0 text-right text-[11px] tabular-nums text-muted-foreground">
+            {fmt(currentTime)}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={duration || 100}
+            value={currentTime}
+            step={1}
+            aria-label="Seek"
+            className={cn(
+              'h-1 flex-1 cursor-pointer appearance-none rounded-full bg-muted',
+              '[&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:appearance-none',
+              '[&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground',
+            )}
+            onChange={(e) => {
+              const t = parseFloat(e.target.value)
+              if (audioRef.current) audioRef.current.currentTime = t
+              setCurrentTime(t)
+            }}
+          />
+          <span className="w-8 shrink-0 text-[11px] tabular-nums text-muted-foreground">
+            {fmt(duration)}
+          </span>
+          <button
+            type="button"
+            className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+            onClick={() => skip(15)}
+            title="+15s"
+          >
+            +15
+          </button>
+          <button
+            type="button"
+            className="min-w-[2rem] shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-foreground/80 hover:bg-muted"
+            onClick={cycleSpeed}
+            title="Playback speed"
+          >
+            {speed}×
+          </button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 shrink-0"
+            onClick={onClose}
+            title="Close player"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+    </>
+  )
+}
+
+function FloatingBall({
+  title,
+  playing,
+  onToggle,
+  onClose,
+}: {
+  title: string
+  playing: boolean
+  onToggle: () => void
+  onClose: () => void
+}) {
+  return (
+    <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex items-center gap-2">
       <button
         type="button"
-        className="shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-        onClick={() => skip(15)}
-        title="+15s"
-      >
-        +15
-      </button>
-      <button
-        type="button"
-        className="min-w-[2rem] shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold text-foreground/80 hover:bg-muted"
-        onClick={cycleSpeed}
-        title="Playback speed"
-      >
-        {speed}×
-      </button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 shrink-0"
         onClick={onClose}
         title="Close player"
+        className="pointer-events-auto flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-strong transition-colors hover:bg-muted"
       >
         <X className="h-3.5 w-3.5" />
-      </Button>
+      </button>
+      <button
+        type="button"
+        onClick={onToggle}
+        title={playing ? `Pause — ${title}` : `Play — ${title}`}
+        className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card shadow-strong transition-colors hover:bg-muted"
+      >
+        {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+      </button>
     </div>
   )
 }

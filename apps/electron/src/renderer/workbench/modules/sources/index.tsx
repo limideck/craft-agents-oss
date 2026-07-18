@@ -10,6 +10,7 @@ import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContex
 import { sourcesAtom } from '@/atoms/sources'
 import { cn } from '@/lib/utils'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../dock/panel-primitives'
+import { ActivityShell } from '../../shell/ActivityShell'
 import { selectedSourceSlugAtom, sourceFilterAtom } from '../stock-store'
 import type { LoadedSource, SourceFilter } from '../../../../shared/types'
 
@@ -64,43 +65,48 @@ function SourcesActivityView() {
   )
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      <div className="px-2 pt-2 pb-1 flex flex-wrap gap-1 shrink-0">
-        {FILTERS.map((f) => {
-          const active =
-            (f.filter === null && sourceFilter === null) ||
-            (f.filter?.kind === 'type' &&
-              sourceFilter?.kind === 'type' &&
-              f.filter.sourceType === sourceFilter.sourceType)
-          return (
-            <button
-              key={f.id}
-              type="button"
-              className={cn(
-                'px-2 py-0.5 text-[11px] rounded-md',
-                active
-                  ? 'bg-foreground-10 text-foreground'
-                  : 'text-muted-foreground hover:bg-foreground-5',
-              )}
-              onClick={() => setSourceFilter(f.filter)}
-            >
-              {f.label}
-            </button>
-          )
-        })}
-      </div>
-      <div className="flex-1 min-h-0 overflow-auto">
-        <SourcesListPanel
-          sources={sources}
-          sourceFilter={sourceFilter}
-          workspaceRootPath={activeWorkspace?.rootPath}
-          onDeleteSource={handleDelete}
-          onSourceClick={handleClick}
-          selectedSourceSlug={selectedSlug}
-          localMcpEnabled={localMcpEnabled}
-        />
-      </div>
-    </div>
+    <ActivityShell
+      title={t('sidebar.sources')}
+      scroll={false}
+      bodyClassName="overflow-hidden"
+      toolbar={
+        <div className="px-2 py-1.5 flex flex-wrap gap-1">
+          {FILTERS.map((f) => {
+            const active =
+              (f.filter === null && sourceFilter === null) ||
+              (f.filter?.kind === 'type' &&
+                sourceFilter?.kind === 'type' &&
+                f.filter.sourceType === sourceFilter.sourceType)
+            return (
+              <button
+                key={f.id}
+                type="button"
+                className={cn(
+                  'px-2 py-0.5 text-[11px] rounded-md',
+                  active
+                    ? 'bg-foreground-10 text-foreground'
+                    : 'text-muted-foreground hover:bg-foreground-5',
+                )}
+                onClick={() => setSourceFilter(f.filter)}
+              >
+                {f.label}
+              </button>
+            )
+          })}
+        </div>
+      }
+    >
+      <SourcesListPanel
+        sources={sources}
+        sourceFilter={sourceFilter}
+        workspaceRootPath={activeWorkspace?.rootPath}
+        onDeleteSource={handleDelete}
+        onSourceClick={handleClick}
+        selectedSourceSlug={selectedSlug}
+        localMcpEnabled={localMcpEnabled}
+        className="h-full"
+      />
+    </ActivityShell>
   )
 }
 
@@ -139,7 +145,8 @@ export const sourcesModule: WorkbenchModule = {
   id: 'sources',
   title: 'Sources',
   icon: <DatabaseZap className="h-4 w-4" />,
-  order: 20,
+  order: 91,
+  placement: 'footer',
   defaultLayout: {
     columns: [
       {

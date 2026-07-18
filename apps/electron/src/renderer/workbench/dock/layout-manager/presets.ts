@@ -49,15 +49,10 @@ export function agentsFocusLayout(): LayoutState {
   }
 }
 
-/** RSS reading: feeds | article list | reader. */
+/** RSS reading: article list | reader. Feeds live in ActivityBar `activityView`. */
 export function rssReadingLayout(): LayoutState {
   return {
     columns: [
-      {
-        id: 'rss-feeds',
-        width: RSS_READING_RATIOS.feeds,
-        groups: [{ id: 'group-rss-feeds', panels: [panel('rss-feeds')] }],
-      },
       {
         id: 'rss-list',
         width: RSS_READING_RATIOS.list,

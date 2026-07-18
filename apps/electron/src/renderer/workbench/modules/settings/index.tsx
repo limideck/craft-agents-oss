@@ -1,21 +1,26 @@
 import { useAtomValue, useSetAtom } from 'jotai'
+import { useTranslation } from 'react-i18next'
 import { Settings } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import SettingsNavigator from '@/pages/settings/SettingsNavigator'
 import { getSettingsPageComponent } from '@/pages/settings/settings-pages'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../dock/panel-primitives'
+import { ActivityShell } from '../../shell/ActivityShell'
 import { settingsSubpageAtom } from '../stock-store'
 import type { SettingsSubpage } from '../../../../shared/types'
 
 function SettingsActivityView() {
+  const { t } = useTranslation()
   const subpage = useAtomValue(settingsSubpageAtom)
   const setSubpage = useSetAtom(settingsSubpageAtom)
 
   return (
-    <SettingsNavigator
-      selectedSubpage={subpage}
-      onSelectSubpage={(next: SettingsSubpage) => setSubpage(next)}
-    />
+    <ActivityShell title={t('sidebar.settings')} scroll={false} bodyClassName="overflow-hidden">
+      <SettingsNavigator
+        selectedSubpage={subpage}
+        onSelectSubpage={(next: SettingsSubpage) => setSubpage(next)}
+      />
+    </ActivityShell>
   )
 }
 

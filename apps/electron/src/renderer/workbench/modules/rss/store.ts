@@ -1,4 +1,5 @@
 import { atom } from 'jotai'
+import { atomWithStorage } from 'jotai/utils'
 import type {
   GroseModulesRssArticle,
   GroseModulesRssFeed,
@@ -32,6 +33,27 @@ export const rssErrorAtom = atom<string | null>(null)
 export const rssAddFeedOpenAtom = atom(false)
 
 export const rssManageFeedsOpenAtom = atom(false)
+
+/** Currently playing podcast episode — kept at app level so playback keeps
+ *  running even when the reader panel unmounts (navigation/panel switch). */
+export type RssPlayingEpisode = {
+  id: string
+  title: string
+  feedName?: string
+  audioUrl: string
+  /** Resume position in seconds, persisted across panel remounts. */
+  position?: number
+} | null
+
+export const rssPlayingEpisodeAtom = atom<RssPlayingEpisode>(null)
+
+/** How the podcast player is displayed: a bottom bar or a floating ball. */
+export type RssPodcastPlayerMode = 'bottom' | 'floating'
+
+export const rssPodcastPlayerModeAtom = atomWithStorage<RssPodcastPlayerMode>(
+  'grose-rss-podcast-player-mode',
+  'bottom',
+)
 
 export function selectionToQuery(sel: RssSidebarSelection): {
   view: GroseModulesRssView

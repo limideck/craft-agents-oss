@@ -9,6 +9,7 @@ import SkillInfoPage from '@/pages/SkillInfoPage'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { skillsAtom } from '@/atoms/skills'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../dock/panel-primitives'
+import { ActivityShell } from '../../shell/ActivityShell'
 import { selectedSkillSlugAtom } from '../stock-store'
 import type { LoadedSkill } from '../../../../shared/types'
 
@@ -46,18 +47,25 @@ function SkillsActivityView() {
   )
 
   if (!activeWorkspaceId) {
-    return <div className="p-3 text-xs text-muted-foreground">No workspace selected.</div>
+    return (
+      <ActivityShell title={t('sidebar.skills')}>
+        <div className="p-3 text-xs text-muted-foreground">No workspace selected.</div>
+      </ActivityShell>
+    )
   }
 
   return (
-    <SkillsListPanel
-      skills={skills}
-      workspaceId={activeWorkspaceId}
-      workspaceRootPath={activeWorkspace?.rootPath}
-      onSkillClick={handleClick}
-      onDeleteSkill={handleDelete}
-      selectedSkillSlug={selectedSlug}
-    />
+    <ActivityShell title={t('sidebar.skills')} scroll={false} bodyClassName="overflow-hidden">
+      <SkillsListPanel
+        skills={skills}
+        workspaceId={activeWorkspaceId}
+        workspaceRootPath={activeWorkspace?.rootPath}
+        onSkillClick={handleClick}
+        onDeleteSkill={handleDelete}
+        selectedSkillSlug={selectedSlug}
+        className="h-full"
+      />
+    </ActivityShell>
   )
 }
 
@@ -95,7 +103,8 @@ export const skillsModule: WorkbenchModule = {
   id: 'skills',
   title: 'Skills',
   icon: <Sparkles className="h-4 w-4" />,
-  order: 30,
+  order: 90,
+  placement: 'footer',
   defaultLayout: {
     columns: [
       {

@@ -25,6 +25,13 @@ export const sitesSelectedFilePathAtom = atom<string | null>(null)
 
 export const sitesFileContentAtom = atom<string | null>(null)
 
+/** Content as last loaded/saved — used for dirty detection. */
+export const sitesFileOriginalContentAtom = atom<string | null>(null)
+
+export const sitesFileDirtyAtom = atom(false)
+
+export const sitesFileOpeningPathAtom = atom<string | null>(null)
+
 export const sitesFileTreeAtom = atom<GroseModulesSiteFileNode[]>([])
 
 export const sitesFilesLoadingAtom = atom(false)

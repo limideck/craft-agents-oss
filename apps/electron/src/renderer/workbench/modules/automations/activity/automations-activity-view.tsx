@@ -11,6 +11,7 @@ import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContex
 import { cn } from '@/lib/utils'
 import { WorkflowListView } from '../../workflows/activity/workflow-list-view'
 import { dockviewApiAtom } from '../../../store/workbench-store'
+import { ActivityShell } from '../../../shell/ActivityShell'
 import { applyAutomationsSurfaceLayout } from '../apply-surface-layout'
 import {
   automationFilterKindAtom,
@@ -41,7 +42,7 @@ function SurfaceSegment({
 
   return (
     <div
-      className="flex shrink-0 gap-0.5 rounded-md bg-foreground-5 p-0.5 mx-2 mt-2"
+      className="flex shrink-0 gap-0.5 rounded-md bg-foreground-5 p-0.5 mx-2 my-1.5"
       role="tablist"
       aria-label={t('workbench.automations.surfaceLabel')}
     >
@@ -181,23 +182,29 @@ export function AutomationsActivityView() {
   }, [surface, dockApi])
 
   if (!activeWorkspaceId) {
-    return <div className="p-3 text-xs text-muted-foreground">{t('workbench.automations.noWorkspace')}</div>
+    return (
+      <ActivityShell title={t('sidebar.automations')}>
+        <div className="p-3 text-xs text-muted-foreground">{t('workbench.automations.noWorkspace')}</div>
+      </ActivityShell>
+    )
   }
 
   return (
-    <div className="h-full flex flex-col min-h-0">
-      <SurfaceSegment surface={surface} onChange={setSurface} />
-      <div className="flex-1 min-h-0 overflow-hidden">
-        {surface === 'rules' ? (
-          automations.length === 0 ? (
-            <RulesEmptyState onGoFlows={() => setSurface('flows')} />
-          ) : (
-            <RulesListSection />
-          )
+    <ActivityShell
+      title={t('sidebar.automations')}
+      toolbar={<SurfaceSegment surface={surface} onChange={setSurface} />}
+      scroll={false}
+      bodyClassName="overflow-hidden"
+    >
+      {surface === 'rules' ? (
+        automations.length === 0 ? (
+          <RulesEmptyState onGoFlows={() => setSurface('flows')} />
         ) : (
-          <WorkflowListView />
-        )}
-      </div>
-    </div>
+          <RulesListSection />
+        )
+      ) : (
+        <WorkflowListView embedded />
+      )}
+    </ActivityShell>
   )
 }

@@ -5,11 +5,12 @@
 import { useCallback } from 'react'
 import { useSetAtom } from 'jotai'
 import { TopBar } from '@/components/shell/top-bar'
+import { useAction } from '@/actions'
 import { useAppShellContext } from '@/context/AppShellContext'
 import { useNavigation } from '@/contexts/NavigationContext'
 import type { SettingsMenuItem } from '../../../shared/menu-schema'
 import { useOpenAgentChat } from '../chat'
-import { activeModuleIdAtom } from '../store/workbench-store'
+import { activeModuleIdAtom, activitySidebarVisibleAtom } from '../store/workbench-store'
 import { settingsSubpageAtom } from '../modules/stock-store'
 
 export function WorkbenchTopBar() {
@@ -25,8 +26,15 @@ export function WorkbenchTopBar() {
 
   const { canGoBack, canGoForward, goBack, goForward } = useNavigation()
   const setActiveModuleId = useSetAtom(activeModuleIdAtom)
+  const setActivitySidebarVisible = useSetAtom(activitySidebarVisibleAtom)
   const setSettingsSubpage = useSetAtom(settingsSubpageAtom)
   const openAgentChat = useOpenAgentChat()
+
+  const toggleActivitySidebar = useCallback(() => {
+    setActivitySidebarVisible((prev) => !prev)
+  }, [setActivitySidebarVisible])
+
+  useAction('view.toggleSidebar', toggleActivitySidebar)
 
   const handleOpenSettings = useCallback(() => {
     setActiveModuleId('settings')
@@ -63,9 +71,7 @@ export function WorkbenchTopBar() {
       onForward={goForward}
       canGoBack={canGoBack}
       canGoForward={canGoForward}
-      onToggleSidebar={() => {
-        /* ActivityBar is always visible in workbench */
-      }}
+      onToggleSidebar={toggleActivitySidebar}
       onToggleFocusMode={() => {
         /* Focus mode not wired in workbench yet */
       }}
