@@ -175,7 +175,7 @@ export function applyLayout(
   }
 }
 
-export type PanelPlacement = 'right' | 'left' | 'active-group'
+export type PanelPlacement = 'right' | 'left' | 'above' | 'below' | 'active-group'
 
 export function focusOrAddPanel(
   api: DockviewApi,
@@ -188,7 +188,8 @@ export function focusOrAddPanel(
     referenceGroupId?: string
     /**
      * `active-group` — tab within the reference/active group (default).
-     * `right` / `left` — new split beside the active panel (or reference group).
+     * `right` / `left` / `above` / `below` — new split relative to the
+     * reference group (preferred) or the active panel.
      */
     placement?: PanelPlacement
   },
@@ -213,7 +214,26 @@ export function focusOrAddPanel(
     params: options.params,
   }
 
-  if (placement === 'right' || placement === 'left') {
+  if (
+    placement === 'right' ||
+    placement === 'left' ||
+    placement === 'above' ||
+    placement === 'below'
+  ) {
+    // Prefer an explicit reference group so reopen/split lands in a stable place
+    // even when the active panel is elsewhere (e.g. chat vs tools).
+    if (options.referenceGroupId) {
+      const refGroup =
+        api.getGroup(options.referenceGroupId) ??
+        api.getPanel(options.referenceGroupId)?.group
+      if (refGroup) {
+        api.addPanel({
+          ...base,
+          position: { referenceGroup: refGroup.id, direction: placement },
+        })
+        return
+      }
+    }
     const activePanel = api.activePanel
     if (activePanel) {
       api.addPanel({
@@ -222,12 +242,12 @@ export function focusOrAddPanel(
       })
       return
     }
-    const refGroupId = options.referenceGroupId ?? CENTER_GROUP
-    const refGroup = api.getGroup(refGroupId) ?? api.groups[api.groups.length - 1] ?? api.groups[0]
-    if (refGroup) {
+    const fallback =
+      api.groups[api.groups.length - 1] ?? api.groups[0]
+    if (fallback) {
       api.addPanel({
         ...base,
-        position: { referenceGroup: refGroup.id, direction: placement },
+        position: { referenceGroup: fallback.id, direction: placement },
       })
       return
     }

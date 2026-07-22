@@ -23,7 +23,7 @@ export type RegisterWorkflowsRpcOptions = {
  * Workspace data: `{rootPath}/modules/workflows/` (see docs/workspace-storage.md).
  *
  * `workflows:run` may be owned by server-core (Grose agent execution). Pass
- * `skipRun: true` when registering from domain-stubs alongside that handler.
+ * `skipRun: true` when registering from domain-rpc alongside that handler.
  */
 export function registerWorkflowsRpcHandlers(
   server: DomainRpcServer,

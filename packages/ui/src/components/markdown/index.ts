@@ -3,7 +3,7 @@
  */
 
 export { Markdown, MemoizedMarkdown, type MarkdownProps, type RenderMode, type DisablablePreviewBlock } from './Markdown'
-export { CodeBlock, InlineCode, type CodeBlockProps } from './CodeBlock'
+export { CodeBlock, InlineCode, inlineCodeText, type CodeBlockProps, type InlineCodeProps } from './CodeBlock'
 export { preprocessLinks, detectLinks, hasLinks } from './linkify'
 export { CollapsibleSection } from './CollapsibleSection'
 export { CollapsibleMarkdownProvider, useCollapsibleMarkdown } from './CollapsibleMarkdownContext'

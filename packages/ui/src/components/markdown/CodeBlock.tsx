@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { codeToHtml, bundledLanguages, type BundledLanguage } from 'shiki'
 import { cn } from '../../lib/utils'
 import { useShikiTheme } from '../../context/ShikiThemeContext'
+import { isFilePathTarget } from './linkify'
 
 export interface CodeBlockProps {
   code: string
@@ -220,11 +221,68 @@ export function CodeBlock({ code, language = 'text', className, mode = 'full', f
   )
 }
 
+export interface InlineCodeProps {
+  children: React.ReactNode
+  className?: string
+  /**
+   * When set, inline code whose content is a recognizable file path becomes
+   * clickable and invokes this callback (same routing as markdown file links).
+   */
+  onFileClick?: (path: string) => void
+}
+
+/** Flatten react-markdown inline-code children to a trim path candidate. */
+export function inlineCodeText(children: React.ReactNode): string {
+  if (typeof children === 'string' || typeof children === 'number') {
+    return String(children).trim()
+  }
+  return React.Children.toArray(children)
+    .map((child) => {
+      if (typeof child === 'string' || typeof child === 'number') return String(child)
+      return ''
+    })
+    .join('')
+    .trim()
+}
+
 /**
  * InlineCode - Styled inline code span
- * Features: subtle background (3%), no border, 75% opacity text
+ * Features: subtle background (3%), no border, 75% opacity text.
+ * File-path contents are clickable when `onFileClick` is provided.
  */
-export function InlineCode({ children, className }: { children: React.ReactNode; className?: string }) {
+export function InlineCode({ children, className, onFileClick }: InlineCodeProps) {
+  const text = inlineCodeText(children)
+  const filePath = onFileClick && text && isFilePathTarget(text) ? text : null
+
+  if (filePath && onFileClick) {
+    return (
+      <code
+        role="link"
+        tabIndex={0}
+        title={filePath}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onFileClick(filePath)
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            event.stopPropagation()
+            onFileClick(filePath)
+          }
+        }}
+        className={cn(
+          'pl-1 pr-1 py-0 rounded bg-foreground/[0.04] font-mono text-[13px]',
+          'text-accent hover:underline cursor-pointer',
+          className,
+        )}
+      >
+        {children}
+      </code>
+    )
+  }
+
   return (
     <code className={cn(
       'pl-1 pr-1 py-0 rounded bg-foreground/[0.04] font-mono text-[13px]',

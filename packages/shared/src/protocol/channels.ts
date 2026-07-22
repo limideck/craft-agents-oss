@@ -108,6 +108,7 @@ export const RPC_CHANNELS = {
     LIST_DIRECTORY: 'fs:listDirectory',
     LIST_ENTRIES: 'fs:listEntries',
     CREATE_FILE: 'fs:createFile',
+    WRITE_FILE: 'fs:writeFile',
     MKDIR: 'fs:mkdir',
     RENAME: 'fs:rename',
     DELETE: 'fs:delete',
@@ -150,6 +151,7 @@ export const RPC_CHANNELS = {
     OPEN_URL: 'shell:openUrl',
     OPEN_FILE: 'shell:openFile',
     SHOW_IN_FOLDER: 'shell:showInFolder',
+    RUN_COMMAND: 'shell:runCommand',
   },
   menu: {
     NEW_CHAT: 'menu:newChat',
@@ -355,6 +357,9 @@ export const RPC_CHANNELS = {
   },
   git: {
     GET_BRANCH: 'git:getBranch',
+    GET_STATUS: 'git:getStatus',
+    GET_DIFF: 'git:getDiff',
+    GET_FILE_CONTENTS: 'git:getFileContents',
   },
   gitbash: {
     CHECK: 'gitbash:check',
@@ -512,6 +517,7 @@ export const RPC_CHANNELS = {
     RUN: 'workflows:run',
     DEPLOY: 'workflows:deploy',
     UNDEPLOY: 'workflows:undeploy',
+    GET_HISTORY: 'workflows:getHistory',
   },
   /** OpenConnector local sidecar (Electron main only). */
   openConnector: {

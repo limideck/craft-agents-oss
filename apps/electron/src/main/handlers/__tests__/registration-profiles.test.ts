@@ -50,6 +50,7 @@ function createMockServer(): RpcServer {
     async invokeClient() {},
     hasClientCapability() { return false },
     findClientsWithCapability() { return [] },
+    async invoke() { return undefined },
   }
 }
 
@@ -126,7 +127,7 @@ async function getExpectedCoreChannels(): Promise<Set<string>> {
     import('@grose-agent/server-core/handlers/rpc/onboarding'),
     import('@grose-agent/server-core/handlers/rpc/resources'),
     import('@grose-agent/server-core/handlers/rpc/transfer'),
-    import('@grose-agent/server-core/handlers/rpc/domain-stubs'),
+    import('@grose-agent/server-core/handlers/rpc/domain-rpc'),
   ])
 
   return new Set([

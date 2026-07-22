@@ -12,7 +12,7 @@ type Props = {
   onAdded: () => void
 }
 
-type Tab = 'url' | 'opml'
+type Tab = 'url' | 'opml' | 'markdown' | 'file' | 'social'
 
 type OpmlPhase = 'idle' | 'importing' | 'done' | 'error'
 
@@ -51,22 +51,25 @@ export function AddFeedDialog({ workspaceId, onAdded }: Props) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Add feed"
-        className="w-full max-w-md overflow-hidden rounded-lg border border-border bg-card shadow-lg"
+        aria-label="Add to library"
+        className="w-full max-w-md overflow-hidden border border-border bg-card shadow-lg"
       >
-        <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-          <div className="flex rounded-md bg-muted/60 p-0.5">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2.5">
+          <div className="flex flex-wrap gap-0.5 bg-muted/60 p-0.5">
             {(
               [
-                ['url', 'URL'],
+                ['url', 'RSS URL'],
                 ['opml', 'OPML'],
+                ['markdown', 'Markdown'],
+                ['file', 'File'],
+                ['social', 'Social'],
               ] as const
             ).map(([key, label]) => (
               <button
                 key={key}
                 type="button"
                 className={cn(
-                  'rounded px-3 py-1 text-xs font-medium transition-colors',
+                  'px-2.5 py-1 text-[11px] font-medium transition-colors',
                   tab === key
                     ? 'bg-card text-foreground shadow-sm border border-border'
                     : 'text-muted-foreground hover:text-foreground',
@@ -77,7 +80,7 @@ export function AddFeedDialog({ workspaceId, onAdded }: Props) {
               </button>
             ))}
           </div>
-          <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={close}>
+          <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs shrink-0" onClick={close}>
             Close
           </Button>
         </div>
@@ -90,7 +93,7 @@ export function AddFeedDialog({ workspaceId, onAdded }: Props) {
             }}
             onCancel={close}
           />
-        ) : (
+        ) : tab === 'opml' ? (
           <OpmlTab
             workspaceId={workspaceId}
             onImported={() => {
@@ -98,6 +101,8 @@ export function AddFeedDialog({ workspaceId, onAdded }: Props) {
             }}
             onClose={close}
           />
+        ) : (
+          <ComingSoonTab kind={tab} onClose={close} />
         )}
       </div>
     </div>
@@ -327,6 +332,35 @@ function OpmlTab({
           onClick={() => void runImport(paste)}
         >
           {phase === 'importing' ? 'Importing…' : 'Import'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ComingSoonTab({
+  kind,
+  onClose,
+}: {
+  kind: 'markdown' | 'file' | 'social'
+  onClose: () => void
+}) {
+  const copy =
+    kind === 'markdown'
+      ? 'Markdown notes will save into the local library (same Item model as RSS). Backend ingest ships next.'
+      : kind === 'file'
+        ? 'PDF / image / video attachments will upload into workspace storage. Use RSS URL / OPML for now.'
+        : 'X / 微博 / YouTube subscriptions will normalize into the same Item model. Coming soon.'
+
+  return (
+    <div className="space-y-3 p-4">
+      <p className="text-sm text-foreground/90">{copy}</p>
+      <p className="text-xs text-muted-foreground">
+        Local triage (unread / read / tags / history) already works on RSS articles. This tab is wired in the UI so the Add flow matches the Local Reader design.
+      </p>
+      <div className="flex justify-end">
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+          Close
         </Button>
       </div>
     </div>

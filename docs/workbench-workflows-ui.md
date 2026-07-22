@@ -7,12 +7,9 @@ Product entry and Rules vs Flows IA: [workbench-automations-ui.md](./workbench-a
 ## How to open
 
 1. Build the Go sidecar once: `bun run build:grose-modules`
-2. Enable the workbench shell:
-   - DevTools console: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev` / usual app entry). Main spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
-4. In the ActivityBar (far left), click **Automations**, then the **Flows** segment.
-5. Left aside shows the flow list; dock applies the `workflow-edit` preset.
+2. Start Electron (`bun run electron:dev` / usual app entry). Main spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
+3. In the ActivityBar (far left), click **Automations**, then the **Flows** segment.
+4. Left aside shows the flow list; dock applies the `workflow-edit` preset.
 
 If you previously opened an older Workflows layout, clear the saved dock layout for that workspace (or wipe `grose-panel-layout:workbench:*` keys in localStorage) so the preset applies.
 

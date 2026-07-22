@@ -54,9 +54,10 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.workflows.RUN,
   RPC_CHANNELS.workflows.DEPLOY,
   RPC_CHANNELS.workflows.UNDEPLOY,
+  RPC_CHANNELS.workflows.GET_HISTORY,
 ] as const
 
-export function registerDomainStubHandlers(server: RpcServer, deps: HandlerDeps): void {
+export function registerDomainRpcHandlers(server: RpcServer, deps: HandlerDeps): void {
   registerRssRpcHandlers(server)
   registerKnowledgeRpcHandlers(server)
   registerSitesRpcHandlers(server)

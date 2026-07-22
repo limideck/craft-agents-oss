@@ -36,6 +36,7 @@ function createFakeServer(opts?: {
     findClientsWithCapability() {
       return opts?.capabilityClients ? [...opts.capabilityClients] : []
     },
+    async invoke() { return undefined },
   }
   return { server, calls }
 }

@@ -44,6 +44,7 @@ function makeServer(): Recorder {
     async invokeClient() {},
     hasClientCapability() { return false },
     findClientsWithCapability() { return [] },
+    async invoke() { return undefined },
   }
   return { server, handlers, pushes }
 }

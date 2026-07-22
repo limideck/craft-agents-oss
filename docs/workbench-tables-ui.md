@@ -7,11 +7,8 @@ See [grose-tables-sidecar.md](./grose-tables-sidecar.md) for process / Admin / M
 ## How to open
 
 1. Build the binary once: `bun run setup:tables` (or `bun run build:tables`)
-2. Enable the workbench shell:
-   - DevTools: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev`). Main spawns `plydb serve` (or attach with `GROSE_TABLES_URL`).
-4. ActivityBar → **Tables**.
+2. Start Electron (`bun run electron:dev`). Main spawns `plydb serve` (or attach with `GROSE_TABLES_URL`).
+3. ActivityBar → **Tables**.
 
 ## Regions
 

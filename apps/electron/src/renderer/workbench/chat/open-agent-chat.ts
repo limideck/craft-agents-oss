@@ -6,7 +6,7 @@ import { activeModuleIdAtom, dockviewApiAtom } from '../store/workbench-store'
 import { resolveSeedPrompt, titleFromContext } from './seed-prompt'
 import type { OpenAgentChatOptions, OpenAgentChatResult } from './types'
 
-const CHAT_PANEL_ID = 'chat'
+export const CHAT_PANEL_ID = 'chat'
 const CHAT_COMPONENT = 'chat'
 
 type JotaiStore = ReturnType<typeof getDefaultStore>
@@ -89,6 +89,27 @@ export async function openAgentChat(
   return { sessionId, activeModuleId }
 }
 
+/** Close the shared Chat dock panel if it is open. */
+export function closeAgentChat(store?: JotaiStore): boolean {
+  const s = store ?? getDefaultStore()
+  const api = s.get(dockviewApiAtom)
+  const panel = api?.getPanel(CHAT_PANEL_ID)
+  if (!panel) return false
+  try {
+    panel.api.close()
+    return true
+  } catch (err) {
+    console.warn('[closeAgentChat] failed', err)
+    return false
+  }
+}
+
+export function isAgentChatOpen(store?: JotaiStore): boolean {
+  const s = store ?? getDefaultStore()
+  const api = s.get(dockviewApiAtom)
+  return !!api?.getPanel(CHAT_PANEL_ID)
+}
+
 /** React hook — preferred entry for TopBar / module UI. */
 export function useOpenAgentChat() {
   const { onCreateSession, onInputChange, activeWorkspaceId } = useAppShellContext()
@@ -114,4 +135,10 @@ export function useOpenAgentChat() {
     },
     [activeWorkspaceId, onCreateSession, onInputChange, setActiveModuleId, activeModuleId, store],
   )
+}
+
+/** Close the docked Chat panel (e.g. Reader AI Chat toggle). */
+export function useCloseAgentChat() {
+  const store = useStore()
+  return useCallback(() => closeAgentChat(store), [store])
 }

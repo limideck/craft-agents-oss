@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { GroseModulesRssFeed } from '@grose-agent/shared/grose-modules'
 import { rssFeedsAtom, rssManageFeedsOpenAtom } from '../store'
 import { refreshRssData } from '../use-rss-data'
+import { FeedFavicon } from './feed-favicon'
 
 type Props = {
   workspaceId: string
@@ -221,6 +222,7 @@ function ManageFeedRow({
 
   return (
     <div className="group flex items-center gap-2 px-4 py-1.5 hover:bg-muted/40">
+      <FeedFavicon feedUrl={feed.url} size={16} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm">{feed.name}</div>
         <div className="truncate text-[11px] text-muted-foreground">{feed.url}</div>

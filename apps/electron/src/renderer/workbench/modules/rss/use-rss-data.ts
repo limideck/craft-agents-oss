@@ -3,15 +3,22 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { useAppShellContext } from '@/context/AppShellContext'
 import { activeModuleIdAtom } from '../../store/workbench-store'
 import {
+  filterArticlesByLocalSelection,
+  articleType,
+} from './local-meta'
+import {
   rssArticlesAtom,
+  rssCatalogAtom,
   rssErrorAtom,
   rssFeedsAtom,
   rssListModeAtom,
   rssLoadingAtom,
+  rssLocalStateAtom,
   rssSearchQueryAtom,
   rssSelectedArticleIdAtom,
   rssSidebarSelectionAtom,
   rssStarredCountAtom,
+  rssTypeFilterAtom,
   selectionToQuery,
 } from './store'
 
@@ -36,8 +43,11 @@ export function useRssWorkspaceData(options: Options = {}) {
   const selection = useAtomValue(rssSidebarSelectionAtom)
   const query = useAtomValue(rssSearchQueryAtom)
   const listMode = useAtomValue(rssListModeAtom)
+  const typeFilter = useAtomValue(rssTypeFilterAtom)
+  const localState = useAtomValue(rssLocalStateAtom)
   const setFeeds = useSetAtom(rssFeedsAtom)
   const setArticles = useSetAtom(rssArticlesAtom)
+  const setCatalog = useSetAtom(rssCatalogAtom)
   const setStarredCount = useSetAtom(rssStarredCountAtom)
   const setLoading = useSetAtom(rssLoadingAtom)
   const setError = useSetAtom(rssErrorAtom)
@@ -71,15 +81,32 @@ export function useRssWorkspaceData(options: Options = {}) {
         q: q || undefined,
       })
       if (seq !== refreshSeq) return
-      setArticles(result.articles)
+
+      setCatalog(result.articles)
+
+      let articles = result.articles
+
+      if (selection.kind === 'library' || selection.kind === 'tag') {
+        articles = filterArticlesByLocalSelection(articles, localState.metaById, selection)
+      }
+
+      if (typeFilter !== 'all') {
+        articles = articles.filter((a) => articleType(a) === typeFilter)
+      }
+
+      setArticles(articles)
+      // Never auto-advance when the current selection leaves the filtered list
+      // (e.g. marked read on 未读). Keep selection so the reader stays put;
+      // mark-read only runs on explicit list click, so a sticky id is safe.
       setSelectedArticleId((prev) => {
-        if (prev && result.articles.some((a) => a.id === prev)) return prev
-        return result.articles[0]?.id ?? null
+        if (prev) return prev
+        return articles[0]?.id ?? null
       })
     } catch (err) {
       if (seq !== refreshSeq) return
       setError(err instanceof Error ? err.message : String(err))
       setArticles([])
+      setCatalog([])
     } finally {
       if (seq === refreshSeq) setLoading(false)
     }
@@ -88,8 +115,11 @@ export function useRssWorkspaceData(options: Options = {}) {
     selection,
     query,
     listMode,
+    typeFilter,
+    localState.metaById,
     setFeeds,
     setArticles,
+    setCatalog,
     setStarredCount,
     setLoading,
     setError,

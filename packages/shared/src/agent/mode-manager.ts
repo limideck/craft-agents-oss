@@ -1678,13 +1678,88 @@ export function looksLikePotentialWrite(command: string): boolean {
   return hasRedirectToken || hasPowerShellWriteCmdlet;
 }
 
+/** Explore-mode write allowlist paths (session plans/data + workspace mydata). */
+export type ExploreWritePathOptions = {
+  plansFolderPath?: string;
+  dataFolderPath?: string;
+  mydataFolderPath?: string;
+};
+
+function hasExploreWritePaths(options?: ExploreWritePathOptions): boolean {
+  return !!(options?.plansFolderPath || options?.dataFolderPath || options?.mydataFolderPath);
+}
+
+function isAllowedExploreWritePath(targetPath: string, options?: ExploreWritePathOptions): boolean {
+  if (options?.plansFolderPath && isPathWithinDirectory(targetPath, options.plansFolderPath)) {
+    return true;
+  }
+  if (options?.dataFolderPath && isPathWithinDirectory(targetPath, options.dataFolderPath)) {
+    return true;
+  }
+  if (options?.mydataFolderPath && isPathWithinDirectory(targetPath, options.mydataFolderPath)) {
+    return true;
+  }
+  return false;
+}
+
+function formatExploreWriteBlockReason(
+  heading: string,
+  targetPath: string,
+  options: ExploreWritePathOptions,
+  shortcutHint: string,
+): string {
+  const pathHint = getPathHint(
+    targetPath,
+    options.plansFolderPath ?? '',
+    options.dataFolderPath,
+    options.mydataFolderPath,
+  );
+  const lines = [
+    heading,
+    ``,
+    `  Target: ${targetPath}`,
+  ];
+  if (options.plansFolderPath) {
+    lines.push(`  Plans:  ${options.plansFolderPath}`);
+  }
+  if (options.dataFolderPath) {
+    lines.push(`  Data:   ${options.dataFolderPath}`);
+  }
+  if (options.mydataFolderPath) {
+    lines.push(`  Mydata: ${options.mydataFolderPath}`);
+  }
+  if (pathHint) {
+    lines.push(``, pathHint);
+  }
+  const plansHint = options.plansFolderPath ? `For plans, write to: ${options.plansFolderPath}` : null;
+  const dataHint = options.dataFolderPath ? `For ephemeral session data, write to: ${options.dataFolderPath}` : null;
+  const mydataHint = options.mydataFolderPath
+    ? `For durable deliverables (web/ppt/md/sync libs), write to: ${options.mydataFolderPath}`
+    : null;
+  lines.push(
+    ``,
+    `Allowed paths in Explore mode:`,
+    ...[plansHint, dataHint, mydataHint].filter(Boolean).map(p => `• ${p}`),
+    `• Or ask the user to switch to Ask or Auto mode (${shortcutHint}) to enable writes anywhere`
+  );
+  return lines.join('\n');
+}
+
 /**
- * Get a helpful hint based on comparing target path to plans folder path.
+ * Get a helpful hint based on comparing target path to plans/data/mydata folders.
  * Detects common mistakes and provides actionable guidance.
  */
-export function getPathHint(targetPath: string, plansFolderPath: string, dataFolderPath?: string): string | null {
+export function getPathHint(
+  targetPath: string,
+  plansFolderPath: string,
+  dataFolderPath?: string,
+  mydataFolderPath?: string,
+): string | null {
   const normalizedTarget = targetPath.replace(/\\/g, '/').toLowerCase();
   const normalizedPlans = plansFolderPath.replace(/\\/g, '/').toLowerCase();
+  const underMydata =
+    normalizedTarget.includes('/mydata/') ||
+    (!!mydataFolderPath && isPathWithinDirectory(targetPath, mydataFolderPath));
 
   // Case: Writing to session folder but missing /plans/ or /data/
   if (normalizedTarget.includes('/sessions/') && !normalizedTarget.includes('/plans/') && !normalizedTarget.includes('/data/')) {
@@ -1700,14 +1775,19 @@ export function getPathHint(targetPath: string, plansFolderPath: string, dataFol
     return `Hint: Wrong session ID. Current session is "${originalSessionMatch?.[1] ?? plansSessionMatch[1]}".`;
   }
 
-  // Case: Writing to workspace root instead of session
-  if (normalizedTarget.includes('/.grose-agent/workspaces/') && !normalizedTarget.includes('/sessions/')) {
-    return 'Hint: Write to the session plans or data folder, not the workspace root.';
+  // Writing under mydata is an allowed durable-deliverables path — no "don't write root" hint
+  if (underMydata) {
+    return null;
   }
 
-  // Case: Writing outside .grose-agent entirely
+  // Case: Writing to workspace root instead of session / mydata
+  if (normalizedTarget.includes('/.grose-agent/workspaces/') && !normalizedTarget.includes('/sessions/')) {
+    return 'Hint: Write durable deliverables under mydataFolderPath, or session plans/data — not the workspace root.';
+  }
+
+  // Case: Writing outside .grose-agent entirely (and not under mydata)
   if (!normalizedTarget.includes('/.grose-agent/')) {
-    return 'Hint: Files must be written to the session plans or data folder. Use plansFolderPath or dataFolderPath from <session_state>.';
+    return 'Hint: Files must be written to mydataFolderPath (durable), plansFolderPath, or dataFolderPath from <session_state>.';
   }
 
   return null;
@@ -1804,9 +1884,7 @@ export function shouldAllowToolInMode(
   toolName: string,
   toolInput: unknown,
   mode: PermissionMode,
-  options?: {
-    plansFolderPath?: string;
-    dataFolderPath?: string;
+  options?: ExploreWritePathOptions & {
     permissionsContext?: PermissionsContext;
   }
 ): ToolCheckResult {
@@ -1863,7 +1941,7 @@ export function shouldAllowToolInMode(
         return { allowed: true };
       }
 
-      // Plans/data folder exception for bash/PowerShell writes.
+      // Plans/data/mydata folder exception for bash/PowerShell writes.
       // Bash uses redirects: /bin/zsh -lc "cat <<'EOF' > /path/to/plans/file.md..."
       // PowerShell uses: @(...) | Out-File -FilePath 'C:\path\to\plans\file.md'
       // Only run this branch for likely write attempts to avoid false positives.
@@ -1871,49 +1949,24 @@ export function shouldAllowToolInMode(
         (rejection.type === 'dangerous_operator' && rejection.operatorType === 'redirect') ||
         looksLikePotentialWrite(command);
 
-      if (likelyWriteAttempt && (options?.plansFolderPath || options?.dataFolderPath)) {
+      if (likelyWriteAttempt && hasExploreWritePaths(options)) {
         const targetPath = extractBashWriteTarget(command) ?? extractPowerShellWriteTarget(command);
         if (targetPath) {
-          // Check plans folder with robust path containment (prevents sibling-prefix bypasses)
-          if (options?.plansFolderPath && isPathWithinDirectory(targetPath, options.plansFolderPath)) {
-            debug(`[Mode] Allowing write to plans folder: ${targetPath}`);
-            return { allowed: true };
-          }
-
-          // Check data folder with robust path containment
-          if (options?.dataFolderPath && isPathWithinDirectory(targetPath, options.dataFolderPath)) {
-            debug(`[Mode] Allowing write to data folder: ${targetPath}`);
+          if (isAllowedExploreWritePath(targetPath, options)) {
+            debug(`[Mode] Allowing write to allowed Explore folder: ${targetPath}`);
             return { allowed: true };
           }
 
           // Target path extracted but not in any allowed folder - give specific error with helpful hint
-          debug(`[Mode] Write target "${targetPath}" is not in plans or data folder`);
-          const pathHint = options?.plansFolderPath ? getPathHint(targetPath, options.plansFolderPath, options?.dataFolderPath) : null;
-          const lines = [
-            `Write blocked (Explore mode) - target not in allowed folders:`,
-            ``,
-            `  Target: ${targetPath}`,
-          ];
-          if (options?.plansFolderPath) {
-            lines.push(`  Plans:  ${options.plansFolderPath}`);
-          }
-          if (options?.dataFolderPath) {
-            lines.push(`  Data:   ${options.dataFolderPath}`);
-          }
-          if (pathHint) {
-            lines.push(``, pathHint);
-          }
-          const plansHint = options?.plansFolderPath ? `For plans, write to: ${options.plansFolderPath}` : null;
-          const dataHint = options?.dataFolderPath ? `For data output, write to: ${options.dataFolderPath}` : null;
-          lines.push(
-            ``,
-            `Allowed paths in Explore mode:`,
-            ...[plansHint, dataHint].filter(Boolean).map(p => `• ${p}`),
-            `• Or ask the user to switch to Ask or Auto mode (${config.shortcutHint}) to enable writes anywhere`
-          );
+          debug(`[Mode] Write target "${targetPath}" is not in plans, data, or mydata folder`);
           return {
             allowed: false,
-            reason: lines.join('\n'),
+            reason: formatExploreWriteBlockReason(
+              'Write blocked (Explore mode) - target not in allowed folders:',
+              targetPath,
+              options ?? {},
+              config.shortcutHint,
+            ),
           };
         }
       }
@@ -1931,24 +1984,14 @@ export function shouldAllowToolInMode(
     };
   }
 
-  // Handle Write/Edit/MultiEdit/NotebookEdit - allow if targeting plans folder or allowedWritePaths
+  // Handle Write/Edit/MultiEdit/NotebookEdit - allow if targeting plans/data/mydata or allowedWritePaths
   if (toolName === 'Write' || toolName === 'Edit' || toolName === 'MultiEdit' || toolName === 'NotebookEdit') {
     const input = toolInput as Record<string, unknown> | null;
     const filePath = (input?.file_path ?? input?.notebook_path) as string | undefined;
 
     if (filePath) {
-      // Check plans folder exception
-      if (options?.plansFolderPath) {
-        debug(`[Mode] Checking plans folder exception: path="${filePath}", plansDir="${options.plansFolderPath}"`);
-        if (isPathWithinDirectory(filePath, options.plansFolderPath)) {
-          debug(`[Mode] Allowing ${toolName} to plans folder`);
-          return { allowed: true };
-        }
-      }
-
-      // Check data folder exception
-      if (options?.dataFolderPath && isPathWithinDirectory(filePath, options.dataFolderPath)) {
-        debug(`[Mode] Allowing ${toolName} to data folder`);
+      if (isAllowedExploreWritePath(filePath, options)) {
+        debug(`[Mode] Allowing ${toolName} to allowed Explore folder: ${filePath}`);
         return { allowed: true };
       }
 
@@ -1960,35 +2003,17 @@ export function shouldAllowToolInMode(
         }
       }
 
-      // Not in plans/data folder and not in allowedWritePaths - provide detailed rejection
-      if (options?.plansFolderPath || options?.dataFolderPath) {
+      // Not in plans/data/mydata and not in allowedWritePaths - provide detailed rejection
+      if (hasExploreWritePaths(options)) {
         debug(`[Mode] ${toolName} target "${filePath}" not in allowed folders or allowedWritePaths`);
-        const pathHint = options?.plansFolderPath ? getPathHint(filePath, options.plansFolderPath, options?.dataFolderPath) : null;
-        const lines = [
-          `${toolName} blocked (Explore mode) - target not in allowed folders:`,
-          ``,
-          `  Target: ${filePath}`,
-        ];
-        if (options?.plansFolderPath) {
-          lines.push(`  Plans:  ${options.plansFolderPath}`);
-        }
-        if (options?.dataFolderPath) {
-          lines.push(`  Data:   ${options.dataFolderPath}`);
-        }
-        if (pathHint) {
-          lines.push(``, pathHint);
-        }
-        const plansHint = options?.plansFolderPath ? `For plans, write to: ${options.plansFolderPath}` : null;
-        const dataHint = options?.dataFolderPath ? `For data output, write to: ${options.dataFolderPath}` : null;
-        lines.push(
-          ``,
-          `Allowed paths in Explore mode:`,
-          ...[plansHint, dataHint].filter(Boolean).map(p => `• ${p}`),
-          `• Or ask the user to switch to Ask or Auto mode (${config.shortcutHint}) to enable writes anywhere`
-        );
         return {
           allowed: false,
-          reason: lines.join('\n'),
+          reason: formatExploreWriteBlockReason(
+            `${toolName} blocked (Explore mode) - target not in allowed folders:`,
+            filePath,
+            options ?? {},
+            config.shortcutHint,
+          ),
         };
       }
     }
@@ -2129,7 +2154,12 @@ export function getSessionState(sessionId: string): { permissionMode: Permission
  */
 export function formatSessionState(
   sessionId: string,
-  options?: { plansFolderPath?: string; dataFolderPath?: string; consumeModeChangeUserSignal?: boolean }
+  options?: {
+    plansFolderPath?: string;
+    dataFolderPath?: string;
+    mydataFolderPath?: string;
+    consumeModeChangeUserSignal?: boolean;
+  }
 ): string {
   const diagnostics = getPermissionModeDiagnostics(sessionId);
 
@@ -2160,9 +2190,14 @@ export function formatSessionState(
     result += `\nplansFolderPath: ${options.plansFolderPath}`;
   }
 
-  // Include data folder path so agent knows where transform_data output goes
+  // Include data folder path so agent knows where ephemeral tool output goes
   if (options?.dataFolderPath) {
     result += `\ndataFolderPath: ${options.dataFolderPath}`;
+  }
+
+  // Workspace durable deliverables (web/ppt/md/sync libs)
+  if (options?.mydataFolderPath) {
+    result += `\nmydataFolderPath: ${options.mydataFolderPath}`;
   }
 
   result += '\n</session_state>';

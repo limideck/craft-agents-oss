@@ -155,7 +155,12 @@ export interface AutomationMatcher {
   name?: string;
   /** Regex pattern for matching event data (not used for SchedulerTick) */
   matcher?: string;
-  /** Cron expression for SchedulerTick events (5-field format) */
+  /**
+   * Cron expression for SchedulerTick events (5-field format). Together with
+   * `timezone` this is the Rules-side representation of the shared
+   * `ScheduleTrigger` (`@grose-agent/shared/automations`). Use
+   * `toScheduleTrigger(matcher)` to project it.
+   */
   cron?: string;
   /** IANA timezone for cron evaluation (e.g., "Europe/Budapest", "America/New_York") */
   timezone?: string;

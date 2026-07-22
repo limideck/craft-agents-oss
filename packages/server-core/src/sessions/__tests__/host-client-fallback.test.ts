@@ -31,6 +31,7 @@ class FakeServer {
       handle() {},
       push() {},
       async invokeClient() { return undefined },
+      async invoke() { return undefined },
       hasClientCapability: (clientId, capability) =>
         this.capabilities.get(clientId)?.has(capability) ?? false,
       findClientsWithCapability: (capability, opts) => {

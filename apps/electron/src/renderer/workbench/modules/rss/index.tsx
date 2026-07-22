@@ -3,38 +3,37 @@ import type { WorkbenchModule } from '../../registry/types'
 import { FeedsPanel } from './panels/feeds-panel'
 import { ArticleListPanel } from './panels/article-list-panel'
 import { ReaderPanel } from './panels/reader-panel'
+import { RssCommandPalette } from './components/rss-command-palette'
 
-/** Feed nav in ActivityBar side rail (like Agents Sessions). */
+/** Reader nav in ActivityBar side rail (like Agents Sessions). */
 function RssActivityView() {
-  return <FeedsPanel />
+  return (
+    <>
+      <FeedsPanel />
+      <RssCommandPalette />
+    </>
+  )
 }
 
-/** RSS workbench module — live data via grose-modules Go sidecar. */
+/** Local Reader module — live RSS via grose-modules + local triage overlay. */
 export const rssModule: WorkbenchModule = {
   id: 'rss',
-  title: 'RSS',
+  title: '阅读',
   icon: <Rss className="h-4 w-4" />,
   order: 50,
-  // Feeds live in activityView; dock is Articles + Reader.
+  // Nav lives in activityView; dock is Articles + Reader (+ AI Chat docked right).
   defaultLayout: 'rss-reading',
   activityView: RssActivityView,
   panels: [
     {
-      component: 'rss-feeds',
-      title: 'Feeds',
-      singleton: true,
-      // Kept registered so persisted layouts / manual reopen still work.
-      render: () => <FeedsPanel />,
-    },
-    {
       component: 'rss-article-list',
-      title: 'Articles',
+      title: '文章',
       singleton: true,
       render: () => <ArticleListPanel />,
     },
     {
       component: 'rss-reader',
-      title: 'Reader',
+      title: '阅读',
       singleton: true,
       render: () => <ReaderPanel />,
     },

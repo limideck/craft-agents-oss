@@ -29,11 +29,8 @@ Separate from `{rootPath}/projects/` (session-bound light projects).
 ## How to open
 
 1. Build once: `bun run build:grose-modules`
-2. Enable the workbench shell:
-   - DevTools: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev`). Main process spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
-4. ActivityBar → **Sites**. Dock preset: **Chat | Files | Preview**.
+2. Start Electron (`bun run electron:dev`). Main process spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
+3. ActivityBar → **Sites**. Dock preset: **Chat | Files | Preview**.
 
 If the list shows a sidecar / connection error, build/start grose-modules or set `GROSE_MODULES_URL` (same as RSS).
 
@@ -109,5 +106,5 @@ Preview point-and-edit (text / basic styles) posts changes through RPC (`sitesVi
 ```bash
 cd services/grose-modules
 PORT=4711 GROSE_MODULES_TOKEN=dev make run
-GROSE_MODULES_URL=http://127.0.0.1:4711 GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+GROSE_MODULES_URL=http://127.0.0.1:4711 bun run electron:dev
 ```

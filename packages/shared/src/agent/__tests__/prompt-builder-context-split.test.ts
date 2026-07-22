@@ -22,7 +22,11 @@ import { cleanupModeState, initializeModeState, setPermissionMode } from '../mod
 
 // Matches createMockSession() in test-utils.ts
 const SESSION_ID = 'test-session-id'
-const OPTS = { plansFolderPath: '/tmp/plans', dataFolderPath: '/tmp/data' }
+const OPTS = {
+  plansFolderPath: '/tmp/plans',
+  dataFolderPath: '/tmp/data',
+  mydataFolderPath: '/test/workspace/mydata',
+}
 const SOURCE_BLOCK = '<sources>\nActive: none\n</sources>'
 
 function makeBuilder() {
@@ -52,6 +56,7 @@ describe('PromptBuilder volatile/stable context split (issue #862)', () => {
 
     // session_state + source ride the volatile tail
     expect(volatileText).toContain('permissionMode:')
+    expect(volatileText).toContain('mydataFolderPath:')
     expect(volatileText).toContain(SOURCE_BLOCK)
     // workspace capabilities + grose_modules catalog are stable
     expect(stableText).toContain('<workspace_capabilities>')

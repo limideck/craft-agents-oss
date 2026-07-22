@@ -10,6 +10,7 @@ import {
   activitySidebarVisibleAtom,
   cancelLayoutPersistAtom,
   dockviewApiAtom,
+  focusModeAtom,
   layoutModuleIdAtom,
 } from '../store/workbench-store'
 import { WorkspaceDataProvider } from '../providers/WorkspaceDataProvider'
@@ -28,14 +29,11 @@ import {
 
 type WorkbenchShellProps = {
   contextValue: AppShellContextType
-  /** Optional extras forwarded for parity with AppShell (unused for now). */
-  menuNewChatTrigger?: number
-  isFocusedMode?: boolean
 }
 
 /**
- * Feature-flagged workbench shell: TopBar + ActivityBar + dockview layout.
- * Dual-shell parallel with AppShell — enable via GROSE_FEATURE_WORKBENCH_SHELL.
+ * Workbench shell: TopBar + ActivityBar + dockview layout. Sole UI shell
+ * (the legacy AppShell was removed in the remove-app-shell refactor).
  */
 export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
   ensureWorkbenchModulesRegistered()
@@ -64,6 +62,7 @@ export function WorkbenchShell({ contextValue }: WorkbenchShellProps) {
 function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
   const activeModuleId = useAtomValue(activeModuleIdAtom)
   const activitySidebarVisible = useAtomValue(activitySidebarVisibleAtom)
+  const focusMode = useAtomValue(focusModeAtom)
   const api = useAtomValue(dockviewApiAtom)
   const cancelLayoutPersist = useAtomValue(cancelLayoutPersistAtom)
   const setLayoutModuleId = useSetAtom(layoutModuleIdAtom)
@@ -141,8 +140,8 @@ function WorkbenchShellInner({ workspaceId }: { workspaceId: string | null }) {
 
   return (
     <div className="h-full flex min-h-0">
-      <ActivityBar />
-      {ActivityView && activitySidebarVisible ? (
+      {!focusMode ? <ActivityBar /> : null}
+      {ActivityView && activitySidebarVisible && !focusMode ? (
         <ActivitySidebar>
           <ActivityView />
         </ActivitySidebar>

@@ -26,6 +26,7 @@ describe('mode transition session_state context', () => {
     const stateBlock = formatSessionState(sessionId, {
       plansFolderPath: '/tmp/plans',
       dataFolderPath: '/tmp/data',
+      mydataFolderPath: '/tmp/workspace/mydata',
     });
 
     expect(stateBlock).toContain('permissionMode: execute');
@@ -35,6 +36,9 @@ describe('mode transition session_state context', () => {
     expect(stateBlock).toContain('modeVersion: 2');
     expect(stateBlock).toContain('modeChangeSummary: Last mode change by user at 2026-03-02T08:00:00.000Z (Explore -> Execute, modeVersion=2)');
     expect(stateBlock).toContain('modeChangeUserSignal: The user changed mode manually. Apply this mode immediately for this turn.');
+    expect(stateBlock).toContain('plansFolderPath: /tmp/plans');
+    expect(stateBlock).toContain('dataFolderPath: /tmp/data');
+    expect(stateBlock).toContain('mydataFolderPath: /tmp/workspace/mydata');
 
     cleanupModeState(sessionId);
   });

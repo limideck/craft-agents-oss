@@ -163,6 +163,56 @@ export async function runWorkflowViaRpc(
   return window.electronAPI.workflowsRun(workspaceId, workflowId)
 }
 
+/** Fetch the persisted run history for a workflow (shared automations-history store). */
+export async function getWorkflowHistoryViaRpc(
+  workspaceId: string,
+  workflowId: string,
+  limit = 20,
+): Promise<Array<{
+  kind: 'flow'
+  id: string
+  runId: string
+  ts: number
+  ok: boolean
+  summary?: string
+  stepCount?: number
+  error?: string
+}>> {
+  return window.electronAPI.getWorkflowHistory(workspaceId, workflowId, limit)
+}
+
+export interface FlowRunEntry {
+  runId: string
+  ok: boolean
+  ts: number
+  summary?: string
+  stepCount?: number
+  error?: string
+}
+
+/** Map raw history rows into the renderer's FlowRunEntry shape. */
+export function toFlowRunEntries(
+  rows: Array<{
+    kind: 'flow'
+    id: string
+    runId: string
+    ts: number
+    ok: boolean
+    summary?: string
+    stepCount?: number
+    error?: string
+  }>,
+): FlowRunEntry[] {
+  return rows.map((r) => ({
+    runId: r.runId,
+    ok: r.ok,
+    ts: r.ts,
+    ...(r.summary !== undefined ? { summary: r.summary } : {}),
+    ...(typeof r.stepCount === 'number' ? { stepCount: r.stepCount } : {}),
+    ...(r.error !== undefined ? { error: r.error } : {}),
+  }))
+}
+
 export async function deployWorkflowViaRpc(
   workspaceId: string,
   workflowId: string,

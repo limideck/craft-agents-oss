@@ -2,12 +2,14 @@ import * as React from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { DatabaseZap } from 'lucide-react'
+import { DatabaseZap, Plus } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { SourcesListPanel } from '@/components/lists/SourcesListPanel'
 import SourceInfoPage from '@/pages/SourceInfoPage'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { sourcesAtom } from '@/atoms/sources'
+import { Button } from '@/components/ui/button'
+import { EditPopover, getEditConfig, type EditContextKey } from '@/components/ui/EditPopover'
 import { cn } from '@/lib/utils'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../dock/panel-primitives'
 import { ActivityShell } from '../../shell/ActivityShell'
@@ -64,11 +66,35 @@ function SourcesActivityView() {
     [setSelectedSlug],
   )
 
+  const addSourceContextKey: EditContextKey =
+    sourceFilter?.kind === 'type'
+      ? (`add-source-${sourceFilter.sourceType}` as EditContextKey)
+      : 'add-source'
+
   return (
     <ActivityShell
       title={t('sidebar.sources')}
       scroll={false}
       bodyClassName="overflow-hidden"
+      actions={
+        activeWorkspace?.rootPath ? (
+          <EditPopover
+            align="end"
+            trigger={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title={t('sourcesList.addSource')}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            }
+            {...getEditConfig(addSourceContextKey, activeWorkspace.rootPath)}
+          />
+        ) : undefined
+      }
       toolbar={
         <div className="px-2 py-1.5 flex flex-wrap gap-1">
           {FILTERS.map((f) => {

@@ -33,18 +33,25 @@ export function registerSkillsHandlers(server: RpcServer, deps: HandlerDeps): vo
     return skills
   })
 
-  // Get files in a skill directory
-  server.handle(RPC_CHANNELS.skills.GET_FILES, async (_ctx, workspaceId: string, skillSlug: string) => {
+  // Get files in a skill directory (workspace / project / global — resolved by slug)
+  server.handle(RPC_CHANNELS.skills.GET_FILES, async (_ctx, workspaceId: string, skillSlug: string, workingDirectory?: string) => {
     const workspace = getWorkspaceByNameOrId(workspaceId)
     if (!workspace) {
       deps.platform.logger?.error(`SKILLS_GET_FILES: Workspace not found: ${workspaceId}`)
       return []
     }
 
-    const { getWorkspaceSkillsPath } = await import('@grose-agent/shared/workspaces')
+    const effectiveWorkingDir = workingDirectory && existsSync(workingDirectory)
+      ? workingDirectory
+      : undefined
+    const { loadSkillBySlug } = await import('@grose-agent/shared/skills')
+    const skill = loadSkillBySlug(workspace.rootPath, skillSlug, effectiveWorkingDir)
+    if (!skill) {
+      deps.platform.logger?.error(`SKILLS_GET_FILES: Skill not found: ${skillSlug}`)
+      return []
+    }
 
-    const skillsDir = getWorkspaceSkillsPath(workspace.rootPath)
-    const skillDir = join(skillsDir, skillSlug)
+    const skillDir = skill.path
 
     function scanDirectory(dirPath: string): SkillFile[] {
       try {
@@ -69,7 +76,10 @@ export function registerSkillsHandlers(server: RpcServer, deps: HandlerDeps): vo
             }
           })
           .sort((a, b) => {
-            // Directories first, then files
+            // SKILL.md first, then directories, then other files
+            const aSkill = a.name === 'SKILL.md' ? 0 : 1
+            const bSkill = b.name === 'SKILL.md' ? 0 : 1
+            if (aSkill !== bSkill) return aSkill - bSkill
             if (a.type !== b.type) return a.type === 'directory' ? -1 : 1
             return a.name.localeCompare(b.name)
           })

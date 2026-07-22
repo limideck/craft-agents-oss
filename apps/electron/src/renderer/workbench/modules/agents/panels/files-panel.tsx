@@ -1,4 +1,6 @@
+import { useAtom } from 'jotai'
 import { useCallback, useMemo, useState } from 'react'
+import { Eye } from 'lucide-react'
 import { useAppShellContext } from '@/context/AppShellContext'
 import {
   FileTree,
@@ -9,22 +11,37 @@ import { joinPath } from '../../../components/file-tree-utils'
 import { PanelRoot, PanelBody, PanelHeaderBarSplit } from '../../../dock/panel-primitives'
 import { Spinner } from '@grose-agent/ui'
 import { getFileManagerName } from '@/lib/platform'
-import { useOpenFileEditor } from '../open-file-editor'
+import {
+  filesPanelSelectedPathAtom,
+  useLastPreviewPath,
+  useOpenFileEditor,
+  useReopenFilePreview,
+} from '../open-file-editor'
+import { cn } from '@/lib/utils'
 
 /**
- * Files panel — workspace file tree with lazy expand, create, rename, delete, and drag-move.
+ * Files panel — workspace deliverables tree (`{rootPath}/mydata`) with lazy expand,
+ * create, rename, delete, and drag-move.
  * Clicking a file opens the center preview panel (kandev-style); double-click pins a tab.
+ * Sites / other modules keep their own roots; this panel is the AI产物管理台 only.
  */
 export function FilesPanel() {
   const { workspaces, activeWorkspaceId } = useAppShellContext()
   const openFile = useOpenFileEditor()
+  const reopenPreview = useReopenFilePreview()
+  const lastPreviewPath = useLastPreviewPath()
   const workspace = useMemo(
     () => workspaces.find((w) => w.id === activeWorkspaceId),
     [workspaces, activeWorkspaceId],
   )
-  const rootPath = workspace?.rootPath ?? null
+  // Bind tree to workspace mydata (WORKSPACE_MYDATA_DIR), not the full workspace root.
+  // Renderer cannot import Node workspaces/storage; joinPath mirrors getWorkspaceMydataPath.
+  const rootPath = useMemo(
+    () => (workspace?.rootPath ? joinPath(workspace.rootPath, 'mydata') : null),
+    [workspace?.rootPath],
+  )
   const tree = useWorkspaceFileTree(rootPath)
-  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const [selectedPath, setSelectedPath] = useAtom(filesPanelSelectedPathAtom)
   const [creating, setCreating] = useState<{
     parentPath: string
     kind: 'file' | 'folder'
@@ -64,23 +81,37 @@ export function FilesPanel() {
     [tree, openFile],
   )
 
-  const handleSelectPath = useCallback(
-    (path: string) => {
-      setSelectedPath(path)
-    },
-    [],
-  )
+  const handleSelectPath = useCallback((path: string) => {
+    setSelectedPath(path)
+  }, [])
+
+  const previewTitle = lastPreviewPath
+    ? `预览：${lastPreviewPath.split(/[/\\]/).pop() ?? lastPreviewPath}`
+    : '预览（选择文件）'
 
   return (
     <PanelRoot>
       <PanelHeaderBarSplit
         left={<span className="font-medium truncate">Files</span>}
         right={
-          <FileTreeToolbar
-            disabled={!rootPath || !!tree.loading || !!tree.error}
-            onNewFile={() => startCreate('file')}
-            onNewFolder={() => startCreate('folder')}
-          />
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              title={previewTitle}
+              onClick={() => reopenPreview()}
+              className={cn(
+                'p-1 rounded hover:bg-foreground-5 text-muted-foreground hover:text-foreground',
+                !lastPreviewPath && 'opacity-70',
+              )}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
+            <FileTreeToolbar
+              disabled={!rootPath || !!tree.loading || !!tree.error}
+              onNewFile={() => startCreate('file')}
+              onNewFolder={() => startCreate('folder')}
+            />
+          </div>
         }
       />
       <PanelBody padding={false}>

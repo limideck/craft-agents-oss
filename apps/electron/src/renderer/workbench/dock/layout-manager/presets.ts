@@ -1,40 +1,12 @@
 import type { LayoutPresetId, LayoutState } from '../../registry/types'
 import {
-  AGENTS_DEFAULT_RATIOS,
   CENTER_GROUP,
   RIGHT_BOTTOM_GROUP,
   RIGHT_TOP_GROUP,
   RSS_READING_RATIOS,
-  SIDEBAR_GROUP,
   WORKFLOW_EDIT_RATIOS,
   panel,
 } from './constants'
-
-/** Agents three-column layout: session-list | chat | files+changes / terminal. */
-export function agentsDefaultLayout(): LayoutState {
-  return {
-    columns: [
-      {
-        id: 'sidebar',
-        width: AGENTS_DEFAULT_RATIOS.sidebar,
-        groups: [{ id: SIDEBAR_GROUP, panels: [panel('session-list')] }],
-      },
-      {
-        id: 'center',
-        width: AGENTS_DEFAULT_RATIOS.center,
-        groups: [{ id: CENTER_GROUP, panels: [panel('chat')] }],
-      },
-      {
-        id: 'right',
-        width: AGENTS_DEFAULT_RATIOS.right,
-        groups: [
-          { id: RIGHT_TOP_GROUP, panels: [panel('files'), panel('changes')] },
-          { id: RIGHT_BOTTOM_GROUP, panels: [panel('terminal')] },
-        ],
-      },
-    ],
-  }
-}
 
 /** Focus mode: chat only (no sidebar / right tools). */
 export function agentsFocusLayout(): LayoutState {
@@ -101,8 +73,7 @@ export function getLayoutPreset(id: LayoutPresetId): LayoutState {
       return rssReadingLayout()
     case 'workflow-edit':
       return workflowEditLayout()
-    case 'agents-default':
     default:
-      return agentsDefaultLayout()
+      return agentsFocusLayout()
   }
 }

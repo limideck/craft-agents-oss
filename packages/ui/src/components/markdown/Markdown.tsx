@@ -335,8 +335,8 @@ function createComponents(
           return wrapBlock('code', code, <CodeBlock code={code} language={match?.[1]} mode="full" className="my-2" />, props.node?.position)
         }
 
-        // Inline code
-        return <InlineCode>{children}</InlineCode>
+        // Inline code — file paths become clickable when onFileClick is set
+        return <InlineCode onFileClick={onFileClick}>{children}</InlineCode>
       },
       pre: ({ children }) => <>{children}</>,
       // Comfortable paragraph spacing
@@ -469,7 +469,7 @@ function createComponents(
         return wrapBlock('code', code, <CodeBlock code={code} language={match?.[1]} mode="full" className="my-2" />, props.node?.position)
       }
 
-      return <InlineCode>{children}</InlineCode>
+      return <InlineCode onFileClick={onFileClick}>{children}</InlineCode>
     },
     pre: ({ children }) => <>{children}</>,
     // Rich paragraph spacing

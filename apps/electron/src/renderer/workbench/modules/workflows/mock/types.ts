@@ -73,7 +73,7 @@ export type WorkflowSummary = {
   deployedAt?: string
 }
 
-export type WorkflowRightTab = 'chat' | 'toolbar' | 'editor'
+export type WorkflowRightTab = 'chat' | 'toolbar' | 'editor' | 'runs'
 
 export type WorkflowLogLevel = 'info' | 'success' | 'warn'
 

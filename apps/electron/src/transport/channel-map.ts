@@ -118,6 +118,7 @@ export const CHANNEL_MAP = {
   openUrl: invoke(RPC_CHANNELS.shell.OPEN_URL),
   openFile: invoke(RPC_CHANNELS.shell.OPEN_FILE),
   showInFolder: invoke(RPC_CHANNELS.shell.SHOW_IN_FOLDER),
+  runCommand: invoke(RPC_CHANNELS.shell.RUN_COMMAND),
 
   // Menu event listeners
   onMenuNewChat: listener(RPC_CHANNELS.menu.NEW_CHAT),
@@ -197,6 +198,7 @@ export const CHANNEL_MAP = {
   listServerDirectory: invoke(RPC_CHANNELS.fs.LIST_DIRECTORY),
   listServerEntries: invoke(RPC_CHANNELS.fs.LIST_ENTRIES),
   createServerFile: invoke(RPC_CHANNELS.fs.CREATE_FILE),
+  writeServerFile: invoke(RPC_CHANNELS.fs.WRITE_FILE),
   createServerDirectory: invoke(RPC_CHANNELS.fs.MKDIR),
   renameServerPath: invoke(RPC_CHANNELS.fs.RENAME),
   deleteServerPath: invoke(RPC_CHANNELS.fs.DELETE),
@@ -353,6 +355,9 @@ export const CHANNEL_MAP = {
 
   // Git
   getGitBranch: invoke(RPC_CHANNELS.git.GET_BRANCH),
+  getGitStatus: invoke(RPC_CHANNELS.git.GET_STATUS),
+  getGitDiff: invoke(RPC_CHANNELS.git.GET_DIFF),
+  getGitFileContents: invoke(RPC_CHANNELS.git.GET_FILE_CONTENTS),
   checkGitBash: invoke(RPC_CHANNELS.gitbash.CHECK),
   browseForGitBash: invoke(RPC_CHANNELS.gitbash.BROWSE),
   setGitBashPath: invoke(RPC_CHANNELS.gitbash.SET_PATH),
@@ -517,4 +522,5 @@ export const CHANNEL_MAP = {
   workflowsRun: invoke(RPC_CHANNELS.workflows.RUN),
   workflowsDeploy: invoke(RPC_CHANNELS.workflows.DEPLOY),
   workflowsUndeploy: invoke(RPC_CHANNELS.workflows.UNDEPLOY),
+  getWorkflowHistory: invoke(RPC_CHANNELS.workflows.GET_HISTORY),
 } satisfies ChannelMap

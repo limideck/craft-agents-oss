@@ -4,7 +4,6 @@ import {
   isDeveloperFeedbackEnabled,
   isGroseAgentsCliEnabled,
   isEmbeddedServerEnabled,
-  isWorkbenchShellEnabled,
 } from '../feature-flags.ts';
 
 const ORIGINAL_ENV = {
@@ -13,7 +12,6 @@ const ORIGINAL_ENV = {
   GROSE_FEATURE_DEVELOPER_FEEDBACK: process.env.GROSE_FEATURE_DEVELOPER_FEEDBACK,
   GROSE_FEATURE_GROSE_AGENTS_CLI: process.env.GROSE_FEATURE_GROSE_AGENTS_CLI,
   GROSE_FEATURE_EMBEDDED_SERVER: process.env.GROSE_FEATURE_EMBEDDED_SERVER,
-  GROSE_FEATURE_WORKBENCH_SHELL: process.env.GROSE_FEATURE_WORKBENCH_SHELL,
 };
 
 afterEach(() => {
@@ -31,9 +29,6 @@ afterEach(() => {
 
   if (ORIGINAL_ENV.GROSE_FEATURE_EMBEDDED_SERVER === undefined) delete process.env.GROSE_FEATURE_EMBEDDED_SERVER;
   else process.env.GROSE_FEATURE_EMBEDDED_SERVER = ORIGINAL_ENV.GROSE_FEATURE_EMBEDDED_SERVER;
-
-  if (ORIGINAL_ENV.GROSE_FEATURE_WORKBENCH_SHELL === undefined) delete process.env.GROSE_FEATURE_WORKBENCH_SHELL;
-  else process.env.GROSE_FEATURE_WORKBENCH_SHELL = ORIGINAL_ENV.GROSE_FEATURE_WORKBENCH_SHELL;
 });
 
 describe('feature-flags runtime helpers', () => {
@@ -108,23 +103,5 @@ describe('feature-flags runtime helpers', () => {
     process.env.GROSE_FEATURE_EMBEDDED_SERVER = '0';
 
     expect(isEmbeddedServerEnabled()).toBe(false);
-  });
-
-  it('isWorkbenchShellEnabled defaults to false when no override is set', () => {
-    delete process.env.GROSE_FEATURE_WORKBENCH_SHELL;
-
-    expect(isWorkbenchShellEnabled()).toBe(false);
-  });
-
-  it('isWorkbenchShellEnabled honors explicit override true', () => {
-    process.env.GROSE_FEATURE_WORKBENCH_SHELL = '1';
-
-    expect(isWorkbenchShellEnabled()).toBe(true);
-  });
-
-  it('isWorkbenchShellEnabled honors explicit override false', () => {
-    process.env.GROSE_FEATURE_WORKBENCH_SHELL = '0';
-
-    expect(isWorkbenchShellEnabled()).toBe(false);
   });
 });

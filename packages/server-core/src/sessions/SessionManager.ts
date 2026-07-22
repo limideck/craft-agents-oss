@@ -39,7 +39,11 @@ import {
   type WorkspaceInfo,
 } from '@grose-agent/shared/config'
 import type { ActiveSessionInfo, SessionProcessingStatus } from '@grose-agent/core/types'
-import { loadWorkspaceConfig } from '@grose-agent/shared/workspaces'
+import {
+  loadWorkspaceConfig,
+  getWorkspaceMydataPath,
+  ensureWorkspaceMydataDefaults,
+} from '@grose-agent/shared/workspaces'
 import {
   // Session persistence functions
   listSessions as listStoredSessions,
@@ -1319,6 +1323,11 @@ export class SessionManager implements ISessionManager {
     sessionLog.info('[browser-pane] setRpcServer called — remote browser bridge is now available')
   }
 
+  /** Access the registered RPC server (for in-process handler invocation). */
+  getRpcServer(): RpcServer | null {
+    return this.rpcServer
+  }
+
   /**
    * Resolve the {@link IBrowserPaneManager} that owns the user's local browser
    * for a given session. Returns:
@@ -2594,6 +2603,9 @@ export class SessionManager implements ISessionManager {
     // Get new session defaults from workspace config (with global fallback)
     // Options.permissionMode overrides the workspace default (used by EditPopover for auto-execute)
     const workspaceRootPath = workspace.rootPath
+    // Ensure mydata/ exists and backfill defaults.workingDirectory → mydata when unset
+    // (legacy workspaces created before the mydata default).
+    ensureWorkspaceMydataDefaults(workspaceRootPath)
     const wsConfig = loadWorkspaceConfig(workspaceRootPath)
     const globalDefaults = loadConfigDefaults()
 
@@ -2602,7 +2614,9 @@ export class SessionManager implements ISessionManager {
       ?? wsConfig?.defaults?.permissionMode
       ?? globalDefaults.workspaceDefaults.permissionMode
 
-    const userDefaultWorkingDir = wsConfig?.defaults?.workingDirectory || undefined
+    // Workspace default cwd, falling back to mydata when still unset after backfill
+    const userDefaultWorkingDir =
+      wsConfig?.defaults?.workingDirectory || getWorkspaceMydataPath(workspaceRootPath)
     // Resolve thinking level with caller-first precedence, matching permissionMode above:
     //   caller override → workspace default → global default.
     // normalizeThinkingLevel() tolerates undefined/unknown inputs.
@@ -8462,7 +8476,12 @@ export class SessionManager implements ISessionManager {
     const fallback = `Automation: ${prompt.slice(0, 50)}${prompt.length > 50 ? '...' : ''}`
     const sessionName = automationName || fallback
 
-    // Create a new session for this automation
+    // Create a new session for this automation.
+    // Explicit mydata cwd so cron / Test runs share persistent deliverables across
+    // sessions (e.g. x-bookmarks/last-sync.json). createSession also inherits the
+    // workspace default (backfilled to mydata); passing it here keeps automations
+    // on mydata even if a project binding would otherwise override cwd.
+    const mydataWorkingDirectory = getWorkspaceMydataPath(workspaceRootPath)
     const session = await this.createSession(workspaceId, {
       name: sessionName,
       labels: resolvedLabels,
@@ -8471,6 +8490,7 @@ export class SessionManager implements ISessionManager {
       llmConnection,
       model,
       thinkingLevel,
+      workingDirectory: mydataWorkingDirectory,
     })
 
     // Populate triggeredBy metadata so title generation is explicitly skipped

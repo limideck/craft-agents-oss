@@ -7,6 +7,7 @@ import {
   loadWorkspaceConfig,
   saveWorkspaceConfig,
   createWorkspaceAtPath,
+  ensureWorkspaceMydataDefaults,
   isValidWorkspace,
 } from '../workspaces/storage.ts';
 import { findIconFile } from '../utils/icon.ts';
@@ -296,6 +297,13 @@ export function loadStoredConfig(): StoredConfig | null {
           createWorkspaceAtPath(workspace.rootPath, workspace.name, undefined, workspace.id);
         } catch (wsError) {
           debug('[config] Failed to create workspace at', workspace.rootPath, ':', wsError instanceof Error ? wsError.message : wsError);
+        }
+      } else {
+        // Backfill mydata/ + default cwd for workspaces created before they existed
+        try {
+          ensureWorkspaceMydataDefaults(workspace.rootPath);
+        } catch (wsError) {
+          debug('[config] Failed to ensure mydata defaults at', workspace.rootPath, ':', wsError instanceof Error ? wsError.message : wsError);
         }
       }
     }
@@ -839,10 +847,13 @@ export function addWorkspace(workspace: Omit<Workspace, 'id' | 'createdAt' | 'sl
   // Create workspace folder structure if it doesn't exist
   if (!isValidWorkspace(newWorkspace.rootPath)) {
     createWorkspaceAtPath(newWorkspace.rootPath, newWorkspace.name, undefined, newWorkspace.id);
-  } else if (existingLocal && existingLocal.id !== newWorkspace.id) {
-    existingLocal.id = newWorkspace.id;
-    existingLocal.updatedAt = Date.now();
-    saveWorkspaceConfig(newWorkspace.rootPath, existingLocal);
+  } else {
+    ensureWorkspaceMydataDefaults(newWorkspace.rootPath);
+    if (existingLocal && existingLocal.id !== newWorkspace.id) {
+      existingLocal.id = newWorkspace.id;
+      existingLocal.updatedAt = Date.now();
+      saveWorkspaceConfig(newWorkspace.rootPath, existingLocal);
+    }
   }
 
   config.workspaces.push(newWorkspace);
@@ -875,6 +886,8 @@ export function syncWorkspaces(): void {
     // Load the workspace config to get name
     const wsConfig = loadWorkspaceConfig(rootPath);
     if (!wsConfig) continue;
+
+    ensureWorkspaceMydataDefaults(rootPath);
 
     const newWorkspace: Workspace = {
       id: wsConfig.id || generateWorkspaceId(),

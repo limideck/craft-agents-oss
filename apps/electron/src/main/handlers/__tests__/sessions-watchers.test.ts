@@ -43,6 +43,7 @@ describe('sessions file watchers', () => {
       },
       hasClientCapability() { return false },
       findClientsWithCapability() { return [] },
+      async invoke() { return undefined },
     }
 
     const deps: HandlerDeps = {

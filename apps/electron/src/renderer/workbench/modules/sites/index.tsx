@@ -1,13 +1,43 @@
 import { Globe } from 'lucide-react'
+import { useAtomValue } from 'jotai'
 import type { WorkbenchModule } from '../../registry/types'
 import { PanelErrorBoundary } from '../../dock/PanelErrorBoundary'
 import { PlaceholderPanel } from '../agents/panels/placeholder-panel'
+import { ChangesPanel } from '../agents/panels/changes-panel'
+import { TerminalPanel } from '../agents/panels/terminal-panel'
 import { SitesListView } from './activity/sites-list'
 import { SitesChatPanel } from './panels/chat-panel'
 import { SitesFilesPanel } from './panels/files-panel'
 import { SitesBrowserPanel } from './panels/browser-panel'
 import { SitesDataPanel } from './panels/data-panel'
 import { SitesPlanPanel } from './panels/plan-panel'
+import { selectedSiteAtom } from './store'
+
+/** Changes panel scoped to the selected site's project directory. */
+function SitesChangesPanel() {
+  const site = useAtomValue(selectedSiteAtom)
+  return <ChangesPanel cwd={site?.path ?? null} />
+}
+
+/** Terminal panel scoped to the selected site's project directory. */
+function SitesTerminalPanel() {
+  const site = useAtomValue(selectedSiteAtom)
+  return <TerminalPanel cwd={site?.path ?? null} />
+}
+
+/** Open the selected site's project in VS Code (no-op when none selected). */
+function SitesVSCodePanel() {
+  const site = useAtomValue(selectedSiteAtom)
+  if (!site?.path) {
+    return (
+      <PlaceholderPanel
+        title="VS Code"
+        description="Select a site to open its workspace in VS Code."
+      />
+    )
+  }
+  return <TerminalPanel cwd={site.path} initialCommand="code ." />
+}
 
 /**
  * Sites (建站) — matches kandev Design advanced dock:
@@ -83,10 +113,7 @@ export const sitesModule: WorkbenchModule = {
       singleton: true,
       render: () => (
         <PanelErrorBoundary panelName="Sites Changes">
-          <PlaceholderPanel
-            title="Changes"
-            description="Git changes for the selected site — coming soon."
-          />
+          <SitesChangesPanel />
         </PanelErrorBoundary>
       ),
     },
@@ -126,7 +153,7 @@ export const sitesModule: WorkbenchModule = {
       singleton: true,
       render: () => (
         <PanelErrorBoundary panelName="Sites Terminal">
-          <PlaceholderPanel title="Terminal" description="Site terminal — coming soon." />
+          <SitesTerminalPanel />
         </PanelErrorBoundary>
       ),
     },
@@ -136,7 +163,7 @@ export const sitesModule: WorkbenchModule = {
       singleton: true,
       render: () => (
         <PanelErrorBoundary panelName="Sites VS Code">
-          <PlaceholderPanel title="VS Code" description="Open site workspace in VS Code — coming soon." />
+          <SitesVSCodePanel />
         </PanelErrorBoundary>
       ),
     },

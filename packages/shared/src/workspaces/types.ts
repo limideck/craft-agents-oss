@@ -7,10 +7,10 @@
  * `basename(rootPath) === workspaceId`.
  *
  * Directory structure under `{rootPath}/` (see docs/workspace-storage.md):
- *   ├── config.json, sources/, sessions/, skills/, projects/, …
+ *   ├── config.json, sources/, sessions/, skills/, projects/, mydata/, …
  *   ├── automations.json, permissions.json, statuses/, labels/, …
  *   └── modules/
- *       ├── rss/, tables/, workflows/, knowledge/
+ *       ├── rss/, tables/, workflows/, knowledge/, sites/
  */
 
 import type { PermissionMode } from '../agent/mode-manager.ts';

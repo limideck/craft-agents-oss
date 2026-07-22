@@ -132,7 +132,7 @@ export default function VoiceSettingsPage() {
     <div className="flex flex-col h-full">
       <PanelHeader
         title={t('settings.voice.title')}
-        actions={<HeaderMenu route={routes.view.settings('voice')} helpFeature="voice" />}
+        actions={<HeaderMenu route={routes.view.settings('voice')} />}
       />
       <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl px-6 py-6 space-y-8">

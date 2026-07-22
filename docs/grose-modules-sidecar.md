@@ -1,18 +1,18 @@
 # Grose Modules Sidecar (Go)
 
-Design boundary for local workbench modules (**RSS**, **Sites**, Knowledge and Workflows) as a single Go sidecar process, exposed to Grose Agents via loopback HTTP (UI) and MCP (AI).
+Design boundary for local workbench modules (**RSS**, **Sites**, and Workflows) as a single Go sidecar process, exposed to Grose Agents via loopback HTTP (UI) and MCP (AI). **Knowledge is planned but not yet implemented** — there is no `/api/knowledge`, no `kb_*` MCP tools, and `domain-knowledge` is ping-only.
 
-Status: **In progress** — RSS sidecar + UI live; Sites module in progress; SQLITE busy hardening + A5 packaging landed.
+Status: **Live** — RSS, Sites, and Workflows CRUD are fully implemented in the sidecar; Workflows `run` is a stub (real execution is delegated to the Grose server-side executor). SQLITE busy hardening + packaging landed.
 
 Related:
 
-- [Workbench architecture](./workbench-architecture.md) — shell, `domain-*` stubs, data path convention
+- [Workbench architecture](./workbench-architecture.md) — shell, `domain-*` handlers, data path convention
 - [Workspace storage](./workspace-storage.md) — **rootPath-only** hard rule
 - [Prefer-builtin agent routing](./grose-modules-agent-routing.md) — Module Registry + `<grose_modules>` context
-- [Workbench RSS UI mock](./workbench-rss-ui.md) — panel contract the backend must feed
+- [Workbench RSS UI](./workbench-rss-ui.md) — live panel contract fed by the backend
 - [Workbench Sites UI](./workbench-sites-ui.md) — Chat \| Files \| Preview, `/api/sites`, `sites_*`
 - [Workbench Workflows contract](./workbench-workflows-contract.md) — frozen graph model, node configs, `/api/workflows`, MCP `wf_*`
-- [Workbench Workflows UI mock](./workbench-workflows-ui.md) — editor shell (mock until RPC)
+- [Workbench Workflows UI](./workbench-workflows-ui.md) — Flows editor shell
 - [OpenConnector sidecar](./open-connector.md) — lifecycle / health / MCP source pattern to mirror
 - Reference implementations (exploration only): `test/yarr`, `test/feedoverflow`, `test/grose-agents-oss-old/examples/apps/rss`, `test/kandev` Design, `test/Doable` editor
 
@@ -143,7 +143,7 @@ Multi-workspace: single Go process; every API/MCP call carries `X-Grose-Workspac
 
 Consumed only by `domain-*` RPC handlers (and by MCP handlers inside Go via loopback self-calls, as in feedoverflow).
 
-Sketch for RSS v1 (names freeze at implementation time; shape matches Workbench mock):
+Sketch for RSS v1 (names freeze at implementation time; shape matches the Workbench RSS panels):
 
 | Method | Path | Purpose |
 |--------|------|---------|
@@ -239,7 +239,7 @@ Optional bundled skill (later): `skills/rss-reader` that documents tools + when 
 | `packages/server-core` | Keep mounting `registerRssRpcHandlers`; ensure sidecar URL reachable from both hosts |
 | `apps/electron/src/main/grose-modules-sidecar.ts` | New lifecycle module (clone OpenConnector patterns) |
 | Headless server entry | Same start/attach helper |
-| `apps/electron/.../workbench/modules/rss/` | Swap mock atoms for RPC-backed queries; keep panel IDs / layout preset |
+| `apps/electron/.../workbench/modules/rss/` | RPC-backed queries live; panel IDs / layout preset stable |
 | `electron-builder.yml` | `extraResources` for per-arch binaries |
 | CI | Cross-compile `darwin-arm64`, `darwin-x64`, `linux-x64`, `win-x64` |
 

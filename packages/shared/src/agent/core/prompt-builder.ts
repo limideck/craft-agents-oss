@@ -12,7 +12,7 @@
  * - Format user preferences for prompt injection
  */
 
-import { isLocalMcpEnabled } from '../../workspaces/storage.ts';
+import { getWorkspaceMydataPath, isLocalMcpEnabled } from '../../workspaces/storage.ts';
 import { formatPreferencesForPrompt } from '../../config/preferences.ts';
 import { formatSessionState } from '../mode-manager.ts';
 import { getDateTimeContext, getWorkingDirectoryContext } from '../../prompts/system.ts';
@@ -116,16 +116,19 @@ export class PromptBuilder {
     // Date/time first (kept on the user tail to preserve prompt caching)
     parts.push(getDateTimeContext());
 
-    // Session state (permission mode, plans folder path, data folder path).
+    // Session state (permission mode, plans/data/mydata paths).
     // Only this volatile builder may consume the one-shot mode-change signal.
     const sessionId = this.config.session?.id ?? `temp-${Date.now()}`;
     const plansFolderPath = options.plansFolderPath ??
       getSessionPlansPath(this.workspaceRootPath, sessionId);
     const dataFolderPath = options.dataFolderPath ??
       getSessionDataPath(this.workspaceRootPath, sessionId);
+    const mydataFolderPath = options.mydataFolderPath ??
+      (this.workspaceRootPath ? getWorkspaceMydataPath(this.workspaceRootPath) : undefined);
     parts.push(formatSessionState(sessionId, {
       plansFolderPath,
       dataFolderPath,
+      mydataFolderPath,
       consumeModeChangeUserSignal: true,
     }));
 

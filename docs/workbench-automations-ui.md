@@ -13,14 +13,13 @@ See also: [workbench-architecture.md](./workbench-architecture.md), [workbench-w
 
 ActivityBar shows a single **Automations** icon (Zap). There is no separate Workflows ActivityBar item.
 
-**Scheduling authority (Phase 1 copy):** everyday cron → **Rules → SchedulerTick**. Flow `schedule` / `webhook` nodes remain Deploy stub metadata; the editor shows a short “coming soon / use Rules” hint.
+**Scheduling authority:** both tracks now share one cron implementation (`croner`, timezone-aware) and one trigger abstraction (`@grose-agent/shared/automations` `Trigger` / `ScheduleTrigger` / `WebhookTrigger`). Flows fire on their `schedule`/`webhook` nodes via the Electron main `workflow-trigger-scheduler` (deployed-only, honors `config.timezone`); Rules fire on `SchedulerTick` matchers (`cron` + `timezone`). The two runtime paths remain separate by design — unification covers the trigger model and cron semantics, not the execution engine.
 
 ## How to open
 
-1. Enable workbench: `GROSE_FEATURE_WORKBENCH_SHELL=1` or `localStorage` flag (see architecture doc).
-2. ActivityBar → **Automations**.
-3. Default surface is **Rules** (single-column `automation-detail`).
-4. Switch segment to **Flows** → dock applies `workflow-edit` (canvas + logs + right).
+1. ActivityBar → **Automations**.
+2. Default surface is **Rules** (single-column `automation-detail`).
+3. Switch segment to **Flows** → dock applies `workflow-edit` (canvas + logs + right).
 
 Classic routes (`automations`, `automations/scheduled/...`, `automations/automation/{id}`) deep-link into Automations + Rules + selection/filter.
 
@@ -50,4 +49,4 @@ Storage stays split in Phase 1 (`automations.json` vs workflow SQLite).
 
 **Out of scope:** storage merge, cron/webhook runners, `run_workflow` action, rewriting `AutomationInfoPage` / canvas, changing classic AppShell Automations.
 
-**Phase 2+ (planned):** one scheduling authority when Flow Deploy arms runners; Rules action `run_workflow`; shared Runs history; agent/MCP defaults to Rule unless multi-step.
+**Phase 2+ (planned):** Rules action `run_workflow`; shared Runs history; agent/MCP defaults to Rule unless multi-step. (Trigger abstraction + cron consistency already done — see `dev-plan.md` 阶段 3.)

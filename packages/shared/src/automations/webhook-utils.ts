@@ -73,7 +73,34 @@ export function createPromptHistoryEntry(opts: {
     ...(opts.sessionId ? { sessionId: opts.sessionId } : {}),
     ...(opts.prompt ? { prompt: opts.prompt.slice(0, HISTORY_FIELD_MAX_LENGTH) } : {}),
     ...(opts.error ? { error: opts.error.slice(0, HISTORY_FIELD_MAX_LENGTH) } : {}),
-  };
+  }
+}
+
+/**
+ * Create a workflow (Flow) run history entry for appending to the same history
+ * JSONL file used by Automations Rules. The `kind: 'flow'` discriminator lets
+ * renderers and compaction tell Rule entries (`kind` undefined / `'rule'`) apart
+ * while sharing the same `id`-keyed store. `id` is the workflow id so a
+ * workflow's runs are grouped together.
+ */
+export function createFlowHistoryEntry(opts: {
+  workflowId: string;
+  runId: string;
+  ok: boolean;
+  summary?: string;
+  stepCount?: number;
+  error?: string;
+}): Record<string, unknown> {
+  return {
+    kind: 'flow',
+    id: opts.workflowId,
+    runId: opts.runId,
+    ts: Date.now(),
+    ok: opts.ok,
+    ...(opts.summary ? { summary: opts.summary.slice(0, HISTORY_FIELD_MAX_LENGTH) } : {}),
+    ...(typeof opts.stepCount === 'number' ? { stepCount: opts.stepCount } : {}),
+    ...(opts.error ? { error: opts.error.slice(0, HISTORY_FIELD_MAX_LENGTH) } : {}),
+  }
 }
 
 /**

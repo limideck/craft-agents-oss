@@ -1,11 +1,12 @@
 import * as React from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
-import { Webhook } from 'lucide-react'
+import { Plus, Webhook } from 'lucide-react'
 import { AutomationsListPanel } from '@/components/automations/AutomationsListPanel'
 import type { AutomationFilterKind } from '@/components/automations/types'
 import { EntityListEmptyScreen } from '@/components/ui/entity-list-empty'
 import { EditPopover, getEditConfig } from '@/components/ui/EditPopover'
+import { Button } from '@/components/ui/button'
 import { automationsAtom } from '@/atoms/automations'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { cn } from '@/lib/utils'
@@ -171,6 +172,7 @@ export function AutomationsActivityView() {
   const dockApi = useAtomValue(dockviewApiAtom)
   const automations = useAtomValue(automationsAtom)
   const { activeWorkspaceId } = useAppShellContext()
+  const activeWorkspace = useActiveWorkspace()
 
   // Keep dock layout aligned with surface (Rules detail vs workflow-edit).
   // Defer so WorkbenchShell's module-switch applyLayout does not overwrite us.
@@ -189,9 +191,29 @@ export function AutomationsActivityView() {
     )
   }
 
+  const newRuleAction =
+    surface === 'rules' && activeWorkspace?.rootPath ? (
+      <EditPopover
+        align="end"
+        trigger={
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            title={t('automations.addAutomation')}
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </Button>
+        }
+        {...getEditConfig('automation-config', activeWorkspace.rootPath)}
+      />
+    ) : undefined
+
   return (
     <ActivityShell
       title={t('sidebar.automations')}
+      actions={newRuleAction}
       toolbar={<SurfaceSegment surface={surface} onChange={setSurface} />}
       scroll={false}
       bodyClassName="overflow-hidden"

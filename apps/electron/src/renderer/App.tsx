@@ -10,7 +10,7 @@ import { defaultSessionOptions, mergeSessionOptions } from './hooks/useSessionOp
 import { generateMessageId } from '../shared/types'
 import { useEventProcessor } from './event-processor'
 import type { AgentEvent, Effect } from './event-processor'
-import { WorkbenchShell, activeModuleIdAtom } from '@/workbench'
+import { WorkbenchShell, activeModuleIdAtom, openFileEditor } from '@/workbench'
 import type { AppShellContextType } from '@/context/AppShellContext'
 import { OnboardingWizard, ReauthScreen } from '@/components/onboarding'
 import { WorkspacePicker } from '@/components/workspace'
@@ -326,12 +326,11 @@ export default function App() {
     return workspace?.slug ?? windowWorkspaceId
   }, [windowWorkspaceId, workspaces])
 
-  // Get initial sessionId and focused mode from URL params (for "Open in New Window" feature)
-  const { initialSessionId, isFocusedMode } = useMemo(() => {
+  // Get initial sessionId from URL params (for "Open in New Window" feature)
+  const { initialSessionId } = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
     return {
       initialSessionId: params.get('sessionId'),
-      isFocusedMode: params.get('focused') === 'true',
     }
   }, [])
 
@@ -354,7 +353,6 @@ export default function App() {
     return llmConnections.find(c => c.slug === defaultLlmConnectionSlug) ?? null
   }, [llmConnections, defaultLlmConnectionSlug])
 
-  const [menuNewChatTrigger, setMenuNewChatTrigger] = useState(0)
   // Permission requests per session (queue to handle multiple concurrent requests)
   const [pendingPermissions, setPendingPermissions] = useState<Map<string, PermissionRequest[]>>(new Map())
   // Credential requests per session (queue to handle multiple concurrent requests)
@@ -1145,7 +1143,7 @@ export default function App() {
   // Listen for menu bar events
   useEffect(() => {
     const unsubNewChat = window.electronAPI.onMenuNewChat(() => {
-      setMenuNewChatTrigger(n => n + 1)
+      if (windowWorkspaceId) void handleCreateSession(windowWorkspaceId)
     })
     const unsubSettings = window.electronAPI.onMenuOpenSettings(() => {
       handleOpenSettings()
@@ -1725,7 +1723,18 @@ export default function App() {
     })
   }, [])
 
-  const handleOpenFile = linkInterceptor.handleOpenFile
+  // In Agents workbench, chat file links open Preview and focus the Files panel.
+  // Overlay preview remains for other modules / non-Agents contexts.
+  const handleOpenFile = useCallback(
+    (path: string) => {
+      if (store.get(activeModuleIdAtom) === 'agents') {
+        openFileEditor({ path, store, revealInFiles: true })
+        return
+      }
+      void linkInterceptor.handleOpenFile(path)
+    },
+    [store, linkInterceptor.handleOpenFile],
+  )
   const handleOpenUrl = linkInterceptor.handleOpenUrl
 
   const handleOpenSettings = useCallback(() => {
@@ -2091,11 +2100,7 @@ export default function App() {
                   onRetry={() => { void loadSessionsFromServer() }}
                 />
               ) : (
-                <WorkbenchShell
-                  contextValue={appShellContextValue}
-                  menuNewChatTrigger={menuNewChatTrigger}
-                  isFocusedMode={isFocusedMode}
-                />
+                <WorkbenchShell contextValue={appShellContextValue} />
               )}
             </div>
             <ResetConfirmationDialog

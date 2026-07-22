@@ -350,22 +350,26 @@ grose-cli --validate-server --url ws://127.0.0.1:9100 --token <token>
 grose-agent/
 ├── apps/
 │   ├── cli/                   # Terminal client (CLI)
-│   └── electron/              # Desktop GUI (primary)
-│       └── src/
-│           ├── main/          # Electron main process
-│           ├── preload/       # Context bridge
-│           └── renderer/      # React UI (Vite + shadcn)
-└── packages/
-    ├── core/                  # Shared types
-    └── shared/                # Business logic
-        └── src/
-            ├── agent/         # GroseAgent, permissions
-            ├── auth/          # OAuth, tokens
-            ├── config/        # Storage, preferences, themes
-            ├── credentials/   # AES-256-GCM encrypted storage
-            ├── sessions/      # Session persistence
-            ├── sources/       # MCP, API, local sources
-            └── statuses/      # Dynamic status system
+│   ├── electron/              # Desktop GUI (primary)
+│   │   └── src/
+│   │       ├── main/          # Electron main process
+│   │       ├── preload/       # Context bridge
+│   │       └── renderer/      # React UI (Vite + shadcn)
+│   │           └── workbench/ # Workbench shell (sole UI): ActivityBar + dockview + module registry
+│   └── webui/                 # Web UI entry
+├── packages/
+│   ├── core/                  # Shared types
+│   ├── shared/                # Business logic (agent, auth, config, sessions, sources, ...)
+│   ├── server-core/           # Headless server infra: RPC transport, handlers, SessionManager
+│   ├── server/                # Standalone headless Grose Agent server
+│   ├── domain-rss/            # RSS domain RPC proxy → grose-modules sidecar
+│   ├── domain-sites/          # Sites domain RPC proxy
+│   ├── domain-workflows/      # Workflows domain RPC proxy
+│   ├── domain-knowledge/      # Knowledge domain (skeleton, ping-only)
+│   ├── ui/                    # Shared React UI components
+│   └── ...                    # messaging-gateway, open-connector-client, pi-agent-server, ...
+└── services/
+    └── grose-modules/         # Go sidecar (RSS / Sites / Workflows CRUD + MCP tools)
 ```
 
 ## Development

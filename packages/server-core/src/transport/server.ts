@@ -187,6 +187,24 @@ export class WsRpcServer implements RpcServer {
     this.handlers.set(channel, handler)
   }
 
+  /**
+   * Invoke a registered handler in-process (no network round-trip). Useful for
+   * server-side callers (e.g. the workflow trigger scheduler) that need to fire
+   * an RPC handler directly. A synthetic root context is supplied.
+   */
+  async invoke(channel: string, ...args: any[]): Promise<any> {
+    const handler = this.handlers.get(channel)
+    if (!handler) {
+      throw new Error(`No handler registered for channel: ${channel}`)
+    }
+    const ctx: RequestContext = {
+      clientId: 'server',
+      workspaceId: null,
+      webContentsId: null,
+    }
+    return handler(ctx, ...args)
+  }
+
   push(channel: string, target: PushTarget, ...args: any[]): void {
     const timestamp = Date.now()
 

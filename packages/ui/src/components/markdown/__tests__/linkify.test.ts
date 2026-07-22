@@ -262,6 +262,12 @@ describe('isFilePathTarget', () => {
     expect(isFilePathTarget('apps/electron/resources/docs/browser-tools.md')).toBe(true)
   })
 
+  it('accepts workspace mydata deliverable paths from AI chat tables', () => {
+    expect(isFilePathTarget('mydata/jobs-profile/renders/final.mp4')).toBe(true)
+    expect(isFilePathTarget('mydata/jobs-profile/renders/final.contact.jpg')).toBe(true)
+    expect(isFilePathTarget('mydata/jobs-profile/reports/render-report.final.json')).toBe(true)
+  })
+
   it('rejects web URLs', () => {
     expect(isFilePathTarget('https://example.com/image.jpg')).toBe(false)
   })
@@ -272,5 +278,10 @@ describe('isFilePathTarget', () => {
 
   it('rejects non-file strings', () => {
     expect(isFilePathTarget('not a link at all')).toBe(false)
+  })
+
+  it('rejects ordinary inline code that is not a path', () => {
+    expect(isFilePathTarget('npm install')).toBe(false)
+    expect(isFilePathTarget('const x = 1')).toBe(false)
   })
 })

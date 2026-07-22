@@ -669,6 +669,8 @@ export function useWorkspaceFileTree(rootPath: string | null) {
     setLoading(true)
     setError(null)
     try {
+      // mkdir -p so listing works when mydata (or another root) was just ensured/created.
+      await window.electronAPI.createServerDirectory(rootPath)
       const listing = await window.electronAPI.listServerEntries(rootPath)
       const children = mapEntries(listing.entries ?? [])
       setRoot({

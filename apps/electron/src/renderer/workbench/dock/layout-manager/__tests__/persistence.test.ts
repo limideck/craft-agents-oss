@@ -46,7 +46,7 @@ describe('layoutMatchesModule', () => {
 
   it('accepts rss layouts', () => {
     expect(
-      layoutMatchesModule(fakeLayout({ 'rss-feeds': 'rss-feeds' }), 'rss'),
+      layoutMatchesModule(fakeLayout({ 'rss-article-list': 'rss-article-list' }), 'rss'),
     ).toBe(true)
   })
 

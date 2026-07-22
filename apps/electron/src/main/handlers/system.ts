@@ -1,7 +1,9 @@
 import { resolve } from 'path'
 import { join } from 'path'
 import { homedir } from 'os'
-import { execSync } from 'child_process'
+import { execSync, execFile } from 'child_process'
+import { promisify } from 'util'
+import { readFile } from 'fs'
 import { RPC_CHANNELS } from '@grose-agent/shared/protocol'
 import { getGitBashPath, setGitBashPath, clearGitBashPath } from '@grose-agent/shared/config'
 import { classifyExternalUrl, formatBlockedUrlError } from '@grose-agent/shared/utils/url-safety'
@@ -25,9 +27,13 @@ export const CORE_HANDLED_CHANNELS = [
   RPC_CHANNELS.shell.OPEN_URL,
   RPC_CHANNELS.shell.OPEN_FILE,
   RPC_CHANNELS.shell.SHOW_IN_FOLDER,
+  RPC_CHANNELS.shell.RUN_COMMAND,
   RPC_CHANNELS.releaseNotes.GET,
   RPC_CHANNELS.releaseNotes.GET_LATEST_VERSION,
   RPC_CHANNELS.git.GET_BRANCH,
+  RPC_CHANNELS.git.GET_STATUS,
+  RPC_CHANNELS.git.GET_DIFF,
+  RPC_CHANNELS.git.GET_FILE_CONTENTS,
   RPC_CHANNELS.gitbash.CHECK,
   RPC_CHANNELS.gitbash.BROWSE,
   RPC_CHANNELS.gitbash.SET_PATH,
@@ -118,6 +124,66 @@ export function registerSystemCoreHandlers(server: RpcServer, deps: HandlerDeps)
       return null
     }
   })
+
+  // List working-tree changes for a directory (git status --porcelain).
+  // Returns [] when not a git repo or git is unavailable.
+  server.handle(RPC_CHANNELS.git.GET_STATUS, async (_ctx, dirPath: string) => {
+    try {
+      const out = await promisify(execFile)('git', ['status', '--porcelain', '-uall'], {
+        cwd: dirPath,
+        encoding: 'utf-8',
+        timeout: 8000,
+        maxBuffer: 8 * 1024 * 1024,
+      })
+      return out.stdout
+        .split('\n')
+        .filter((line) => line.trim().length > 0)
+        .map((line) => {
+          const status = line.slice(0, 2)
+          const path = line.slice(3)
+          return { status, path }
+        })
+    } catch {
+      return []
+    }
+  })
+
+  // Unified diff for a single file (or the whole tree when path is empty).
+  server.handle(RPC_CHANNELS.git.GET_DIFF, async (_ctx, dirPath: string, filePath: string) => {
+    try {
+      const args = filePath ? ['diff', '--', filePath] : ['diff']
+      const out = await promisify(execFile)('git', args, {
+        cwd: dirPath,
+        encoding: 'utf-8',
+        timeout: 8000,
+        maxBuffer: 16 * 1024 * 1024,
+      })
+      return out.stdout
+    } catch {
+      return ''
+    }
+  })
+
+  // Original (HEAD) and modified (working tree) contents of a single file,
+  // for side-by-side diff rendering. Returns nulls when unavailable.
+  server.handle(
+    RPC_CHANNELS.git.GET_FILE_CONTENTS,
+    async (_ctx, dirPath: string, filePath: string) => {
+      try {
+        const original = await promisify(execFile)('git', ['show', `HEAD:${filePath}`], {
+          cwd: dirPath,
+          encoding: 'utf-8',
+          timeout: 8000,
+          maxBuffer: 16 * 1024 * 1024,
+        }).then((r) => r.stdout)
+        const absPath = resolve(dirPath, filePath)
+        const modified = await promisify(readFile)(absPath, 'utf-8')
+        return { original, modified }
+      } catch {
+        return { original: null, modified: null }
+      }
+    },
+  )
 
   // Git Bash detection and configuration (Windows only)
   server.handle(RPC_CHANNELS.gitbash.CHECK, async () => {
@@ -260,6 +326,25 @@ export function registerSystemCoreHandlers(server: RpcServer, deps: HandlerDeps)
       const message = error instanceof Error ? error.message : 'Unknown error'
       deps.platform.logger.error('showInFolder error:', message)
       throw new Error(`Failed to show in folder: ${message}`)
+    }
+  })
+
+  // Run a shell command in a directory and return combined stdout/stderr.
+  // Used by the workbench Terminal panel (non-interactive run console).
+  server.handle(RPC_CHANNELS.shell.RUN_COMMAND, async (_ctx, cwd: string, command: string) => {
+    try {
+      const shell = process.platform === 'win32' ? 'cmd.exe' : 'bash'
+      const shellArg = process.platform === 'win32' ? ['/c', command] : ['-c', command]
+      const result = await promisify(execFile)(shell, shellArg, {
+        cwd,
+        encoding: 'utf-8',
+        timeout: 60_000,
+        maxBuffer: 16 * 1024 * 1024,
+      })
+      return { ok: true, output: `${result.stdout}${result.stderr}`.trimEnd() }
+    } catch (error) {
+      const stderr = error instanceof Error ? error.message : 'Command failed'
+      return { ok: false, output: stderr }
     }
   })
 }

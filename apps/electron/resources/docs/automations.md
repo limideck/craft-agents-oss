@@ -112,6 +112,8 @@ Send a prompt to Grose Agent (creates a new session for scheduled prompts).
 | `llmConnection` | string | Workspace default | LLM connection slug (configured in AI Settings) |
 | `model` | string | Workspace default | Model ID for the created session |
 
+**Working directory & artifacts:** Scheduled prompt sessions use the workspace default `workingDirectory`, which for new workspaces is `{rootPath}/mydata/`. Relative paths in the prompt (e.g. `x-bookmarks/last-sync.json`) resolve against that cwd, so incremental sync state and other deliverables persist across runs. Put shared artifacts under `mydata/`, not under `sessions/{id}/data/`.
+
 **Features:**
 - Use `@mentions` to reference sources or skills
 - Environment variables are expanded (e.g., `$GROSE_LABEL`)

@@ -4,23 +4,8 @@ Grose’s personal workbench shell: **ActivityBar + dockview layout + Module reg
 
 `frontend/` is a UX mock only — not merged into Electron. Layout engine patterns come from kandev (dockview + portals); session/chat data stays Grose.
 
-## Enable the shell (dual-shell)
-
-Default is the classic `AppShell`. Enable the new `WorkbenchShell` with either:
-
-```bash
-# Env (Electron / Vite process)
-GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
-```
-
-Or in DevTools:
-
-```js
-localStorage.setItem('grose-feature-workbench-shell', '1')
-location.reload()
-```
-
-Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShell` / `isWorkbenchShellEnabled()`.
+> **Workbench is the sole UI shell.** The legacy `AppShell` was removed in the
+> `remove-app-shell` refactor; there is no dual-shell toggle or feature flag.
 
 ## Modules (this sprint)
 
@@ -32,7 +17,7 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 | Automations | Rules + Flows unified entry — [workbench-automations-ui.md](./workbench-automations-ui.md); Flows canvas — [workbench-workflows-ui.md](./workbench-workflows-ui.md); contract — [workbench-workflows-contract.md](./workbench-workflows-contract.md) |
 | Connectors | Open Connector console (Overview/Providers/Actions/Runs/Access) |
 | Settings | ActivityBar footer |
-| RSS | UI mock (no RPC) — [workbench-rss-ui.md](./workbench-rss-ui.md) |
+| RSS | Live — feeds/articles via `grose-modules` Go sidecar — [workbench-rss-ui.md](./workbench-rss-ui.md) |
 | Tables | Browse/upload/preview UI + plydb sidecar — [workbench-tables-ui.md](./workbench-tables-ui.md), [grose-tables-sidecar.md](./grose-tables-sidecar.md) |
 | Knowledge | Placeholder only |
 | Sites | Agent site IDE (Chat \| Files \| Preview) — [workbench-sites-ui.md](./workbench-sites-ui.md) |
@@ -46,10 +31,10 @@ Disable: set to `0` / remove the key. Shared helper: `FEATURE_FLAGS.workbenchShe
 bun run setup:open-connector
 
 # Or attach to an already-running instance
-GROSE_OPENCONNECTOR_URL=http://127.0.0.1:PORT GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+GROSE_OPENCONNECTOR_URL=http://127.0.0.1:PORT bun run electron:dev
 ```
 
-With the workbench flag on, open the **Connectors** ActivityBar icon. Sidecar start failures are non-fatal; when ready, workspaces get an `open-connector` MCP source automatically.
+Open the **Connectors** ActivityBar icon. Sidecar start failures are non-fatal; when ready, workspaces get an `open-connector` MCP source automatically.
 
 See also: [docs/open-connector.md](./open-connector.md).
 
@@ -90,7 +75,7 @@ Domain packages (backend skeletons):
 - `packages/domain-workflows`
 - `packages/domain-sites`
 
-Mounted from `packages/server-core` via `registerDomainStubHandlers` (`rss:ping` / `knowledge:ping` / `workflows:ping` / `sites:*`).
+Mounted from `packages/server-core` via `registerDomainHandlers` (`rss:*` / `sites:*` / `workflows:*` real; `knowledge:ping` only — Knowledge is still a skeleton).
 
 Phase 3+ backend direction: a single Go sidecar (`grose-modules`) with loopback HTTP for UI RPC proxies and MCP for agents — see [grose-modules-sidecar.md](./grose-modules-sidecar.md). Agent prefer-builtin routing (Module Registry + `<grose_modules>` context) — see [grose-modules-agent-routing.md](./grose-modules-agent-routing.md).
 
@@ -150,7 +135,7 @@ URL / deep link restores focus only; it does **not** serialize the full dock tre
 | `chat` | `chat` | Center — existing `ChatPage` |
 | `files` | `files` | Right — file tree (lazy expand, create/rename/delete, drag-move) |
 | `file-editor` | `file-editor` | Center preview slot (`preview:file-editor`) — click file to open; double-click pins |
-| `changes` / `terminal` | placeholders | Phase 3+ |
+| `changes` / `terminal` | placeholders | P2 — shared Changes + Terminal panel (not yet implemented) |
 
 ## Portal rule
 

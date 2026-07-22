@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { toast } from 'sonner'
-import { MessageSquare, Play, Rocket, Search, SlidersHorizontal, Wrench } from 'lucide-react'
+import { History, MessageSquare, Play, Rocket, Search, SlidersHorizontal, Wrench } from 'lucide-react'
 import { PanelRoot, PanelBody, PanelHeaderBarSplit } from '../../../dock/panel-primitives'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -37,7 +37,8 @@ import {
   workflowRunStepsAtom,
   workflowsAtom,
 } from '../store'
-import { runWorkflowViaRpc, scheduleWorkflowPersist, flushPendingWorkflowPersists, deployWorkflowViaRpc } from '../use-workflow-data'
+import { runWorkflowViaRpc, scheduleWorkflowPersist, flushPendingWorkflowPersists, deployWorkflowViaRpc, getWorkflowHistoryViaRpc, toFlowRunEntries, type FlowRunEntry } from '../use-workflow-data'
+import { FlowRunsTimeline } from '../components/flow-runs-timeline'
 import { normalizeRunSteps } from '../utils/synthesize-run-steps'
 import { getNodeById, getWorkflowById } from '../utils/lookup'
 
@@ -45,6 +46,7 @@ const TABS: { id: WorkflowRightTab; label: string; icon: typeof MessageSquare }[
   { id: 'chat', label: 'Chat', icon: MessageSquare },
   { id: 'toolbar', label: 'Toolbar', icon: Wrench },
   { id: 'editor', label: 'Editor', icon: SlidersHorizontal },
+  { id: 'runs', label: 'Runs', icon: History },
 ]
 
 const CATEGORY_ITEMS: Record<BlockCategory, BlockConfig[]> = {
@@ -73,6 +75,32 @@ export function RightPanel() {
 
   const workflow = getWorkflowById(workflows, selectedWorkflowId)
   const node = getNodeById(workflow, selectedNodeId)
+
+  const [runHistory, setRunHistory] = useState<FlowRunEntry[]>([])
+  const [runHistoryLoading, setRunHistoryLoading] = useState(false)
+
+  // Load shared run history for the selected workflow when the Runs tab is active.
+  useEffect(() => {
+    if (tab !== 'runs' || !activeWorkspaceId || !selectedWorkflowId) {
+      return
+    }
+    let cancelled = false
+    setRunHistoryLoading(true)
+    void getWorkflowHistoryViaRpc(activeWorkspaceId, selectedWorkflowId, 20)
+      .then((rows) => {
+        if (cancelled) return
+        setRunHistory(toFlowRunEntries(rows))
+      })
+      .catch(() => {
+        if (!cancelled) setRunHistory([])
+      })
+      .finally(() => {
+        if (!cancelled) setRunHistoryLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [tab, activeWorkspaceId, selectedWorkflowId])
 
   const onDeploy = async () => {
     if (!activeWorkspaceId || !selectedWorkflowId || !workflow) {
@@ -262,6 +290,12 @@ export function RightPanel() {
               scheduleWorkflowPersist(selectedWorkflowId)
             }}
           />
+        </div>
+        <div
+          className={cn('absolute inset-0 overflow-auto', tab !== 'runs' && 'hidden')}
+          role="tabpanel"
+        >
+          <RunsTab entries={runHistory} loading={runHistoryLoading} />
         </div>
       </PanelBody>
     </PanelRoot>
@@ -458,6 +492,27 @@ function EditorTab({
       <p className="text-[11px] text-muted-foreground pt-1">
         Changes save to grose-modules via <code className="text-[10px]">workflows:update</code>.
       </p>
+    </div>
+  )
+}
+
+function RunsTab({
+  entries,
+  loading,
+}: {
+  entries: FlowRunEntry[]
+  loading?: boolean
+}) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="sticky top-0 z-10 border-b border-border/80 bg-card/95 px-3 py-2 backdrop-blur-sm">
+        <p className="text-[11px] text-muted-foreground">
+          Shared run history. Manual runs and auto-fired triggers all appear here.
+        </p>
+      </div>
+      <div className="flex-1">
+        <FlowRunsTimeline entries={entries} loading={loading} />
+      </div>
     </div>
   )
 }

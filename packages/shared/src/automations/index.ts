@@ -102,6 +102,16 @@ export { resolveAutomationsConfigPath, generateShortId } from './resolve-config-
 // Cron matching
 export { matchesCron } from './cron-matcher.ts';
 
+// Canonical trigger abstraction (shared by Rules + Flows tracks)
+export type {
+  Trigger,
+  TriggerKind,
+  ScheduleTrigger,
+  WebhookTrigger,
+  HttpMethod,
+} from './trigger-types.ts';
+export { toScheduleTrigger } from './trigger-types.ts';
+
 // Event Bus
 export {
   WorkspaceEventBus,

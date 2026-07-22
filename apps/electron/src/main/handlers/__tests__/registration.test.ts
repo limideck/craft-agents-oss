@@ -51,6 +51,7 @@ function createMockServer(): RpcServer {
     async invokeClient() {},
     hasClientCapability() { return false },
     findClientsWithCapability() { return [] },
+    async invoke() { return undefined },
   }
 }
 
@@ -127,7 +128,7 @@ async function getExpectedChannels(): Promise<Set<string>> {
     import('@grose-agent/server-core/handlers/rpc/transfer'),
     import('@grose-agent/server-core/handlers/rpc/tasks'),
     import('@grose-agent/server-core/handlers/rpc/projects'),
-    import('@grose-agent/server-core/handlers/rpc/domain-stubs'),
+    import('@grose-agent/server-core/handlers/rpc/domain-rpc'),
   ])
 
   // GUI handler channels (remain in electron)

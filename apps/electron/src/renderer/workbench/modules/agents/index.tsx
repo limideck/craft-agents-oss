@@ -1,13 +1,29 @@
 import { Bot } from 'lucide-react'
+import { useAppShellContext } from '@/context/AppShellContext'
 import type { WorkbenchModule } from '../../registry/types'
 import { SessionListPanel } from './panels/session-list-panel'
 import { FilesPanel } from './panels/files-panel'
 import { FileEditorPanel } from './panels/file-editor-panel'
-import { PlaceholderPanel } from './panels/placeholder-panel'
+import { ChangesPanel } from './panels/changes-panel'
+import { TerminalPanel } from './panels/terminal-panel'
 
 /** Session nav in ActivityBar side rail (classic Sessions upper half). */
 function AgentsActivityView() {
   return <SessionListPanel />
+}
+
+/** Changes panel scoped to the active Agents workspace. */
+function AgentsChangesPanel() {
+  const { workspaces, activeWorkspaceId } = useAppShellContext()
+  const rootPath = workspaces.find((w) => w.id === activeWorkspaceId)?.rootPath ?? null
+  return <ChangesPanel cwd={rootPath} />
+}
+
+/** Terminal panel scoped to the active Agents workspace. */
+function AgentsTerminalPanel() {
+  const { workspaces, activeWorkspaceId } = useAppShellContext()
+  const rootPath = workspaces.find((w) => w.id === activeWorkspaceId)?.rootPath ?? null
+  return <TerminalPanel cwd={rootPath} />
 }
 
 export const agentsModule: WorkbenchModule = {
@@ -59,7 +75,7 @@ export const agentsModule: WorkbenchModule = {
     },
     {
       component: 'file-editor',
-      title: 'Preview',
+      title: '预览',
       // Not a singleton — preview slot + optional pinned tabs share this component.
       render: (params) => <FileEditorPanel params={params} />,
     },
@@ -67,16 +83,13 @@ export const agentsModule: WorkbenchModule = {
       component: 'changes',
       title: 'Changes',
       singleton: true,
-      render: () => (
-        <PlaceholderPanel title="Changes" description="Git changes panel — Phase 3+." />
-      ),
+      render: () => <AgentsChangesPanel />,
     },
     {
       component: 'terminal',
       title: 'Terminal',
-      render: () => (
-        <PlaceholderPanel title="Terminal" description="Terminal panel — Phase 3+." />
-      ),
+      singleton: true,
+      render: () => <AgentsTerminalPanel />,
     },
   ],
 }

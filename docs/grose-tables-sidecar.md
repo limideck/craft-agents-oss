@@ -159,7 +159,7 @@ How to try:
 
 ```bash
 bun run setup:tables
-GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+bun run electron:dev
 ```
 
 ActivityBar → **Tables**. See also [workbench-tables-ui.md](./workbench-tables-ui.md).

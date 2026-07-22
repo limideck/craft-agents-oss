@@ -102,6 +102,7 @@ import type { PlatformServices } from '../runtime/platform'
 import { createElectronPlatform } from './platform'
 import type { HandlerDeps } from './handlers/handler-deps'
 import { bootstrapServer, releaseServerLock } from '@grose-agent/server-core/bootstrap'
+import { createWorkflowTriggerScheduler, type WorkflowTriggerScheduler } from './workflow-trigger-scheduler'
 import { createMessagingBootstrap, type MessagingBootstrapHandle } from '@grose-agent/messaging-gateway'
 import { getCredentialManager } from '@grose-agent/shared/credentials'
 import { initModelRefreshService, getModelRefreshService, setFetcherPlatform } from '@grose-agent/server-core/model-fetchers'
@@ -224,6 +225,7 @@ let browserPaneManager: BrowserPaneManager | null = null
 let oauthFlowStore: OAuthFlowStore | null = null
 let moduleSink: EventSink | null = null
 let moduleClientResolver: ((webContentsId: number) => string | undefined) | null = null
+let workflowTriggerScheduler: WorkflowTriggerScheduler | null = null
 
 // Messaging gateway: the bootstrap handle is created once sessionManager is
 // available (inside createHandlerDeps) and populated with the WS publisher
@@ -634,6 +636,26 @@ app.whenReady().then(async () => {
         mainLog.info(`[server-mode] Enabled — binding ${rpcHost}:${rpcPort}${tls ? ' (TLS)' : ''}`)
       }
 
+      // Workflow trigger scheduler (schedule cron + webhook auto-firing).
+      // Created before bootstrap so its webhook handler can be mounted on the
+      // RPC server's HTTP surface; started after the RPC server is live.
+      const webhookHttpHandler = (
+        req: import('node:http').IncomingMessage,
+        res: import('node:http').ServerResponse,
+      ): void => {
+        const result = workflowTriggerScheduler?.handleWebhook({
+          url: req.url,
+          method: req.method,
+        })
+        if (!result || !result.handled) {
+          res.statusCode = 404
+          res.end('not found')
+          return
+        }
+        res.statusCode = result.statusCode
+        res.end(result.body)
+      }
+
       // Bootstrap the WS RPC server via shared bootstrap function.
       const instance = await bootstrapServer<SessionManager, HandlerDeps>({
         serverToken,
@@ -643,6 +665,7 @@ app.whenReady().then(async () => {
         bundledAssetsRoot: __dirname,
         serverId: 'local',
         serverVersion: app.getVersion(),
+        httpHandler: webhookHttpHandler,
         platformFactory: () => platform,
         applyPlatformToSubsystems: (p) => {
           setFetcherPlatform(p)
@@ -743,6 +766,14 @@ app.whenReady().then(async () => {
       oauthFlowStore = instance.oauthFlowStore
       moduleSink = instance.wsServer.push.bind(instance.wsServer)
       moduleClientResolver = resolveClientId
+
+      // Start the workflow trigger scheduler (fires deployed schedule/webhook
+      // workflows via the in-process RPC server).
+      workflowTriggerScheduler = createWorkflowTriggerScheduler({
+        getRpcServer: () => instance.sessionManager.getRpcServer(),
+        getWorkspaces,
+      })
+      workflowTriggerScheduler.start()
 
       // -----------------------------------------------------------------------
       // Messaging Gateway — attach the WS publisher, init local workspaces,
@@ -1286,14 +1317,16 @@ function captureAndSaveWindowState(reason: 'before-quit' | 'pre-update'): number
   return windows.length
 }
 
-// Save window state and clean up resources before quitting
-app.on('before-quit', async (event) => {
-  // Avoid re-entry when we call app.exit()
-  if (isQuitting) return
-  isQuitting = true
+  // Save window state and clean up resources before quitting
+  app.on('before-quit', async (event) => {
+    // Avoid re-entry when we call app.exit()
+    if (isQuitting) return
+    isQuitting = true
 
-  // Ensure Cmd+Q/app quit bypasses layered window close interception (Cmd+W behavior).
-  windowManager?.setAppQuitting(true)
+    workflowTriggerScheduler?.stop()
+
+    // Ensure Cmd+Q/app quit bypasses layered window close interception (Cmd+W behavior).
+    windowManager?.setAppQuitting(true)
 
   if (windowManager) {
     const windows = windowManager.getWindowStates()

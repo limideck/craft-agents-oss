@@ -16,7 +16,14 @@ import { Textarea } from "../ui/textarea";
 import { getColumnVariant } from "../../lib/data-grid";
 import type { CellOpts, CellSelectOption } from "../../lib/data-grid-types";
 
-const CELL_VARIANTS: Array<{ value: CellOpts["variant"]; label: string }> = [
+type ColumnVariant = CellOpts["variant"];
+
+/** Form-local option type: RHF's field-array type mapping explodes on the
+ *  `icon?: React.FC` member of CellSelectOption, so drop it for the form shape
+ *  (options never set an icon via the form). */
+type ColumnFormOption = Omit<CellSelectOption, "icon">;
+
+const CELL_VARIANTS: Array<{ value: ColumnVariant; label: string }> = [
   { value: "short-text", label: "Text" },
   { value: "long-text", label: "Long Text" },
   { value: "number", label: "Number" },
@@ -32,8 +39,8 @@ const MAX_UNIQUE_VALUE_ATTEMPTS = 1000;
 
 export interface ColumnFormValues {
   label: string;
-  variant: CellOpts["variant"];
-  options: CellSelectOption[];
+  variant: ColumnVariant;
+  options: ColumnFormOption[];
   prompt: string;
 }
 
@@ -64,7 +71,7 @@ export const ColumnForm = React.forwardRef<ColumnFormRef, ColumnFormProps>(
       },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove } = useFieldArray<ColumnFormValues, "options", "id">({
       control: form.control,
       name: "options",
     });

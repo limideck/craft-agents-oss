@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { getWorkspaceMydataPath } from '@grose-agent/shared/workspaces'
 import { SessionManager } from './SessionManager.ts'
 
 // Regression test for grose-agents-oss#943:
@@ -23,13 +24,21 @@ import { SessionManager } from './SessionManager.ts'
 describe('executePromptAutomation waitForCompletion', () => {
   let tmpRoot: string
   let sm: SessionManager
+  let createSessionOptions: { workingDirectory?: string } | undefined
 
   beforeEach(() => {
     tmpRoot = mkdtempSync(join(tmpdir(), 'exec-prompt-automation-'))
     sm = new SessionManager()
+    createSessionOptions = undefined
     // Stub the collaborators executePromptAutomation touches. With no labels /
     // mentions / llmConnection in the input, everything else is skipped.
-    ;(sm as unknown as { createSession: unknown }).createSession = async () => ({ id: 'test-sess' })
+    ;(sm as unknown as { createSession: unknown }).createSession = async (
+      _workspaceId: string,
+      options?: { workingDirectory?: string },
+    ) => {
+      createSessionOptions = options
+      return { id: 'test-sess' }
+    }
     ;(sm as unknown as { sendEvent: unknown }).sendEvent = () => {}
   })
 
@@ -67,5 +76,18 @@ describe('executePromptAutomation waitForCompletion', () => {
         prompt: 'do something',
       }),
     ).rejects.toThrow('send failed')
+  })
+
+  it('passes workingDirectory = workspace mydata to createSession', async () => {
+    ;(sm as unknown as { sendMessage: unknown }).sendMessage = async () => {}
+
+    await sm.executePromptAutomation({
+      workspaceId: 'ws_test',
+      workspaceRootPath: tmpRoot,
+      prompt: 'sync bookmarks',
+      waitForCompletion: false,
+    })
+
+    expect(createSessionOptions?.workingDirectory).toBe(getWorkspaceMydataPath(tmpRoot))
   })
 })

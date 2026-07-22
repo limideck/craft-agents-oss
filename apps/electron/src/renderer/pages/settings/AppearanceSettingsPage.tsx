@@ -36,7 +36,7 @@ import { ColorPicker } from '@/components/ui/color-picker'
 import { workspaceAvatarColorsAtom } from '@/atoms/workspace-avatar-colors'
 import { kanbanColumnColorsAtom, kanbanColumnStatusAtom, kanbanLivePulseAtom } from '@/atoms/kanban'
 import { showBackgroundFinishedChipAtom } from '@/atoms/background-finished'
-import { rssPodcastPlayerModeAtom } from '@/workbench/modules/rss/store'
+import { rssPodcastPlayerModeAtom, type RssPodcastPlayerMode } from '@/workbench/modules/rss/store'
 import { KANBAN_COLUMNS } from '@/components/kanban/status-column'
 import { DEFAULT_KANBAN_COLUMN_COLORS } from '@/components/kanban/kanban-colors'
 import type { KanbanColumnId } from '@/components/kanban/types'
@@ -464,7 +464,7 @@ export default function AppearanceSettingsPage() {
                   >
                     <SettingsMenuSelect
                       value={rssPodcastPlayerMode}
-                      onValueChange={setRssPodcastPlayerMode}
+                      onValueChange={(v) => setRssPodcastPlayerMode(v as RssPodcastPlayerMode)}
                       options={[
                         { value: 'bottom', label: t("settings.appearance.podcastPlayerModeBottom") },
                         { value: 'floating', label: t("settings.appearance.podcastPlayerModeFloating") },

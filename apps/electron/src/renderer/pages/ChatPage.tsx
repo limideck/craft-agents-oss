@@ -23,6 +23,7 @@ import { useAppShellContext, usePendingPermission, usePendingCredential, useSess
 import { rendererPerf } from '@/lib/perf'
 import { navigate, routes } from '@/lib/navigate'
 import { coerceInputText } from '@/lib/input-text'
+import { resolveChatFilePath } from '@/lib/resolve-chat-file-path'
 import { deriveSessionMessagesLoadState, formatSessionLoadFailure } from '@/lib/session-load'
 import { ensureSessionMessagesLoadedAtom, forceSessionMessagesReloadAtom, loadedSessionsAtom, sessionMetaMapAtom } from '@/atoms/sessions'
 import { kanbanEditorTargetAtom } from '@/atoms/kanban'
@@ -32,9 +33,14 @@ import { resolveEffectiveConnectionSlug, isSessionConnectionUnavailable } from '
 
 export interface ChatPageProps {
   sessionId: string
+  /** Optional override for AppShellContext.rightSidebarButton (e.g. Agents tools reopen). */
+  rightSidebarButton?: React.ReactNode
 }
 
-const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
+const ChatPage = React.memo(function ChatPage({
+  sessionId,
+  rightSidebarButton: rightSidebarButtonProp,
+}: ChatPageProps) {
   const { t } = useTranslation()
   // Diagnostic: mark when component runs
   React.useLayoutEffect(() => {
@@ -72,7 +78,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onUnarchiveSession,
     onSessionStatusChange,
     onDeleteSession,
-    rightSidebarButton,
+    rightSidebarButton: rightSidebarButtonCtx,
     leadingAction,
     isCompactMode,
     sessionListSearchQuery,
@@ -81,6 +87,7 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
     onChatMatchInfoChange,
     isFocusedPanel,
   } = useAppShellContext()
+  const rightSidebarButton = rightSidebarButtonProp ?? rightSidebarButtonCtx
 
   // Use the unified session options hook for clean access
   const {
@@ -332,18 +339,10 @@ const ChatPage = React.memo(function ChatPage({ sessionId }: ChatPageProps) {
 
   const handleOpenFile = React.useCallback(
     async (path: string) => {
-      // Resolve bare relative paths against session working directory,
-      // or workspace root as a fallback when workingDirectory is not set.
-      const resolved = (() => {
-        if (path.startsWith('/') || path.startsWith('~/')) return path
-
-        const baseDir = workingDirectory || activeWorkspace?.rootPath
-        if (!baseDir) return path
-
-        const cleanedBase = baseDir.replace(/\/+$/, '')
-        const cleanedPath = path.replace(/^\.\//, '')
-        return `${cleanedBase}/${cleanedPath}`
-      })()
+      const resolved = resolveChatFilePath(path, {
+        workingDirectory,
+        workspaceRootPath: activeWorkspace?.rootPath,
+      })
 
       // Smart fallback for missing files in AI output:
       // if the exact path doesn't exist, search nearby for same basename

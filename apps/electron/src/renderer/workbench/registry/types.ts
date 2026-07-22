@@ -2,7 +2,6 @@ import type { ComponentType, ReactNode } from 'react'
 
 /** Well-known layout preset ids. */
 export type LayoutPresetId =
-  | 'agents-default'
   | 'agents-focus'
   | 'rss-reading'
   | 'workflow-edit'
@@ -75,5 +74,4 @@ export type WorkbenchModule = {
   panels: PanelContribution[]
   /** Optional ActivityBar side content (list/tree), not a dock panel. */
   activityView?: ComponentType
-  commands?: CommandContribution[]
 }

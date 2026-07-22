@@ -106,9 +106,12 @@ printAnnotation('Added first to user message for prompt caching optimization');
 const sessionState = formatSessionState('260121-example-session', {
   plansFolderPath:
     '/Users/example/.grose-agent/workspaces/abc123/sessions/260121-example-session/plans',
+  dataFolderPath:
+    '/Users/example/.grose-agent/workspaces/abc123/sessions/260121-example-session/data',
+  mydataFolderPath: '/Users/example/.grose-agent/workspaces/abc123/mydata',
 });
 printSection('2. SESSION STATE - formatSessionState()', sessionState, colors.magenta);
-printAnnotation('Contains: sessionId, permissionMode, modeTransition/modeChangedBy/modeChangedAt/modeVersion (when available), plansFolderPath');
+printAnnotation('Contains: sessionId, permissionMode, modeTransition/modeChangedBy/modeChangedAt/modeVersion (when available), plansFolderPath, dataFolderPath, mydataFolderPath');
 
 // 3. Source State (example - can't call formatSourceState without agent instance)
 const exampleSourceState = `<sources>

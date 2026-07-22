@@ -85,7 +85,7 @@ function faviconUrl(homepageUrl: string | undefined): string | undefined {
   if (!homepageUrl) return undefined
   try {
     const hostname = new URL(homepageUrl).hostname
-    return `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(hostname)}`
+    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&size=64&url=https://${encodeURIComponent(hostname)}`
   } catch {
     return undefined
   }

@@ -26,6 +26,21 @@ export const activitySidebarVisibleAtom = atom(
 )
 
 /**
+ * Focus mode hides the ActivityBar (icon rail) and the secondary
+ * ActivitySidebar for distraction-free work. Independent of the per-module
+ * sidebar visibility so toggling focus mode does not clobber that preference.
+ */
+export const focusModeAtom = atom(
+  storage.get(storage.KEYS.focusModeEnabled, false),
+  (get, set, next: boolean | ((prev: boolean) => boolean)) => {
+    const prev = get(focusModeAtom)
+    const value = typeof next === 'function' ? next(prev) : next
+    storage.set(storage.KEYS.focusModeEnabled, value)
+    set(focusModeAtom, value)
+  },
+)
+
+/**
  * Module id that the *current dock layout* belongs to.
  * Lagged behind `activeModuleIdAtom` until WorkbenchShell finishes applying
  * the incoming layout — prevents debounced persists from writing the outgoing

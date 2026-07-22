@@ -5,7 +5,7 @@ import {
   siteDataSourcePrefix,
   siteSourceIdForFile,
 } from '../site-data-utils'
-import type { TablesSource } from '../tables/types'
+import type { TablesSource } from '../../tables/types'
 
 function src(id: string, name = id): TablesSource {
   return { id, name, type: 'file', access: 'read' }

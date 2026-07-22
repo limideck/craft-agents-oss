@@ -5,13 +5,6 @@ export const CENTER_GROUP = 'group-center'
 export const RIGHT_TOP_GROUP = 'group-right-top'
 export const RIGHT_BOTTOM_GROUP = 'group-right-bottom'
 
-/** Default column width fractions (~frontend 18 / 38 / 44). */
-export const AGENTS_DEFAULT_RATIOS = {
-  sidebar: 0.18,
-  center: 0.38,
-  right: 0.44,
-} as const
-
 /** RSS reading layout: article list | reader (feeds live in activityView). */
 export const RSS_READING_RATIOS = {
   list: 0.38,
@@ -30,7 +23,6 @@ export const PANEL_DEFS: Record<string, Omit<LayoutPanel, 'id'>> = {
   files: { component: 'files', title: 'Files' },
   changes: { component: 'changes', title: 'Changes' },
   terminal: { component: 'terminal', title: 'Terminal' },
-  'rss-feeds': { component: 'rss-feeds', title: 'Feeds' },
   'rss-article-list': { component: 'rss-article-list', title: 'Articles' },
   'rss-reader': { component: 'rss-reader', title: 'Reader' },
   'wf-canvas': { component: 'wf-canvas', title: 'Canvas' },

@@ -2,12 +2,14 @@ import * as React from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { Sparkles } from 'lucide-react'
+import { BookOpen, Plus } from 'lucide-react'
 import type { WorkbenchModule } from '../../registry/types'
 import { SkillsListPanel } from '@/components/lists/SkillsListPanel'
 import SkillInfoPage from '@/pages/SkillInfoPage'
 import { useAppShellContext, useActiveWorkspace } from '@/context/AppShellContext'
 import { skillsAtom } from '@/atoms/skills'
+import { Button } from '@/components/ui/button'
+import { EditPopover, getEditConfig } from '@/components/ui/EditPopover'
 import { PanelRoot, PanelBody, PanelHeaderBar } from '../../dock/panel-primitives'
 import { ActivityShell } from '../../shell/ActivityShell'
 import { selectedSkillSlugAtom } from '../stock-store'
@@ -55,7 +57,30 @@ function SkillsActivityView() {
   }
 
   return (
-    <ActivityShell title={t('sidebar.skills')} scroll={false} bodyClassName="overflow-hidden">
+    <ActivityShell
+      title={t('sidebar.skills')}
+      scroll={false}
+      bodyClassName="overflow-hidden"
+      actions={
+        activeWorkspace?.rootPath ? (
+          <EditPopover
+            align="end"
+            trigger={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title={t('skillsList.addSkill')}
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            }
+            {...getEditConfig('add-skill', activeWorkspace.rootPath)}
+          />
+        ) : undefined
+      }
+    >
       <SkillsListPanel
         skills={skills}
         workspaceId={activeWorkspaceId}
@@ -102,7 +127,7 @@ function SkillDetailPanel() {
 export const skillsModule: WorkbenchModule = {
   id: 'skills',
   title: 'Skills',
-  icon: <Sparkles className="h-4 w-4" />,
+  icon: <BookOpen className="h-4 w-4" />,
   order: 90,
   placement: 'footer',
   defaultLayout: {

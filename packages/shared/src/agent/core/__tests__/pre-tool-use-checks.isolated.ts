@@ -210,6 +210,7 @@ describe('runPreToolUseChecks', () => {
         permissionMode: 'safe',
         plansFolderPath: '/test/plans',
         dataFolderPath: '/test/data',
+        mydataFolderPath: '/test/workspace/mydata',
         workspaceRootPath: '/test/workspace',
         activeSourceSlugs: ['linear'],
       }));
@@ -221,6 +222,7 @@ describe('runPreToolUseChecks', () => {
         {
           plansFolderPath: '/test/plans',
           dataFolderPath: '/test/data',
+          mydataFolderPath: '/test/workspace/mydata',
           permissionsContext: {
             workspaceRootPath: '/test/workspace',
             activeSourceSlugs: ['linear'],

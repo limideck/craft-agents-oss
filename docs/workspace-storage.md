@@ -15,7 +15,18 @@ There is **no migration** from older layouts. Wipe leftover global / id-keyed da
    - App registry (`~/.grose-agent/config.json`)
    - Preferences, themes, LLM/OAuth credentials
    - Sidecar process secrets/tokens/ports (`~/.grose-agent/grose-modules/sidecar-secrets.json`, `~/.grose-agent/tables/sidecar-secrets.json`)
-5. Session `workingDirectory` may still point at a user project elsewhere (the agent *operates on* that tree). Grose-**generated** data must still land in `rootPath`.
+5. Session `workingDirectory` may still point at a user project elsewhere (the agent *operates on* that tree). Grose-**generated** deliverables should land under `{rootPath}/mydata/` (not session `data/` or the workspace root). New workspaces default `defaults.workingDirectory` to `mydata/`.
+
+## Path roles
+
+| Path | Role | Audience |
+|------|------|----------|
+| `{rootPath}/mydata/` | Persistent deliverables and shared task state (exports, notes, sync caches like `x-bookmarks/`). Default session cwd; Files panel entry point. | User-facing |
+| `{rootPath}/sessions/{id}/data/` | Ephemeral per-session tool output (transforms, large responses). Not for cross-run state. | Internal |
+| `{rootPath}/sessions/{id}/plans/` | Session plans / process artifacts. | Mostly internal |
+| `{rootPath}/modules/knowledge/` | Reserved for knowledge-base index/metadata (not yet implemented). | System |
+
+**Do not treat `mydata/` as the knowledge module.** Knowledge (when shipped) may ingest from `mydata/` into `modules/knowledge/`; they stay separate folders.
 
 ## Directory tree
 
@@ -24,7 +35,11 @@ There is **no migration** from older layouts. Wipe leftover global / id-keyed da
 ├── config.json
 ├── sources/
 ├── sessions/
+│   └── {sessionId}/
+│       ├── data/                     # ephemeral session scratch
+│       └── plans/                    # session plans
 ├── skills/
+├── mydata/                           # persistent AI deliverables (default cwd)
 ├── projects/
 ├── automations.json
 ├── permissions.json
@@ -38,7 +53,7 @@ There is **no migration** from older layouts. Wipe leftover global / id-keyed da
     │   ├── files/{sourceId}/…
     │   ├── config.json
     │   └── access.json
-    ├── knowledge/                    # reserved (docs/, knowledge.db, index/)
+    ├── knowledge/                    # reserved index/meta (ingest from mydata later)
     │   ├── docs/
     │   └── index/
     ├── sites/
@@ -49,7 +64,7 @@ There is **no migration** from older layouts. Wipe leftover global / id-keyed da
         └── definitions/              # preferred file SoT for graph YAML/JSON (future)
 ```
 
-Default create location is still `~/.grose-agent/workspaces/{slug}/`, but the slug is only a folder name — the registry `id` is independent.
+Default create location is still `~/.grose-agent/workspaces/{slug}/`, but the slug is only a folder name — the registry `id` is independent. `mydata/` is created on workspace create and backfilled when an existing workspace loads.
 
 ## Sidecar path resolution
 

@@ -1,8 +1,7 @@
 /**
  * SkillInfoPage
  *
- * Displays comprehensive skill details including metadata,
- * permission modes, and instructions.
+ * Displays skill details (metadata + file browser for SKILL.md and supporting files).
  * Uses the Info_ component system for consistent styling with SourceInfoPage.
  */
 
@@ -21,8 +20,8 @@ import {
   Info_Page,
   Info_Section,
   Info_Table,
-  Info_Markdown,
 } from '@/components/info'
+import { SkillFilesPanel } from '../workbench/modules/skills/skill-files-panel'
 import type { LoadedSkill } from '../../shared/types'
 
 interface SkillInfoPageProps {
@@ -38,6 +37,8 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
   const [error, setError] = useState<string | null>(null)
   const activeWorkspace = useActiveWorkspace()
   const canRevealLocally = !activeWorkspace?.remoteServer
+  // Skill dirs under workspace / project / ~/.agents are writable via fs APIs (homedir allowed).
+  const canWriteFiles = Boolean(skill) && !activeWorkspace?.remoteServer
 
   // Load skill data
   useEffect(() => {
@@ -81,7 +82,7 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
       isMounted = false
       unsubscribe?.()
     }
-  }, [workspaceId, skillSlug, workingDirectory])
+  }, [workspaceId, skillSlug, workingDirectory, t])
 
   // Handle open in finder
   const handleOpenInFinder = useCallback(async () => {
@@ -110,7 +111,7 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
         description: err instanceof Error ? err.message : undefined,
       })
     }
-  }, [skill, workspaceId, skillSlug])
+  }, [skill, workspaceId, skillSlug, t])
 
   // Handle opening in new window
   const handleOpenInNewWindow = useCallback(() => {
@@ -143,6 +144,13 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
     }
   }
 
+  const sourceHint =
+    skill?.source === 'global'
+      ? t('skillInfo.importedHintGlobal')
+      : skill?.source === 'project'
+        ? t('skillInfo.importedHintProject')
+        : null
+
   return (
     <Info_Page
       loading={loading}
@@ -166,7 +174,7 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
       />
 
       {skill && (
-        <Info_Page.Content>
+        <Info_Page.Content className="!pb-0">
           {/* Hero: Avatar, title, and description */}
           <Info_Page.Hero
             avatar={<SkillAvatar skill={skill} fluid workspaceId={workspaceId} />}
@@ -178,15 +186,16 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
           <Info_Section
             title={t('skillInfo.metadata')}
             actions={
-              // EditPopover for AI-assisted metadata editing (name, description in frontmatter)
-              <EditPopover
-                trigger={<EditButton />}
-                {...getEditConfig('skill-metadata', skill.path)}
-                secondaryAction={{
-                  label: t('common.editFile'),
-                  filePath: `${skill.path}/SKILL.md`,
-                }}
-              />
+              canWriteFiles ? (
+                <EditPopover
+                  trigger={<EditButton />}
+                  {...getEditConfig('skill-metadata', skill.path)}
+                  secondaryAction={{
+                    label: t('common.editFile'),
+                    filePath: `${skill.path}/SKILL.md`,
+                  }}
+                />
+              ) : undefined
             }
           >
             <Info_Table>
@@ -254,26 +263,20 @@ export default function SkillInfoPage({ skillSlug, workspaceId, workingDirectory
             </Info_Section>
           )}
 
-          {/* Instructions */}
-          <Info_Section
-            title={t('skillInfo.instructions')}
-            actions={
-              // EditPopover for AI-assisted editing with "Edit File" as secondary action
-              <EditPopover
-                trigger={<EditButton />}
-                {...getEditConfig('skill-instructions', skill.path)}
-                secondaryAction={{
-                  label: t('common.editFile'),
-                  filePath: `${skill.path}/SKILL.md`,
-                }}
+          {/* Files — list + preview/edit (replaces standalone Instructions section) */}
+          <div className="space-y-2 pt-2">
+            <h3 className="text-base font-semibold pl-1">{t('skillInfo.files')}</h3>
+            <div className="bg-background shadow-minimal rounded-[8px] overflow-hidden">
+              <SkillFilesPanel
+                skillPath={skill.path}
+                skillSlug={skill.slug}
+                workspaceId={workspaceId}
+                workingDirectory={workingDirectory}
+                canWrite={canWriteFiles}
+                sourceHint={sourceHint}
               />
-            }
-          >
-            <Info_Markdown maxHeight={540} fullscreen>
-              {skill.content || t('skillInfo.noInstructions')}
-            </Info_Markdown>
-          </Info_Section>
-
+            </div>
+          </div>
         </Info_Page.Content>
       )}
     </Info_Page>

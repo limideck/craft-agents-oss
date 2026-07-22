@@ -1,6 +1,6 @@
-# Workbench RSS reader
+# Workbench Local Reader (RSS)
 
-Live RSS module for the Grose workbench shell. Backend is the **grose-modules** Go sidecar; UI follows feedoverflow’s 3-pane pattern (Today / All / Starred / Podcasts + flat feeds).
+Live reading library for the Grose workbench shell. Backend is the **grose-modules** Go sidecar (RSS feeds / articles / star). UI follows a Local Reader layout: ActivityBar nav (全部 / 未读 / 收藏 / 历史 · 标签 · 订阅源) + Articles + Reader, with **AI Chat** docked via `openAgentChat({ placement: 'right' })`.
 
 See [grose-modules-sidecar.md](./grose-modules-sidecar.md) for process / API / MCP boundaries.
 
@@ -19,11 +19,8 @@ bun run build:grose-modules:all
 ## How to open
 
 1. Build once: `bun run build:grose-modules`
-2. Enable the workbench shell:
-   - DevTools: `localStorage.setItem('grose-feature-workbench-shell', '1')` then reload, **or**
-   - Env: `GROSE_FEATURE_WORKBENCH_SHELL=1`
-3. Start Electron (`bun run electron:dev`). Main process spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
-4. ActivityBar → **RSS**. Dock preset: **Feeds | Articles | Reader**.
+2. Start Electron (`bun run electron:dev`). Main process spawns `grose-modules` (or attach with `GROSE_MODULES_URL`).
+3. ActivityBar → **Reader**. Dock preset: **Articles | Reader**.
 
 If you previously hit `database is locked`, quit Grose and kill stale sidecars (`pkill -f grose-modules`) then restart so only one process holds the SQLite file.
 
@@ -31,11 +28,20 @@ If you previously hit `database is locked`, quit Grose and kill stale sidecars (
 
 | Region | Panel | Role |
 |--------|--------|------|
-| Feeds | `rss-feeds` | Smart views + subscriptions; add / manage / refresh / OPML export |
-| Articles | `rss-article-list` | List with Latest/Digest for Today/All; search |
-| Reader | `rss-reader` | HTML body, 全文, star, open original, Ask AI, podcast player |
+| Nav | `activityView` (FeedsPanel) | 全部 / 未读 / 收藏 / 历史, tags (local), subscriptions |
+| Articles | `rss-article-list` | List with type filter, search, Latest/Digest |
+| Reader | `rss-reader` | Body, 全文, favorite, unread/read, tags, AI summary, selection toolbar |
+| AI | shared `chat` panel | Opened via **AI Chat** / ⌘K / selection actions |
 
-Article state is **star-only** (no unread), matching feedoverflow.
+### Status model (local overlay)
+
+| Dimension | Values | Notes |
+|-----------|--------|-------|
+| Read status | `unread` / `read` | Default `unread`. Opening an article marks `read`. |
+| Favorite | starred (server) | Via `isStarred` / `rssToggleStar`. Independent of read status. |
+| History | `lastViewedAt` | Auto browse history — articles the user has opened. |
+
+Tags and status/history meta live in `localStorage` (`grose-rss-local-reader-v3`) keyed by article id.
 
 ### Manage feeds
 
@@ -43,7 +49,14 @@ Feeds header **gear** opens Manage feeds: rename, delete, copy URL, and **Export
 
 ### Add feed / OPML import
 
-Add (+) opens a dialog with tabs **URL** | **OPML**. OPML accepts file drop/picker or pasted XML; success shows imported/skipped counts via `rssImportOpml`.
+Add (+) opens a dialog with tabs **RSS URL** | **OPML** | Markdown / File / Social (UI stubs until ingest APIs exist). OPML accepts file drop/picker or pasted XML.
+
+### AI
+
+- **AI Chat** — docks the shared chat panel with `rss-article` context.
+- **Selection toolbar** — translate / polish / explain / ask / continue → `selection` context.
+- **⌘K** — Reader command palette (add, navigate, triage, summarize).
+- **AI Summary** — caches a local summary card; “Generate” also seeds chat.
 
 ### Podcast player
 
@@ -51,11 +64,13 @@ When an article has `audioUrl`, Reader shows a Play chip; the bottom bar support
 
 ### Full text (全文)
 
-Reader toolbar **全文** calls `rssFetchArticleContent` → Go readability (`GET /api/rss/articles/fetch-content?url=`). Extracted HTML is shown in-session (not persisted); toggle restores RSS body.
+Reader toolbar **全文** calls `rssFetchArticleContent` → Go readability (`GET /api/rss/articles/fetch-content?url=`). Extracted HTML is shown in-session (not persisted); toggle restores RSS body. Local **Edit Markdown** can store a body override in the local overlay.
 
 ## Data path
 
 `{rootPath}/modules/rss/rss.db` — see [workspace-storage.md](./workspace-storage.md).
+
+Local reader meta: browser `localStorage` key `grose-rss-local-reader-v3`.
 
 Pass `X-Grose-Workspace-Id` (+ optional `X-Grose-Workspace-Root`) on every request. Never assume `basename(rootPath) === workspaceId`.
 
@@ -64,5 +79,9 @@ Pass `X-Grose-Workspace-Id` (+ optional `X-Grose-Workspace-Root`) on every reque
 ```bash
 cd services/grose-modules
 PORT=4711 GROSE_MODULES_TOKEN=dev make run
-GROSE_MODULES_URL=http://127.0.0.1:4711 GROSE_FEATURE_WORKBENCH_SHELL=1 bun run electron:dev
+GROSE_MODULES_URL=http://127.0.0.1:4711 bun run electron:dev
 ```
+
+## Design prototype
+
+Hi-fi clickable mock: `designs/local-reader/Local Reader.html` (serve `designs/` on port 4311).

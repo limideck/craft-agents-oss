@@ -88,6 +88,49 @@ export function getWorkspaceSkillsPath(rootPath: string): string {
   return join(rootPath, 'skills');
 }
 
+/** Persistent AI deliverables directory under `{rootPath}/mydata`. */
+export const WORKSPACE_MYDATA_DIR = 'mydata';
+
+/**
+ * Get path to workspace mydata directory (persistent agent deliverables).
+ * @param rootPath - Absolute path to workspace root folder
+ */
+export function getWorkspaceMydataPath(rootPath: string): string {
+  return join(rootPath, WORKSPACE_MYDATA_DIR);
+}
+
+/**
+ * Ensure `{rootPath}/mydata` exists. Safe to call repeatedly (mkdir -p).
+ */
+export function ensureWorkspaceMydataDir(rootPath: string): void {
+  mkdirSync(getWorkspaceMydataPath(rootPath), { recursive: true });
+}
+
+/**
+ * Ensure `mydata/` exists and backfill `defaults.workingDirectory` → mydata
+ * when the workspace has no configured working directory yet.
+ *
+ * Does not overwrite a user-set (or previously defaulted) workingDirectory.
+ * Safe to call repeatedly.
+ */
+export function ensureWorkspaceMydataDefaults(rootPath: string): void {
+  ensureWorkspaceMydataDir(rootPath);
+
+  const config = loadWorkspaceConfig(rootPath);
+  if (!config) return;
+
+  const existing = config.defaults?.workingDirectory;
+  if (typeof existing === 'string' && existing.trim().length > 0) {
+    return;
+  }
+
+  config.defaults = {
+    ...config.defaults,
+    workingDirectory: getWorkspaceMydataPath(rootPath),
+  };
+  saveWorkspaceConfig(rootPath, config);
+}
+
 /** Builtin workbench module ids that live under `{rootPath}/modules/`. */
 export const WORKSPACE_MODULE_IDS = ['rss', 'tables', 'workflows', 'knowledge', 'sites'] as const;
 export type WorkspaceModuleId = (typeof WORKSPACE_MODULE_IDS)[number];
@@ -275,8 +318,14 @@ export function loadWorkspace(rootPath: string): LoadedWorkspace | null {
     mkdirSync(skillsPath, { recursive: true });
   }
 
+  // Ensure mydata/ exists and default cwd points at it (migration for existing workspaces)
+  ensureWorkspaceMydataDefaults(rootPath);
+
+  // Reload so callers see a backfilled workingDirectory when we just wrote it
+  const configAfterMydata = loadWorkspaceConfig(rootPath) ?? config;
+
   return {
-    config,
+    config: configAfterMydata,
     sourceSlugs: listSubdirNames(getWorkspaceSourcesPath(rootPath)),
     sessionCount: countSubdirs(getWorkspaceSessionsPath(rootPath)),
   };
@@ -377,7 +426,8 @@ export function createWorkspaceAtPath(
     permissionMode: globalDefaults.workspaceDefaults.permissionMode,
     cyclablePermissionModes: globalDefaults.workspaceDefaults.cyclablePermissionModes,
     enabledSourceSlugs: [],
-    workingDirectory: undefined,
+    // Default cwd = mydata (portable form applied in saveWorkspaceConfig)
+    workingDirectory: getWorkspaceMydataPath(rootPath),
     ...defaults, // User-provided defaults override global defaults
   };
 
@@ -397,6 +447,7 @@ export function createWorkspaceAtPath(
   mkdirSync(getWorkspaceSourcesPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSessionsPath(rootPath), { recursive: true });
   mkdirSync(getWorkspaceSkillsPath(rootPath), { recursive: true });
+  ensureWorkspaceMydataDir(rootPath);
   ensureWorkspaceModuleDirs(rootPath);
 
   // Save config

@@ -25,7 +25,7 @@ import { registerTasksHandlers } from './tasks'
 import { registerTransferHandlers } from './transfer'
 import { registerWorkspaceCoreHandlers } from './workspace'
 import { registerMessagingHandlers } from './messaging'
-import { registerDomainStubHandlers } from './domain-stubs'
+import { registerDomainRpcHandlers } from './domain-rpc'
 
 export function registerCoreRpcHandlers(
   server: RpcServer,
@@ -52,5 +52,5 @@ export function registerCoreRpcHandlers(
   registerTransferHandlers(server)
   registerWorkspaceCoreHandlers(server, deps)
   registerMessagingHandlers(server, deps)
-  registerDomainStubHandlers(server, deps)
+  registerDomainRpcHandlers(server, deps)
 }

@@ -13,11 +13,12 @@ import { renderRegisteredPanel, getAllPanels } from '../registry/panel-registry'
 import { getModule } from '../registry/module-registry'
 import {
   applyLayout,
-  agentsDefaultLayout,
+  agentsFocusLayout,
   loadPersistedLayout,
   createLayoutPersistence,
   resolveModuleLayout,
 } from './layout-manager'
+import { AgentsAddTabHeaderActions } from './agents-add-tab-actions'
 import { useAtomValue, useSetAtom, useStore } from 'jotai'
 import {
   activeModuleIdAtom,
@@ -63,7 +64,6 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
       'file-editor',
       'changes',
       'terminal',
-      'rss-feeds',
       'rss-article-list',
       'rss-reader',
       'sites-chat',
@@ -106,12 +106,12 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
         if (saved) {
           api.fromJSON(saved)
         } else {
-          const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsDefaultLayout()
+          const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsFocusLayout()
           applyLayout(api, layout, api.width || 1200, api.height || 800)
         }
       } catch (err) {
         console.warn('[workbench] layout restore failed — applying default', err)
-        const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsDefaultLayout()
+        const layout = resolveModuleLayout(mod?.defaultLayout) ?? agentsFocusLayout()
         applyLayout(api, layout, api.width || 1200, api.height || 800)
       }
 
@@ -149,6 +149,7 @@ export function DockviewHost({ workspaceId }: DockviewHostProps) {
         onReady={onReady}
         defaultRenderer="always"
         className="h-full"
+        rightHeaderActionsComponent={AgentsAddTabHeaderActions}
       />
       <PanelPortalHost renderPanel={renderPanel} />
     </div>

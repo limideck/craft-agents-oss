@@ -23,6 +23,7 @@ function createTestHarness(overrides?: { workspaceId?: string | null }) {
     },
     hasClientCapability() { return false },
     findClientsWithCapability() { return [] },
+    async invoke() { return undefined },
   }
 
   const deps: HandlerDeps = {

@@ -10,7 +10,7 @@ import { useAppShellContext } from '@/context/AppShellContext'
 import { useNavigation } from '@/contexts/NavigationContext'
 import type { SettingsMenuItem } from '../../../shared/menu-schema'
 import { useOpenAgentChat } from '../chat'
-import { activeModuleIdAtom, activitySidebarVisibleAtom } from '../store/workbench-store'
+import { activeModuleIdAtom, activitySidebarVisibleAtom, focusModeAtom } from '../store/workbench-store'
 import { settingsSubpageAtom } from '../modules/stock-store'
 
 export function WorkbenchTopBar() {
@@ -27,6 +27,7 @@ export function WorkbenchTopBar() {
   const { canGoBack, canGoForward, goBack, goForward } = useNavigation()
   const setActiveModuleId = useSetAtom(activeModuleIdAtom)
   const setActivitySidebarVisible = useSetAtom(activitySidebarVisibleAtom)
+  const setFocusMode = useSetAtom(focusModeAtom)
   const setSettingsSubpage = useSetAtom(settingsSubpageAtom)
   const openAgentChat = useOpenAgentChat()
 
@@ -34,7 +35,12 @@ export function WorkbenchTopBar() {
     setActivitySidebarVisible((prev) => !prev)
   }, [setActivitySidebarVisible])
 
+  const toggleFocusMode = useCallback(() => {
+    setFocusMode((prev) => !prev)
+  }, [setFocusMode])
+
   useAction('view.toggleSidebar', toggleActivitySidebar)
+  useAction('view.toggleFocusMode', toggleFocusMode)
 
   const handleOpenSettings = useCallback(() => {
     setActiveModuleId('settings')
@@ -72,9 +78,7 @@ export function WorkbenchTopBar() {
       canGoBack={canGoBack}
       canGoForward={canGoForward}
       onToggleSidebar={toggleActivitySidebar}
-      onToggleFocusMode={() => {
-        /* Focus mode not wired in workbench yet */
-      }}
+      onToggleFocusMode={toggleFocusMode}
       onAddSessionPanel={handleNewChat}
       onAddBrowserPanel={() => {
         void (async () => {

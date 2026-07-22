@@ -349,6 +349,8 @@ export interface ElectronAPI {
   /** List files + directories for the workbench file tree (workspace-scoped). */
   listServerEntries(dirPath: string): Promise<import('@grose-agent/shared/protocol').FsListEntriesResult>
   createServerFile(filePath: string): Promise<{ path: string }>
+  /** Write UTF-8 text content to a file (creates parent dirs). */
+  writeServerFile(filePath: string, content: string): Promise<{ path: string }>
   createServerDirectory(dirPath: string): Promise<{ path: string }>
   renameServerPath(oldPath: string, newPath: string): Promise<{ path: string }>
   deleteServerPath(targetPath: string): Promise<{ ok: true }>
@@ -505,7 +507,7 @@ export interface ElectronAPI {
 
   // Skills
   getSkills(workspaceId: string, workingDirectory?: string): Promise<LoadedSkill[]>
-  getSkillFiles?(workspaceId: string, skillSlug: string): Promise<SkillFile[]>
+  getSkillFiles?(workspaceId: string, skillSlug: string, workingDirectory?: string): Promise<SkillFile[]>
   deleteSkill(workspaceId: string, skillSlug: string): Promise<void>
   openSkillInEditor(workspaceId: string, skillSlug: string): Promise<void>
   openSkillInFinder(workspaceId: string, skillSlug: string): Promise<void>
@@ -624,6 +626,12 @@ export interface ElectronAPI {
 
   // Git operations
   getGitBranch(dirPath: string): Promise<string | null>
+  getGitStatus(dirPath: string): Promise<Array<{ status: string; path: string }>>
+  getGitDiff(dirPath: string, filePath: string): Promise<string>
+  getGitFileContents(dirPath: string, filePath: string): Promise<{ original: string | null; modified: string | null }>
+
+  // Shell
+  runCommand(cwd: string, command: string): Promise<{ ok: boolean; output: string }>
 
   // Git Bash (Windows)
   checkGitBash(): Promise<GitBashStatus>
@@ -920,6 +928,11 @@ export interface ElectronAPI {
     workspaceId: string,
     workflowId: string,
   ): Promise<import('@grose-agent/shared/grose-modules').GroseModulesWorkflowDeployResult>
+  getWorkflowHistory(
+    workspaceId: string,
+    workflowId: string,
+    limit?: number,
+  ): Promise<Array<{ kind: 'flow'; id: string; runId: string; ts: number; ok: boolean; summary?: string; stepCount?: number; error?: string }>>
 }
 
 export interface MessagingPlatformRuntimeInfo {

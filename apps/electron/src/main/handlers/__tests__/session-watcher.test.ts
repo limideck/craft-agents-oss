@@ -63,6 +63,7 @@ function createTestHarness(sessionPaths: Map<string, string>) {
     async invokeClient() {},
     hasClientCapability() { return false },
     findClientsWithCapability() { return [] },
+    async invoke() { return undefined },
   }
 
   const deps: HandlerDeps = {

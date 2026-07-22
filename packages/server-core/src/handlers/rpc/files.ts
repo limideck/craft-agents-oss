@@ -29,6 +29,7 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.fs.LIST_DIRECTORY,
   RPC_CHANNELS.fs.LIST_ENTRIES,
   RPC_CHANNELS.fs.CREATE_FILE,
+  RPC_CHANNELS.fs.WRITE_FILE,
   RPC_CHANNELS.fs.MKDIR,
   RPC_CHANNELS.fs.RENAME,
   RPC_CHANNELS.fs.DELETE,
@@ -655,6 +656,17 @@ export function registerFilesHandlers(server: RpcServer, deps: HandlerDeps): voi
     await mkdir(dirname(safePath), { recursive: true })
     const handle = await open(safePath, 'wx')
     await handle.close()
+    return { path: safePath }
+  })
+
+  server.handle(RPC_CHANNELS.fs.WRITE_FILE, async (ctx, filePath: string, content: string) => {
+    const workspaceId = ctx.workspaceId ?? deps.windowManager?.getWorkspaceForWindow(ctx.webContentsId!)
+    const safePath = await validateFilePath(filePath, getWorkspaceAllowedDirs(workspaceId))
+    if (typeof content !== 'string') {
+      throw new Error('File content must be a string')
+    }
+    await mkdir(dirname(safePath), { recursive: true })
+    await writeFile(safePath, content, 'utf-8')
     return { path: safePath }
   })
 
