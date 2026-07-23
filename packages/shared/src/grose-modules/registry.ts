@@ -3,10 +3,10 @@
  * agent routing. See docs/grose-modules-agent-routing.md.
  */
 
-import { GROSE_MODULES_SOURCE_SLUG } from './mcp-source.ts'
+import { GROSE_MODULES_SOURCE_SLUG } from './constants.ts'
+import type { GroseBuiltinModuleId } from './types.ts'
 
-/** Known builtin module ids; open string union for future modules. */
-export type GroseBuiltinModuleId = 'rss' | 'knowledge' | 'workflows' | 'sites' | (string & {})
+export type { GroseBuiltinModuleId } from './types.ts'
 
 export type GroseBuiltinModule = {
   id: GroseBuiltinModuleId

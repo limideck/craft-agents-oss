@@ -110,6 +110,21 @@ func registerTools(server *sdkmcp.Server, c *client, _ string) {
 		return textResult(res)
 	})
 
+	type getArticleInput struct {
+		workspaceInput
+		ID string `json:"id" jsonschema:"Article ID (same id as Workbench Reader / rss-article context)"`
+	}
+	sdkmcp.AddTool(server, &sdkmcp.Tool{
+		Name:        "rss_get_article",
+		Description: "Get one stored RSS article by id, including title, link, summary, and full content when available. Prefer this over guessing body text. If content is empty or truncated, follow up with rss_fetch_article_content using the article link.",
+	}, func(ctx context.Context, _ *sdkmcp.CallToolRequest, in getArticleInput) (*sdkmcp.CallToolResult, any, error) {
+		res, err := c.get(ctx, "/api/rss/articles/"+url.PathEscape(in.ID), c.ws(in.workspaceInput))
+		if err != nil {
+			return nil, nil, err
+		}
+		return textResult(res)
+	})
+
 	sdkmcp.AddTool(server, &sdkmcp.Tool{
 		Name:        "rss_get_all_articles",
 		Description: "Latest articles across all feeds (digest mode).",

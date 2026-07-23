@@ -30,3 +30,12 @@ export function createVideoObjectUrl(bytes: Uint8Array, mime: string): string {
   copy.set(bytes)
   return URL.createObjectURL(new Blob([copy], { type: mime }))
 }
+
+/**
+ * Build a local-file:// URL for <video src>. Streams directly from disk
+ * via Electron's custom protocol — avoids loading the entire file into
+ * V8 memory (which causes OOM for large videos).
+ */
+export function localFileUrl(filePath: string): string {
+  return `local-file://${encodeURIComponent(filePath)}`
+}

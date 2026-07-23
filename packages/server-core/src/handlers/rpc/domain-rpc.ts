@@ -3,6 +3,7 @@
  * Delegates to domain packages; RSS proxies to grose-modules.
  * Workflows CRUD is proxied; `workflows:run` is registered by workflows-run.ts
  * (Grose executes agent nodes via SessionManager).
+ * `moduleActions:run` is registered by module-actions.ts (silent mini sessions).
  */
 
 import type { RpcServer } from '@grose-agent/server-core/transport'
@@ -13,6 +14,7 @@ import { registerWorkflowsRpcHandlers } from '@grose-agent/domain-workflows'
 import { registerSitesRpcHandlers } from '@grose-agent/domain-sites'
 import type { HandlerDeps } from '../handler-deps'
 import { registerWorkflowsRunHandler } from './workflows-run'
+import { registerModuleActionsHandler } from './module-actions'
 
 export const HANDLED_CHANNELS = [
   RPC_CHANNELS.rss.PING,
@@ -55,6 +57,7 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.workflows.DEPLOY,
   RPC_CHANNELS.workflows.UNDEPLOY,
   RPC_CHANNELS.workflows.GET_HISTORY,
+  RPC_CHANNELS.moduleActions.RUN,
 ] as const
 
 export function registerDomainRpcHandlers(server: RpcServer, deps: HandlerDeps): void {
@@ -63,4 +66,5 @@ export function registerDomainRpcHandlers(server: RpcServer, deps: HandlerDeps):
   registerSitesRpcHandlers(server)
   registerWorkflowsRpcHandlers(server, { skipRun: true })
   registerWorkflowsRunHandler(server, deps)
+  registerModuleActionsHandler(server, deps)
 }

@@ -204,6 +204,8 @@ import type {
   LlmConnectionSetup,
   TestLlmConnectionParams,
   TestLlmConnectionResult,
+  FetchCustomEndpointModelsParams,
+  FetchCustomEndpointModelsResult,
   SkillFile,
   SessionFile,
   OAuthResult,
@@ -447,6 +449,8 @@ export interface ElectronAPI {
   setupLlmConnection(setup: LlmConnectionSetup): Promise<{ success: boolean; error?: string }>
   /** Unified connection test — spawns a lightweight agent subprocess to validate credentials */
   testLlmConnectionSetup(params: TestLlmConnectionParams): Promise<TestLlmConnectionResult>
+  /** Fetch available models from a custom OpenAI/Anthropic-compatible endpoint */
+  fetchCustomEndpointModels(params: FetchCustomEndpointModelsParams): Promise<FetchCustomEndpointModelsResult>
   // Pi provider discovery (main process only — Pi SDK can't run in renderer)
   getPiApiKeyProviders(): Promise<Array<{ key: string; label: string; placeholder: string }>>
   getPiProviderBaseUrl(provider: string): Promise<string | undefined>
@@ -933,6 +937,15 @@ export interface ElectronAPI {
     workflowId: string,
     limit?: number,
   ): Promise<Array<{ kind: 'flow'; id: string; runId: string; ts: number; ok: boolean; summary?: string; stepCount?: number; error?: string }>>
+
+  /**
+   * Run a silent Module Action (e.g. rss.translate). Instruction never enters Composer.
+   * Returns resultMarkdown for the Reader result panel.
+   */
+  moduleActionsRun(
+    workspaceId: string,
+    request: import('@grose-agent/shared/protocol').ModuleActionRunRequest,
+  ): Promise<import('@grose-agent/shared/protocol').ModuleActionRunResponse>
 }
 
 export interface MessagingPlatformRuntimeInfo {

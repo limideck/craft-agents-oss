@@ -9,9 +9,9 @@ import { PanelRoot, PanelBody, PanelHeaderBarSplit } from '../../../dock/panel-p
 import { baseName } from '../../../components/file-tree-utils'
 import { cn } from '@/lib/utils'
 import {
-  createVideoObjectUrl,
   getExtension,
   isVideoPath,
+  localFileUrl,
   videoMime,
 } from '../video-preview'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
@@ -133,7 +133,6 @@ export function FileEditorPanel({ params }: { params: Record<string, unknown> })
     }
 
     let cancelled = false
-    let videoObjectUrl: string | null = null
     setState({ status: 'loading' })
     setHtmlMode('render')
 
@@ -142,19 +141,12 @@ export function FileEditorPanel({ params }: { params: Record<string, unknown> })
         const ext = getExtension(path)
 
         if (isVideoPath(path)) {
-          // Must use blob: + correct video MIME. readFileDataUrl tags unknown
-          // extensions as application/octet-stream; CSP media-src allows blob:
-          // (not data:); Chromium also won't seek/play media from data: URLs.
-          const bytes = await window.electronAPI.readFileBinary(path)
+          // Stream directly from disk via local-file:// protocol.
+          // Avoids reading the entire file into V8 memory (which causes OOM
+          // for large videos). Chromium handles seeking via Range requests.
+          const objectUrl = localFileUrl(path)
           if (cancelled) return
-          const mime = videoMime(ext)
-          videoObjectUrl = createVideoObjectUrl(bytes, mime)
-          if (cancelled) {
-            URL.revokeObjectURL(videoObjectUrl)
-            videoObjectUrl = null
-            return
-          }
-          setState({ status: 'ready', kind: 'video', objectUrl: videoObjectUrl, mime })
+          setState({ status: 'ready', kind: 'video', objectUrl, mime: videoMime(ext) })
           return
         }
 
@@ -219,10 +211,6 @@ export function FileEditorPanel({ params }: { params: Record<string, unknown> })
 
     return () => {
       cancelled = true
-      if (videoObjectUrl) {
-        URL.revokeObjectURL(videoObjectUrl)
-        videoObjectUrl = null
-      }
     }
   }, [path])
 

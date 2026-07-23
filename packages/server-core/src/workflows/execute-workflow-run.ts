@@ -12,31 +12,19 @@ import type {
   GroseModulesWorkflowNode,
   GroseModulesWorkflowRunStep,
 } from '@grose-agent/shared/grose-modules'
-import type { CreateSessionOptions } from '@grose-agent/shared/protocol'
 import type { PermissionMode } from '@grose-agent/shared/agent/mode-types'
-import type { SessionCompletionEvent } from '../sessions/SessionManager'
+import {
+  runSilentAgentTurn,
+  type SilentAgentHost,
+} from '../sessions/silent-agent-turn'
 
 const TRIGGER_TYPES = new Set(['start', 'schedule', 'webhook'])
 const AUTONOMOUS_MODE: PermissionMode = 'allow-all'
 /** Cap a single agent turn so a hung model cannot block Run forever. */
 const AGENT_STEP_TIMEOUT_MS = 5 * 60_000
 
-export type WorkflowRunHost = {
-  createSession(
-    workspaceId: string,
-    options?: CreateSessionOptions,
-    internal?: { emitCreatedEvent?: boolean },
-  ): Promise<{ id: string }>
-  sendMessage(
-    sessionId: string,
-    message: string,
-    attachments?: undefined,
-    storedAttachments?: undefined,
-    options?: { skillSlugs?: string[] },
-  ): Promise<void>
-  onSessionComplete(listener: (evt: SessionCompletionEvent) => void): () => void
-  getSessionFinalText(sessionId: string): string | undefined
-}
+/** @deprecated Prefer SilentAgentHost — kept as a workflow-facing alias. */
+export type WorkflowRunHost = SilentAgentHost
 
 export type ExecuteWorkflowRunOptions = {
   workspaceId: string
@@ -197,19 +185,21 @@ async function runAgentStep(
   let sessionId: string | undefined
 
   try {
-    const session = await host.createSession(
+    const skillSlugs = agentRef && agentRef !== 'default' ? [agentRef] : undefined
+    const { sessionId: sid, text: finalText } = await runSilentAgentTurn({
+      host,
       workspaceId,
-      {
-        name: `Workflow · ${node.name}`,
+      prompt,
+      timeoutMs,
+      sessionName: `Workflow · ${node.name}`,
+      sessionOptions: {
         permissionMode: AUTONOMOUS_MODE,
         systemPromptPreset: 'mini',
         ...(model ? { model } : {}),
       },
-      { emitCreatedEvent: false },
-    )
-    sessionId = session.id
-
-    const finalText = await waitForAgentTurn(host, sessionId, prompt, agentRef, timeoutMs)
+      sendOptions: skillSlugs ? { skillSlugs } : undefined,
+    })
+    sessionId = sid
     const text = finalText.trim()
     if (!text) {
       return {
@@ -242,64 +232,6 @@ async function runAgentStep(
       durationMs: Date.now() - started,
     }
   }
-}
-
-/**
- * Subscribe to completion before sending so a fast turn cannot race past us.
- * Falls back to getSessionFinalText when the event carries no text.
- */
-function waitForAgentTurn(
-  host: WorkflowRunHost,
-  sessionId: string,
-  prompt: string,
-  agentRef: string,
-  timeoutMs: number,
-): Promise<string> {
-  return new Promise<string>((resolve, reject) => {
-    let settled = false
-    let off: (() => void) | undefined
-    let timer: ReturnType<typeof setTimeout> | undefined
-
-    const finish = (fn: () => void) => {
-      if (settled) return
-      settled = true
-      off?.()
-      if (timer) clearTimeout(timer)
-      fn()
-    }
-
-    off = host.onSessionComplete((evt) => {
-      if (evt.sessionId !== sessionId) return
-      if (evt.reason === 'error' || evt.reason === 'timeout') {
-        finish(() =>
-          reject(new Error(evt.reason === 'timeout' ? 'Agent turn timed out' : 'Agent turn failed')),
-        )
-        return
-      }
-      if (evt.reason === 'interrupted') {
-        finish(() => reject(new Error('Agent turn was interrupted')))
-        return
-      }
-      const text = evt.finalText ?? host.getSessionFinalText(sessionId) ?? ''
-      finish(() => resolve(text))
-    })
-
-    timer = setTimeout(() => {
-      finish(() => reject(new Error(`Agent step timed out after ${timeoutMs}ms`)))
-    }, timeoutMs)
-
-    const skillSlugs = agentRef && agentRef !== 'default' ? [agentRef] : undefined
-    void Promise.resolve(host.sendMessage(sessionId, prompt, undefined, undefined, { skillSlugs }))
-      .then(() => {
-        // sendMessage awaits the full turn; use as a backstop if the completion
-        // seam already fired (finish is idempotent) or somehow missed.
-        const text = host.getSessionFinalText(sessionId) ?? ''
-        finish(() => resolve(text))
-      })
-      .catch((err: unknown) =>
-        finish(() => reject(err instanceof Error ? err : new Error(String(err)))),
-      )
-  })
 }
 
 /**

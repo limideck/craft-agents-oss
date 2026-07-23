@@ -3,6 +3,7 @@ import {
   resolveCustomEndpointPayload,
   resolvePiAuthProviderForSubmit,
   resolvePresetStateForBaseUrlChange,
+  mergeSelectedModelIntoList,
 } from '../submit-helpers'
 import { pickTierDefaults, resolveTierModels } from '../tier-models'
 
@@ -152,5 +153,21 @@ describe('resolveCustomEndpointPayload', () => {
       customEndpoint: undefined,
       piAuthProvider: undefined,
     })
+  })
+})
+
+describe('mergeSelectedModelIntoList', () => {
+  const PLACEHOLDERS = [
+    'claude-opus-4-8, claude-opus-4-7, claude-sonnet-4-6, claude-haiku-4-5',
+  ]
+
+  it('replaces empty and placeholder defaults', () => {
+    expect(mergeSelectedModelIntoList('', 'model-a')).toBe('model-a')
+    expect(mergeSelectedModelIntoList(PLACEHOLDERS[0], 'model-a', PLACEHOLDERS)).toBe('model-a')
+  })
+
+  it('appends without duplicating', () => {
+    expect(mergeSelectedModelIntoList('model-a', 'model-b')).toBe('model-a, model-b')
+    expect(mergeSelectedModelIntoList('model-a, model-b', 'model-a')).toBe('model-a, model-b')
   })
 })

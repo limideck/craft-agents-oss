@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import {
   AlignLeft,
@@ -18,17 +18,35 @@ import { cn } from '@/lib/utils'
 import { useCloseAgentChat, useOpenAgentChat, CHAT_PANEL_ID } from '../../../chat'
 import { dockviewApiAtom } from '../../../store/workbench-store'
 import { useAppShellContext } from '@/context/AppShellContext'
-import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules'
+import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules/types'
 import {
   effectiveStatus,
-  excerptFromArticle,
   getArticleMeta,
   suggestAutoTags,
   TAG_COLORS,
 } from '../local-meta'
 import {
+  applyTextAnnotations,
+  buildAnnotationFromDraft,
+  buildEscalateFromResultSeed,
+  buildEscalateSelectionSeed,
+  buildSelectionDraft,
+  formatSelectionMetaLabel,
+  ActionResultPanel,
+  ReadingChips,
+  SelectedTextCard,
+  SelectionPopover,
+  beginActionRun,
+  runReadingModuleAction,
+  type ActiveSelectionContext,
+  type ReadingTask,
+  type SelectionDraft,
+} from '../reading-assistant'
+import {
   patchArticleMeta,
+  rssActionResultAtom,
   rssArticlesAtom,
+  rssFeedsAtom,
   rssLoadingAtom,
   rssLocalStateAtom,
   rssPlayingEpisodeAtom,
@@ -42,19 +60,13 @@ import { EditArticleDialog } from '../components/edit-article-dialog'
 
 type FullContent = null | 'loading' | { html: string } | { error: string }
 
-type SelectionBar = {
-  text: string
-  top: number
-  left: number
-} | null
-
 const STATUS_ACTIONS: { id: ReaderStatus; label: string; icon: typeof Mail }[] = [
   { id: 'unread', label: '未读', icon: Mail },
   { id: 'read', label: '已读', icon: BookOpen },
 ]
 
 /**
- * 阅读面板 — 正文 + 未读/已读 + 标签 + 划词 AI + 摘要。
+ * 阅读面板 — 正文 + 未读/已读 + 标签 + 划线点评 + 伴读 chips + AI。
  */
 export function ReaderPanel() {
   const { workspaceId } = useRssWorkspaceData()
@@ -62,7 +74,9 @@ export function ReaderPanel() {
   const loading = useAtomValue(rssLoadingAtom)
   const selectedId = useAtomValue(rssSelectedArticleIdAtom)
   const listArticles = useAtomValue(rssArticlesAtom)
+  const feeds = useAtomValue(rssFeedsAtom)
   const [localState, setLocalState] = useAtom(rssLocalStateAtom)
+  const [actionResult, setActionResult] = useAtom(rssActionResultAtom)
   const openAgentChat = useOpenAgentChat()
   const closeAgentChat = useCloseAgentChat()
   const dockApi = useAtomValue(dockviewApiAtom)
@@ -71,11 +85,14 @@ export function ReaderPanel() {
   const [busyStar, setBusyStar] = useState(false)
   const [fullContent, setFullContent] = useState<FullContent>(null)
   const [playingEpisode, setPlayingEpisode] = useAtom(rssPlayingEpisodeAtom)
-  const [selectionBar, setSelectionBar] = useState<SelectionBar>(null)
+  const [selectionDraft, setSelectionDraft] = useState<SelectionDraft | null>(null)
+  const [selectionNote, setSelectionNote] = useState('')
+  const [activeSelection, setActiveSelection] = useState<ActiveSelectionContext | null>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [tagDraft, setTagDraft] = useState('')
   const [showTagInput, setShowTagInput] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
 
   const listHit = selectedId ? listArticles.find((a) => a.id === selectedId) : undefined
 
@@ -98,8 +115,12 @@ export function ReaderPanel() {
     let cancelled = false
     const ws = workspaceId || activeWorkspaceId
     setFullContent(null)
-    setSelectionBar(null)
+    setSelectionDraft(null)
+    setSelectionNote('')
+    setActiveSelection(null)
     setShowTagInput(false)
+    setActionResult({ status: 'idle' })
+    beginActionRun()
     if (!selectedId || !ws || !window.electronAPI?.rssGetArticle) {
       setDetail(listHit ?? null)
       return
@@ -118,19 +139,22 @@ export function ReaderPanel() {
   }, [selectedId, workspaceId, activeWorkspaceId, listHit])
 
   const article = detail ?? listHit ?? null
+  const feedUrl = article
+    ? feeds.find((f) => f.id === article.feedId)?.url
+    : undefined
   const meta = article ? getArticleMeta(localState.metaById, article.id) : {}
   const status = article ? effectiveStatus(article, meta) : 'unread'
-  const bodyHtml =
+  const annotations = meta.annotations
+  const annotationList = annotations ?? []
+  /** Body HTML for display (override / fetched full / content, else summary). */
+  const bodyOnlyHtml =
     meta.bodyOverride ||
     (fullContent && typeof fullContent === 'object' && 'html' in fullContent
       ? fullContent.html
       : null) ||
     article?.content ||
-    article?.summary ||
     ''
-
-  // Mark-as-read + lastViewedAt happen on explicit user open (list click / 标为已读),
-  // not here — otherwise 未读 filter refresh auto-selects the next item and cascades.
+  const bodyHtml = bodyOnlyHtml || article?.summary || ''
 
   // Auto-tag on first open
   useEffect(() => {
@@ -151,10 +175,23 @@ export function ReaderPanel() {
     })
   }, [article?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-apply underline marks after body HTML / annotations change.
+  useEffect(() => {
+    const root = bodyRef.current
+    if (!root) return
+    applyTextAnnotations(root, annotationList)
+  }, [bodyHtml, annotations, article?.id]) // annotationList derived; use annotations ref equality
+
   const patchMeta = (patch: Parameters<typeof patchArticleMeta>[2]) => {
     if (!article) return
     setLocalState((prev) => patchArticleMeta(prev, article.id, patch))
   }
+
+  const closePopover = useCallback(() => {
+    setSelectionDraft(null)
+    setSelectionNote('')
+    window.getSelection()?.removeAllRanges()
+  }, [])
 
   const toggleStar = async () => {
     if (!article || !workspaceId) return
@@ -191,38 +228,113 @@ export function ReaderPanel() {
     })
   }
 
-  const askSelection = (action: string, text: string) => {
+  const openWithSelection = (
+    seedPrompt: string,
+    quote: string,
+    actionLabel: string,
+    note?: string,
+  ) => {
     if (!article) return
-    const prompts: Record<string, string> = {
-      translate: `请把下面这段翻译成中文：\n\n${text}`,
-      polish: `请润色下面这段文字，保持原意：\n\n${text}`,
-      explain: `请解释下面这段内容：\n\n${text}`,
-      ask: `关于「${article.title}」中选中的内容：\n\n${text}`,
-      continue: `请基于下面这段续写：\n\n${text}`,
-      summarize: `请用中文总结这篇文章「${article.title}」的要点。\n\n摘录：\n${excerptFromArticle(article, 400)}`,
-    }
-    setSelectionBar(null)
+    setActiveSelection({
+      quote,
+      metaLabel: formatSelectionMetaLabel(actionLabel),
+      note,
+    })
+    closePopover()
     void openAgentChat({
       placement: 'right',
-      seedPrompt: prompts[action] ?? prompts.ask,
+      seedPrompt,
       title: 'AI Chat',
       context: {
         type: 'selection',
-        text,
+        text: quote,
         source: article.title,
       },
     })
   }
 
+  const startModuleAction = useCallback(
+    (opts: {
+      actionId: string
+      selection?: string
+      selectionNote?: string
+      selectionMetaLabel?: string
+    }) => {
+      if (!article) return
+      const ws = workspaceId || activeWorkspaceId
+      if (!ws) return
+
+      if (opts.selection) {
+        setActiveSelection({
+          quote: opts.selection,
+          metaLabel: formatSelectionMetaLabel(opts.selectionMetaLabel ?? '选中文本'),
+          note: opts.selectionNote,
+        })
+        closePopover()
+      }
+
+      void runReadingModuleAction({
+        workspaceId: ws,
+        actionId: opts.actionId,
+        articleId: article.id,
+        url: article.link || undefined,
+        feedUrl: feedUrl || undefined,
+        title: article.title,
+        selection: opts.selection,
+        selectionNote: opts.selectionNote,
+        onState: setActionResult,
+      })
+    },
+    [article, feedUrl, workspaceId, activeWorkspaceId, closePopover, setActionResult],
+  )
+
+  const runReadingTask = (task: ReadingTask) => {
+    if (!article) return
+    const quote = selectionDraft?.quote || activeSelection?.quote
+    const note = selectionDraft ? selectionNote : activeSelection?.note
+    startModuleAction({
+      actionId: task.actionId,
+      selection: quote,
+      selectionNote: note,
+      selectionMetaLabel: task.label,
+    })
+  }
+
   const generateSummary = () => {
     if (!article) return
-    const summary =
-      meta.summaryCache ||
-      excerptFromArticle(article, 220) ||
-      '暂无摘要。可用 AI Chat 生成更完整的总结。'
-    patchMeta({ summaryCache: summary })
-    askSelection('summarize', excerptFromArticle(article, 500) || article.title)
+    startModuleAction({ actionId: 'rss.summarize_bullets' })
   }
+
+  const handleCopyActionResult = async () => {
+    if (actionResult.status !== 'ok') return
+    try {
+      await navigator.clipboard.writeText(actionResult.resultMarkdown)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleEscalateActionResult = () => {
+    if (!article || actionResult.status !== 'ok') return
+    askAi(
+      buildEscalateFromResultSeed({
+        actionTitle: actionResult.title,
+        articleTitle: article.title,
+        articleId: article.id,
+        resultMarkdown: actionResult.resultMarkdown,
+      }),
+    )
+  }
+
+  // Cache summarize Action output into the local AI summary card.
+  useEffect(() => {
+    if (actionResult.status !== 'ok') return
+    if (actionResult.actionId !== 'rss.summarize_bullets') return
+    if (!article || actionResult.articleId !== article.id) return
+    const text = actionResult.resultMarkdown.trim()
+    if (!text) return
+    patchMeta({ summaryCache: text.slice(0, 1200) })
+  }, [actionResult]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const openOriginal = () => {
     if (!article?.link) return
@@ -240,24 +352,72 @@ export function ReaderPanel() {
     }
   }
 
-  const onMouseUp = () => {
-    const sel = window.getSelection()
-    if (!sel || sel.isCollapsed || !scrollRef.current) {
-      setSelectionBar(null)
+  const onMouseUp = (e: MouseEvent) => {
+    if ((e.target as Element | null)?.closest?.('[role="dialog"][aria-label="划线点评"]')) {
       return
     }
-    const text = sel.toString().trim()
-    if (text.length < 2) {
-      setSelectionBar(null)
+    if (!scrollRef.current || !bodyRef.current) {
+      setSelectionDraft(null)
       return
     }
-    const range = sel.getRangeAt(0)
-    const rect = range.getBoundingClientRect()
-    const pane = scrollRef.current.getBoundingClientRect()
-    setSelectionBar({
-      text,
-      top: rect.top - pane.top - 40 + scrollRef.current.scrollTop,
-      left: Math.min(Math.max(rect.left - pane.left + rect.width / 2 - 150, 8), pane.width - 320),
+    const draft = buildSelectionDraft(bodyRef.current, scrollRef.current)
+    if (!draft) {
+      setSelectionDraft(null)
+      setSelectionNote('')
+      return
+    }
+    setSelectionDraft(draft)
+    setSelectionNote('')
+  }
+
+  const handleUnderline = () => {
+    if (!article || !selectionDraft) return
+    const next = buildAnnotationFromDraft(selectionDraft, selectionNote)
+    patchMeta({ annotations: [...annotationList, next] })
+    closePopover()
+  }
+
+  const handleCopy = async () => {
+    if (!selectionDraft) return
+    try {
+      await navigator.clipboard.writeText(selectionDraft.selectedText)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleSendToAi = () => {
+    if (!selectionDraft || !article) return
+    const note = selectionNote.trim()
+    openWithSelection(
+      buildEscalateSelectionSeed({
+        quote: selectionDraft.quote,
+        note: note || undefined,
+        articleTitle: article.title,
+      }),
+      selectionDraft.quote,
+      '发给AI',
+      note || undefined,
+    )
+  }
+
+  const handleTranslateSelection = () => {
+    if (!selectionDraft) return
+    startModuleAction({
+      actionId: 'rss.translate',
+      selection: selectionDraft.quote,
+      selectionNote: selectionNote.trim() || undefined,
+      selectionMetaLabel: '翻译',
+    })
+  }
+
+  const handleRewriteSelection = () => {
+    if (!selectionDraft) return
+    startModuleAction({
+      actionId: 'rss.rewrite',
+      selection: selectionDraft.quote,
+      selectionNote: selectionNote.trim() || undefined,
+      selectionMetaLabel: '中文改写',
     })
   }
 
@@ -392,6 +552,9 @@ export function ReaderPanel() {
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto relative"
             onMouseUp={onMouseUp}
+            onScroll={() => {
+              if (selectionDraft) closePopover()
+            }}
           >
             <article className="mx-auto max-w-2xl px-5 py-4">
               <div className="mb-3 flex flex-wrap gap-1">
@@ -479,6 +642,45 @@ export function ReaderPanel() {
                 </h1>
               </header>
 
+              <ReadingChips
+                onSelect={runReadingTask}
+                disabled={
+                  (!workspaceId && !activeWorkspaceId) ||
+                  (actionResult.status === 'loading' &&
+                    !!article &&
+                    actionResult.articleId === article.id)
+                }
+              />
+
+              {actionResult.status !== 'idle' &&
+              article &&
+              actionResult.articleId === article.id ? (
+                <ActionResultPanel
+                  state={actionResult}
+                  onClose={() => {
+                    beginActionRun()
+                    setActionResult({ status: 'idle' })
+                  }}
+                  onCopy={() => void handleCopyActionResult()}
+                  onEscalate={handleEscalateActionResult}
+                  onRetry={
+                    actionResult.status === 'error'
+                      ? () =>
+                          startModuleAction({
+                            actionId: actionResult.actionId,
+                          })
+                      : undefined
+                  }
+                />
+              ) : null}
+
+              {activeSelection ? (
+                <SelectedTextCard
+                  context={activeSelection}
+                  onDismiss={() => setActiveSelection(null)}
+                />
+              ) : null}
+
               {meta.summaryCache ? (
                 <div className="mb-4 border border-[color-mix(in_oklab,var(--success)_28%,var(--border))] bg-[color-mix(in_oklab,var(--success)_12%,var(--background))] px-3 py-2.5">
                   <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-[color-mix(in_oklab,var(--success)_55%,var(--foreground))]">
@@ -534,8 +736,21 @@ export function ReaderPanel() {
               {fullError ? (
                 <p className="mb-3 text-xs text-destructive">全文抓取失败：{fullError}</p>
               ) : null}
+              {annotationList.length > 0 ? (
+                <p className="mb-2 text-[10px] text-muted-foreground">
+                  已划线 {annotationList.length} 处
+                  <button
+                    type="button"
+                    className="ml-2 underline underline-offset-2 hover:text-foreground"
+                    onClick={() => patchMeta({ annotations: [] })}
+                  >
+                    清除全部
+                  </button>
+                </p>
+              ) : null}
               {bodyHtml ? (
                 <div
+                  ref={bodyRef}
                   className={cn(
                     'rss-reader-body text-sm leading-relaxed text-foreground/90',
                     '[&_p]:mb-3 [&_ul]:mb-3 [&_ol]:mb-3 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5',
@@ -553,33 +768,18 @@ export function ReaderPanel() {
               )}
             </article>
 
-            {selectionBar ? (
-              <div
-                className="absolute z-20 flex gap-px bg-foreground text-background p-0.5 shadow-[var(--shadow-modal-small)]"
-                style={{ top: selectionBar.top, left: selectionBar.left }}
-                role="toolbar"
-                aria-label="Selection actions"
-              >
-                {(
-                  [
-                    ['translate', '翻译'],
-                    ['polish', '润色'],
-                    ['explain', '解释'],
-                    ['ask', '问 AI'],
-                    ['continue', '续写'],
-                  ] as const
-                ).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    className="px-2.5 py-1.5 text-[11px] hover:bg-background/10"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => askSelection(id, selectionBar.text)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+            {selectionDraft ? (
+              <SelectionPopover
+                draft={selectionDraft}
+                note={selectionNote}
+                onNoteChange={setSelectionNote}
+                onCopy={() => void handleCopy()}
+                onSendToAi={handleSendToAi}
+                onUnderline={handleUnderline}
+                onTranslate={handleTranslateSelection}
+                onRewrite={handleRewriteSelection}
+                onClose={closePopover}
+              />
             ) : null}
           </div>
         )}

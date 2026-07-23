@@ -87,3 +87,27 @@ export function resolveCustomEndpointPayload(params: {
       : fallbackPiAuthProvider,
   }
 }
+
+/**
+ * Merge a selected model id into a comma-separated model field.
+ * Replaces known placeholder defaults; otherwise appends if not already present.
+ */
+export function mergeSelectedModelIntoList(
+  currentValue: string,
+  modelId: string,
+  placeholderDefaults: readonly string[] = [],
+): string {
+  const selected = modelId.trim()
+  if (!selected) return currentValue
+
+  const trimmed = currentValue.trim()
+  if (!trimmed) return selected
+
+  if (placeholderDefaults.some((p) => p.trim() === trimmed)) {
+    return selected
+  }
+
+  const existing = trimmed.split(',').map((s) => s.trim()).filter(Boolean)
+  if (existing.includes(selected)) return trimmed
+  return [...existing, selected].join(', ')
+}

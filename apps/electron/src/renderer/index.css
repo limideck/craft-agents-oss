@@ -931,6 +931,23 @@ html.dark[data-scenic] .fullscreen-overlay-background {
   .feature-bullet {
     background-color: var(--foreground);
   }
+
+  /* RSS reader underline / 划线 marks (qmreader-inspired) */
+  .rss-text-annotation-mark {
+    cursor: pointer;
+    border-radius: 3px;
+    background: linear-gradient(
+      transparent 54%,
+      color-mix(in oklab, var(--warning, #d4a017) 42%, transparent) 0
+    );
+    box-shadow: inset 0 -1px 0 color-mix(in oklab, var(--warning, #d4a017) 70%, var(--border));
+  }
+
+  .rss-text-annotation-mark:hover,
+  .rss-text-annotation-mark[data-active='true'] {
+    background: color-mix(in oklab, var(--warning, #d4a017) 32%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--warning, #d4a017) 22%, transparent);
+  }
 }
 
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules'
+import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'

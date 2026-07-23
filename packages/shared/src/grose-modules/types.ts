@@ -1,5 +1,8 @@
 /** Wire types for grose-modules RSS + Workflows APIs. */
 
+/** Known builtin module ids; open string union for future modules. */
+export type GroseBuiltinModuleId = 'rss' | 'knowledge' | 'workflows' | 'sites' | (string & {})
+
 export type GroseModulesRssFeed = {
   id: string
   name: string

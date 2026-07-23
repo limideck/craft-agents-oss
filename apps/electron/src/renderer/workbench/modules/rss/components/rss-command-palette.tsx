@@ -21,31 +21,41 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import { useOpenAgentChat, useCloseAgentChat } from '../../../chat'
+import { useAppShellContext } from '@/context/AppShellContext'
 import {
   patchArticleMeta,
+  rssActionResultAtom,
   rssAddFeedOpenAtom,
   rssArticlesAtom,
   rssCommandOpenAtom,
+  rssFeedsAtom,
   rssLocalStateAtom,
   rssSelectedArticleIdAtom,
   rssSidebarSelectionAtom,
   type ReaderStatus,
 } from '../store'
 import { refreshRssData, useRssWorkspaceData } from '../use-rss-data'
+import { runReadingModuleAction } from '../reading-assistant'
 
 /** ⌘K 命令菜单 — 阅读模块。 */
 export function RssCommandPalette() {
   const [open, setOpen] = useAtom(rssCommandOpenAtom)
   const selectedId = useAtomValue(rssSelectedArticleIdAtom)
   const articles = useAtomValue(rssArticlesAtom)
+  const feeds = useAtomValue(rssFeedsAtom)
   const setLocalState = useSetAtom(rssLocalStateAtom)
+  const setActionResult = useSetAtom(rssActionResultAtom)
   const setAddOpen = useSetAtom(rssAddFeedOpenAtom)
   const setSelection = useSetAtom(rssSidebarSelectionAtom)
   const openAgentChat = useOpenAgentChat()
   const closeAgentChat = useCloseAgentChat()
   const { workspaceId } = useRssWorkspaceData()
+  const { activeWorkspaceId } = useAppShellContext()
 
   const article = selectedId ? articles.find((a) => a.id === selectedId) : null
+  const feedUrl = article
+    ? feeds.find((f) => f.id === article.feedId)?.url
+    : undefined
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,6 +91,21 @@ export function RssCommandPalette() {
     } catch {
       // ignore
     }
+  }
+
+  const runSummarizeAction = () => {
+    if (!article) return
+    const ws = workspaceId || activeWorkspaceId
+    if (!ws) return
+    void runReadingModuleAction({
+      workspaceId: ws,
+      actionId: 'rss.summarize_bullets',
+      articleId: article.id,
+      url: article.link || undefined,
+      feedUrl: feedUrl || undefined,
+      title: article.title,
+      onState: setActionResult,
+    })
   }
 
   return (
@@ -158,24 +183,7 @@ export function RssCommandPalette() {
                   打开原文
                 </CommandItem>
               ) : null}
-              <CommandItem
-                onSelect={() =>
-                  run(() =>
-                    void openAgentChat({
-                      placement: 'right',
-                      title: 'AI Chat',
-                      seedPrompt: `请用中文总结这篇文章「${article.title}」的要点。`,
-                      context: {
-                        type: 'rss-article',
-                        articleId: article.id,
-                        title: article.title,
-                        feedTitle: article.feedName,
-                        url: article.link,
-                      },
-                    }),
-                  )
-                }
-              >
+              <CommandItem onSelect={() => run(() => runSummarizeAction())}>
                 <Pencil className="mr-2 h-4 w-4" />
                 AI 总结
               </CommandItem>

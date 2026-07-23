@@ -29,6 +29,10 @@ mock.module('electron', () => ({
     openPath: async () => '',
     showItemInFolder: () => {},
   },
+  systemPreferences: {
+    getMediaAccessStatus: () => 'granted',
+    askForMediaAccess: async () => true,
+  },
   BrowserWindow: {
     fromWebContents: () => null,
     getFocusedWindow: () => null,

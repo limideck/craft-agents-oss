@@ -5,8 +5,10 @@ import type {
   GroseModulesRssFeed,
   GroseModulesRssListMode,
   GroseModulesRssView,
-} from '@grose-agent/shared/grose-modules'
+} from '@grose-agent/shared/grose-modules/types'
 import { DEFAULT_READER_TAGS } from './local-meta'
+import type { RssActionResultState } from './reading-assistant/run-module-action'
+import type { ReaderTextAnnotation } from './reading-assistant/types'
 
 /** Local read status — overlay on server articles (star remains server-backed). */
 export type ReaderStatus = 'unread' | 'read'
@@ -24,6 +26,8 @@ export type ReaderArticleMeta = {
   bodyOverride?: string
   /** Set after first auto-tag pass so we don't keep re-applying. */
   autoTagged?: boolean
+  /** Local underline / 划线 annotations for this article. */
+  annotations?: ReaderTextAnnotation[]
 }
 
 export type ReaderLocalState = {
@@ -103,6 +107,12 @@ export const rssPodcastPlayerModeAtom = atomWithStorage<RssPodcastPlayerMode>(
   'grose-rss-podcast-player-mode',
   'bottom',
 )
+
+/**
+ * Inline Module Action result for the Reader panel (chips / selection / ⌘K).
+ * Shared so the command palette can kick off the same Action → result UX.
+ */
+export const rssActionResultAtom = atom<RssActionResultState>({ status: 'idle' })
 
 /**
  * Map sidebar selection → server list query.

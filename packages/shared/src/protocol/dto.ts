@@ -16,7 +16,7 @@ import type {
 } from '@grose-agent/core/types'
 import type { PermissionMode } from '../agent/mode-types'
 import type { ThinkingLevel } from '../agent/thinking-levels'
-import type { CustomEndpointConfig } from '../config/llm-connections'
+import type { CustomEndpointApi, CustomEndpointConfig } from '../config/llm-connections'
 import type {
   AuthRequest as SharedAuthRequest,
   CredentialInputMode as SharedCredentialInputMode,
@@ -631,6 +631,20 @@ export interface TestLlmConnectionResult {
   error?: string
 }
 
+/** Live model discovery for custom OpenAI/Anthropic-compatible endpoints during setup */
+export interface FetchCustomEndpointModelsParams {
+  baseUrl: string
+  apiKey?: string
+  /** Protocol hint — defaults to openai-completions on the server */
+  api?: CustomEndpointApi
+}
+
+export interface FetchCustomEndpointModelsResult {
+  success: boolean
+  models?: Array<{ id: string; name: string }>
+  error?: string
+}
+
 // ---------------------------------------------------------------------------
 // Source / skill types
 // ---------------------------------------------------------------------------
@@ -848,3 +862,42 @@ export interface DeepLinkNavigation {
   action?: string
   actionParams?: Record<string, string>
 }
+
+// ---------------------------------------------------------------------------
+// Module Actions (silent workbench tasks — e.g. Reader translate / summarize)
+// ---------------------------------------------------------------------------
+
+/** Request body for `moduleActions:run`. Prefer articleId/url over pasting body. */
+export interface ModuleActionRunRequest {
+  actionId: string
+  articleId?: string
+  url?: string
+  /** Subscription feed URL — used to detect pre-cleaned full-content feeds. */
+  feedUrl?: string
+  /** Optional feed homepage / alternate source URL for allowlist matching. */
+  sourceUrl?: string
+  title?: string
+  selection?: string
+  selectionNote?: string
+  /** Optional model override; omit or `default` → workspace default. */
+  model?: string
+  /** Optional timeout override in ms (server default ~5 min). */
+  timeoutMs?: number
+}
+
+export type ModuleActionRunResponse =
+  | {
+      ok: true
+      actionId: string
+      moduleId: string
+      resultMarkdown: string
+      sessionId: string
+      durationMs: number
+    }
+  | {
+      ok: false
+      actionId: string
+      error: string
+      sessionId?: string
+      durationMs: number
+    }

@@ -76,5 +76,5 @@ HTTP headers:
 All tools accept optional `workspace_id` (falls back to `GROSE_DEFAULT_WORKSPACE_ID`). **Agents must use the `workspace_id` from the session `<grose_modules>` context** (same id as the Workbench UI) — do not invent ids or copy a mismatched id from a workspace folder `config.json`.
 
 - `rss_list_feeds`, `rss_add_feed`, `rss_rename_feed`, `rss_delete_feed`, `rss_import_opml`, `rss_export_opml`
-- `rss_get_all_articles`, `rss_get_today_articles`, `rss_get_starred_articles`, `rss_get_feed_articles`
+- `rss_get_all_articles`, `rss_get_today_articles`, `rss_get_starred_articles`, `rss_get_feed_articles`, `rss_get_article`
 - `rss_get_starred_count`, `rss_toggle_star`, `rss_refresh_feeds`, `rss_fetch_article_content`

@@ -1,4 +1,4 @@
-import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules'
+import type { GroseModulesRssArticle } from '@grose-agent/shared/grose-modules/types'
 import type { ReaderArticleMeta, ReaderLibraryId, ReaderStatus } from './store'
 
 export const DEFAULT_READER_TAGS = [
@@ -99,6 +99,25 @@ export function excerptFromArticle(article: GroseModulesRssArticle, max = 140): 
   const text = stripHtml(raw)
   if (text.length <= max) return text
   return `${text.slice(0, max).trim()}…`
+}
+
+export type ArticleBodySource = 'body' | 'summary' | 'empty'
+
+/**
+ * Resolve plain text for AI reading tasks.
+ * Prefers full article body (override / fetched HTML / content) over RSS summary/excerpt.
+ */
+export function resolveArticleBodyText(input: {
+  /** Body HTML only — do not pass summary-fallback display HTML here. */
+  bodyHtml?: string | null
+  content?: string | null
+  summary?: string | null
+}): { text: string; source: ArticleBodySource } {
+  const bodyText = stripHtml(input.bodyHtml || input.content || '')
+  if (bodyText) return { text: bodyText, source: 'body' }
+  const summaryText = stripHtml(input.summary || '')
+  if (summaryText) return { text: summaryText, source: 'summary' }
+  return { text: '', source: 'empty' }
 }
 
 export type ArticleTypeFilter = 'all' | 'web' | 'podcast'

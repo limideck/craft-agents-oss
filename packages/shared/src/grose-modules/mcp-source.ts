@@ -16,13 +16,12 @@ import {
 } from '../sources/storage.ts'
 import { getSourceCredentialManager } from '../sources/credential-manager.ts'
 import { loadWorkspaceConfig, saveWorkspaceConfig } from '../workspaces/storage.ts'
-
-export const GROSE_MODULES_SOURCE_SLUG = 'grose-modules'
-export const GROSE_MODULES_SOURCE_NAME = 'Grose Modules'
-export const GROSE_MODULES_PROVIDER = 'grose-modules'
-/** Shown in <sources> when the source is first introduced this session */
-export const GROSE_MODULES_TAGLINE =
-  'Preferred builtin for RSS, Knowledge, and Workflows (rss_*/kb_*/wf_* tools)'
+import {
+  GROSE_MODULES_PROVIDER,
+  GROSE_MODULES_SOURCE_NAME,
+  GROSE_MODULES_SOURCE_SLUG,
+  GROSE_MODULES_TAGLINE,
+} from './constants.ts'
 
 const GROSE_MODULES_GUIDE = `# grose-modules
 

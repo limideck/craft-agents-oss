@@ -8,7 +8,7 @@ import {
   validateStoredBackendConnection,
 } from '@grose-agent/shared/agent/backend'
 import { getModelRefreshService } from '@grose-agent/server-core/model-fetchers'
-import { parseTestConnectionError, createBuiltInConnection, validateModelList, piAuthProviderDisplayName, validateSetupTestInput, setupTestRequiresApiKey, resolveCustomEndpointSetup } from '@grose-agent/server-core/domain'
+import { parseTestConnectionError, createBuiltInConnection, validateModelList, piAuthProviderDisplayName, validateSetupTestInput, setupTestRequiresApiKey, resolveCustomEndpointSetup, fetchCustomEndpointModels } from '@grose-agent/server-core/domain'
 import { getWorkspaceOrThrow, buildBackendHostRuntimeContext } from '@grose-agent/server-core/handlers'
 import { pushTyped, type RpcServer } from '@grose-agent/server-core/transport'
 import type { HandlerDeps } from '../handler-deps'
@@ -40,6 +40,7 @@ export const HANDLED_CHANNELS = [
   RPC_CHANNELS.copilot.LOGOUT,
   RPC_CHANNELS.settings.SETUP_LLM_CONNECTION,
   RPC_CHANNELS.settings.TEST_LLM_CONNECTION_SETUP,
+  RPC_CHANNELS.settings.FETCH_CUSTOM_ENDPOINT_MODELS,
   RPC_CHANNELS.pi.GET_API_KEY_PROVIDERS,
   RPC_CHANNELS.pi.GET_PROVIDER_BASE_URL,
   RPC_CHANNELS.pi.GET_PROVIDER_MODELS,
@@ -358,6 +359,25 @@ export function registerLlmConnectionsHandlers(server: RpcServer, deps: HandlerD
       const msg = error instanceof Error ? error.message : String(error)
       deps.platform.logger?.info(`[testLlmConnectionSetup] Elapsed: ${elapsed}ms, threw: ${msg.slice(0, 1000)}`)
       return { success: false, error: parseTestConnectionError(msg) }
+    }
+  })
+
+  // Live model discovery for custom OpenAI/Anthropic-compatible endpoints (setup form)
+  server.handle(RPC_CHANNELS.settings.FETCH_CUSTOM_ENDPOINT_MODELS, async (
+    _ctx,
+    params: import('@grose-agent/shared/protocol').FetchCustomEndpointModelsParams,
+  ): Promise<import('@grose-agent/shared/protocol').FetchCustomEndpointModelsResult> => {
+    try {
+      const result = await fetchCustomEndpointModels({
+        baseUrl: params.baseUrl,
+        apiKey: params.apiKey,
+        api: params.api,
+      })
+      return { success: true, models: result.models }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to fetch models'
+      deps.platform.logger?.info(`[fetchCustomEndpointModels] ${message}`)
+      return { success: false, error: message }
     }
   })
 

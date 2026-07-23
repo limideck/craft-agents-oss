@@ -22,12 +22,13 @@ import {
   StyledDropdownMenuItem,
 } from "@/components/ui/styled-dropdown"
 import { cn } from "@/lib/utils"
-import { Check, ChevronDown, Eye, EyeOff, Loader2 } from "lucide-react"
+import { Check, ChevronDown, Eye, EyeOff, Loader2, RefreshCcw } from "lucide-react"
 import { pickTierDefaults, resolveTierModels, type PiModelInfo } from "./tier-models"
 import {
   resolveCustomEndpointPayload,
   resolvePiAuthProviderForSubmit,
   resolvePresetStateForBaseUrlChange,
+  mergeSelectedModelIntoList,
   type PresetKey,
 } from "./submit-helpers"
 
@@ -223,6 +224,16 @@ export function ApiKeyInput({
   const tierFilterInputRef = useRef<HTMLInputElement>(null)
   const hydratedTierProviderRef = useRef<string | null>(null)
 
+  // Custom endpoint live model fetch
+  const [fetchedCustomModels, setFetchedCustomModels] = useState<Array<{ id: string; name: string }>>([])
+  const [customModelsLoading, setCustomModelsLoading] = useState(false)
+  const [customModelsError, setCustomModelsError] = useState<string | null>(null)
+  const [customModelsOpen, setCustomModelsOpen] = useState(false)
+  const [customModelFilter, setCustomModelFilter] = useState('')
+  const [customModelsDropdownPosition, setCustomModelsDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null)
+  const customModelFilterRef = useRef<HTMLInputElement>(null)
+  const customModelsTriggerRef = useRef<HTMLButtonElement>(null)
+
   const isDisabled = disabled || status === 'validating'
 
   const isPiApiKeyFlow = providerType === 'pi_api_key'
@@ -273,6 +284,27 @@ export function ApiKeyInput({
   // Whether to show 3 tier dropdowns instead of text input
   const hasPiModels = isPiApiKeyFlow && piModels.length > 0 && !isDefaultProviderPreset && activePreset !== 'custom' && !isBedrock
 
+  // Custom / branded openai-compat presets support live model listing
+  const supportsCustomModelFetch =
+    !isDefaultProviderPreset
+    && !isBedrock
+    && (activePreset === 'custom' || OPENAI_COMPAT_CUSTOM_URL_PRESETS.has(activePreset))
+
+  const modelPlaceholderDefaults = [
+    COMPAT_ANTHROPIC_DEFAULTS,
+    COMPAT_OPENAI_DEFAULTS,
+    COMPAT_MINIMAX_DEFAULTS,
+    COMPAT_KIMI_DEFAULTS,
+    'auto',
+  ]
+
+  const resetFetchedCustomModels = () => {
+    setFetchedCustomModels([])
+    setCustomModelsError(null)
+    setCustomModelsOpen(false)
+    setCustomModelFilter('')
+  }
+
   const handlePresetSelect = (preset: Preset) => {
     setActivePreset(preset.key)
     if (preset.key !== 'custom') {
@@ -284,6 +316,7 @@ export function ApiKeyInput({
       setBaseUrl(preset.url)
     }
     setModelError(null)
+    resetFetchedCustomModels()
     // Pre-fill recommended model for Ollama; clear for all others
     // (Default provider presets hide the field entirely, others default to provider model IDs when empty)
     if (preset.key === 'ollama') {
@@ -316,6 +349,7 @@ export function ApiKeyInput({
     setActivePreset(nextPresetState.activePreset)
     setLastNonCustomPreset(nextPresetState.lastNonCustomPreset)
     setModelError(null)
+    resetFetchedCustomModels()
     if (!connectionDefaultModel.trim()) {
       if (presetKey === 'ollama') {
         setConnectionDefaultModel('qwen3-coder')
@@ -329,6 +363,69 @@ export function ApiKeyInput({
         setConnectionDefaultModel(providerType === 'openai' ? COMPAT_OPENAI_DEFAULTS : COMPAT_ANTHROPIC_DEFAULTS)
       }
     }
+  }
+
+  const openCustomModelsDropdown = () => {
+    const trigger = customModelsTriggerRef.current
+    if (!trigger) return
+    const rect = trigger.getBoundingClientRect()
+    setCustomModelsDropdownPosition({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, 280),
+    })
+    setCustomModelsOpen(true)
+    setCustomModelFilter('')
+    setTimeout(() => customModelFilterRef.current?.focus(), 0)
+  }
+
+  const handleFetchCustomModels = async () => {
+    const effectiveBaseUrl = baseUrl.trim()
+    if (!effectiveBaseUrl) {
+      setCustomModelsError(t('apiSetup.fetchModelsNeedsUrl'))
+      return
+    }
+
+    setCustomModelsLoading(true)
+    setCustomModelsError(null)
+    try {
+      // Never send masked placeholders (••••) from GET_API_KEY — they are not
+      // valid ByteString header values. Empty/masked → omit auth (keyless local OK).
+      const trimmedKey = apiKey.trim()
+      const effectiveApiKey = trimmedKey && !trimmedKey.includes('•') ? trimmedKey : undefined
+      const result = await window.electronAPI.fetchCustomEndpointModels({
+        baseUrl: effectiveBaseUrl,
+        apiKey: effectiveApiKey,
+        api: OPENAI_COMPAT_CUSTOM_URL_PRESETS.has(activePreset) ? 'openai-completions' : customApi,
+      })
+      if (!result.success) {
+        setFetchedCustomModels([])
+        setCustomModelsError(result.error || t('apiSetup.fetchModelsFailed'))
+        return
+      }
+      const models = result.models ?? []
+      setFetchedCustomModels(models)
+      if (models.length === 0) {
+        setCustomModelsError(t('apiSetup.fetchModelsEmpty'))
+        return
+      }
+      openCustomModelsDropdown()
+    } catch (err) {
+      console.error('[ApiKeyInput] Failed to fetch custom endpoint models', err)
+      setFetchedCustomModels([])
+      setCustomModelsError(err instanceof Error ? err.message : t('apiSetup.fetchModelsFailed'))
+    } finally {
+      setCustomModelsLoading(false)
+    }
+  }
+
+  const handleSelectFetchedModel = (modelId: string) => {
+    setConnectionDefaultModel((current) =>
+      mergeSelectedModelIntoList(current, modelId, modelPlaceholderDefaults),
+    )
+    setModelError(null)
+    setCustomModelsOpen(false)
+    setCustomModelFilter('')
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -529,7 +626,10 @@ export function ApiKeyInput({
                 key={value}
                 type="button"
                 disabled={isDisabled}
-                onClick={() => setCustomApi(value)}
+                onClick={() => {
+                  setCustomApi(value)
+                  resetFetchedCustomModels()
+                }}
                 className={cn(
                   "flex-1 py-1.5 text-[12px] font-medium transition-colors",
                   customApi === value
@@ -784,12 +884,39 @@ export function ApiKeyInput({
         </div>
       ) : !isDefaultProviderPreset && (
         <div className="space-y-2">
-          <Label htmlFor="connection-default-model" className="text-muted-foreground font-normal">
-            Default Model{' '}
-            <span className="text-foreground/30">
-              · {!isBedrock && baseUrl.trim() ? 'required' : 'optional'}
-            </span>
-          </Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="connection-default-model" className="text-muted-foreground font-normal">
+              Default Model{' '}
+              <span className="text-foreground/30">
+                · {!isBedrock && baseUrl.trim() ? 'required' : 'optional'}
+              </span>
+            </Label>
+            {supportsCustomModelFetch && (
+              <button
+                ref={customModelsTriggerRef}
+                type="button"
+                disabled={isDisabled || customModelsLoading}
+                onClick={() => void handleFetchCustomModels()}
+                className={cn(
+                  "flex h-6 items-center gap-1.5 rounded-[6px] bg-background shadow-minimal pl-2.5 pr-2 text-[12px] font-medium",
+                  "text-foreground/50 hover:bg-foreground/5 hover:text-foreground focus:outline-none",
+                  (isDisabled || customModelsLoading) && "opacity-50 pointer-events-none"
+                )}
+              >
+                {customModelsLoading ? (
+                  <>
+                    <Loader2 className="size-2.5 animate-spin" />
+                    {t('apiSetup.loadingModels')}
+                  </>
+                ) : (
+                  <>
+                    <RefreshCcw className="size-2.5 opacity-70" />
+                    {t('apiSetup.fetchModels')}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <div className={cn(
             "rounded-md shadow-minimal transition-colors",
             "bg-foreground-2 focus-within:bg-background",
@@ -808,13 +935,80 @@ export function ApiKeyInput({
               disabled={isDisabled}
             />
           </div>
+          {customModelsOpen && customModelsDropdownPosition && fetchedCustomModels.length > 0 && (
+            <>
+              <div
+                className="fixed inset-0 z-floating-backdrop"
+                onClick={() => { setCustomModelsOpen(false); setCustomModelFilter('') }}
+              />
+              <div
+                className="fixed z-floating-menu min-w-[200px] overflow-hidden rounded-[8px] bg-background text-foreground shadow-modal-small"
+                style={{
+                  top: customModelsDropdownPosition.top,
+                  left: customModelsDropdownPosition.left,
+                  width: customModelsDropdownPosition.width,
+                }}
+              >
+                <CommandPrimitive className="min-w-[200px]" shouldFilter={false}>
+                  <div className="border-b border-border/50 px-3 py-2">
+                    <CommandPrimitive.Input
+                      ref={customModelFilterRef}
+                      value={customModelFilter}
+                      onValueChange={setCustomModelFilter}
+                      placeholder={t('apiSetup.searchModels')}
+                      autoFocus
+                      className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground placeholder:select-none"
+                    />
+                  </div>
+                  <CommandPrimitive.List className="max-h-[240px] overflow-y-auto p-1">
+                    {fetchedCustomModels
+                      .filter((m) => {
+                        const q = customModelFilter.toLowerCase()
+                        if (!q) return true
+                        return m.id.toLowerCase().includes(q) || m.name.toLowerCase().includes(q)
+                      })
+                      .map((model) => {
+                        const selected = parseModelList(connectionDefaultModel).includes(model.id)
+                        return (
+                          <CommandPrimitive.Item
+                            key={model.id}
+                            value={model.id}
+                            onSelect={() => handleSelectFetchedModel(model.id)}
+                            className={cn(
+                              "flex cursor-pointer select-none items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-[13px]",
+                              "outline-none data-[selected=true]:bg-foreground/5"
+                            )}
+                          >
+                            <div className="flex flex-col min-w-0">
+                              <span className="truncate">{model.name}</span>
+                              {model.name !== model.id && (
+                                <span className="truncate text-[11px] text-foreground/30">{model.id}</span>
+                              )}
+                            </div>
+                            <Check className={cn("size-3 shrink-0", selected ? "opacity-100" : "opacity-0")} />
+                          </CommandPrimitive.Item>
+                        )
+                      })}
+                  </CommandPrimitive.List>
+                </CommandPrimitive>
+              </div>
+            </>
+          )}
+          {customModelsError && (
+            <p className="text-xs text-destructive">{customModelsError}</p>
+          )}
           {modelError && (
             <p className="text-xs text-destructive">{modelError}</p>
           )}
           <p className="text-xs text-foreground/30">
             Comma-separated list. The first model is the default. The last is used for summarization.
           </p>
-          {(activePreset === 'custom' || !activePreset) && (
+          {supportsCustomModelFetch && (
+            <p className="text-xs text-foreground/30">
+              {t('apiSetup.fetchModelsHint')}
+            </p>
+          )}
+          {(activePreset === 'custom' || !activePreset) && !supportsCustomModelFetch && (
             <p className="text-xs text-foreground/30">
               Required for custom endpoints. Use the provider-specific model ID.
             </p>

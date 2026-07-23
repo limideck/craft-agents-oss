@@ -170,6 +170,7 @@ export const CHANNEL_MAP = {
   // Settings - API Setup
   setupLlmConnection: invoke(RPC_CHANNELS.settings.SETUP_LLM_CONNECTION),
   testLlmConnectionSetup: invoke(RPC_CHANNELS.settings.TEST_LLM_CONNECTION_SETUP),
+  fetchCustomEndpointModels: invoke(RPC_CHANNELS.settings.FETCH_CUSTOM_ENDPOINT_MODELS),
   getDefaultThinkingLevel: invoke(RPC_CHANNELS.settings.GET_DEFAULT_THINKING_LEVEL),
   setDefaultThinkingLevel: invoke(RPC_CHANNELS.settings.SET_DEFAULT_THINKING_LEVEL),
   getNetworkProxySettings: invoke(RPC_CHANNELS.settings.GET_NETWORK_PROXY),
@@ -523,4 +524,7 @@ export const CHANNEL_MAP = {
   workflowsDeploy: invoke(RPC_CHANNELS.workflows.DEPLOY),
   workflowsUndeploy: invoke(RPC_CHANNELS.workflows.UNDEPLOY),
   getWorkflowHistory: invoke(RPC_CHANNELS.workflows.GET_HISTORY),
+
+  // Module Actions (silent mini-session tasks)
+  moduleActionsRun: invoke(RPC_CHANNELS.moduleActions.RUN),
 } satisfies ChannelMap

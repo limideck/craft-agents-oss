@@ -336,6 +336,7 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   // settings — workspace-level settings
   RPC_CHANNELS.settings.SETUP_LLM_CONNECTION,
   RPC_CHANNELS.settings.TEST_LLM_CONNECTION_SETUP,
+  RPC_CHANNELS.settings.FETCH_CUSTOM_ENDPOINT_MODELS,
   RPC_CHANNELS.settings.GET_DEFAULT_THINKING_LEVEL,
   RPC_CHANNELS.settings.SET_DEFAULT_THINKING_LEVEL,
 
@@ -520,6 +521,10 @@ export const REMOTE_ELIGIBLE_CHANNELS = new Set<string>([
   RPC_CHANNELS.workflows.RUN,
   RPC_CHANNELS.workflows.DEPLOY,
   RPC_CHANNELS.workflows.UNDEPLOY,
+  RPC_CHANNELS.workflows.GET_HISTORY,
+
+  // Module Actions (silent mini-session tasks for workbench UI)
+  RPC_CHANNELS.moduleActions.RUN,
 
   // openConnector — local sidecar lifecycle (spawned by Electron main)
   RPC_CHANNELS.openConnector.GET_STATUS,

@@ -10,7 +10,7 @@ import {
   getGroseBuiltinModule,
   listGroseBuiltinModules,
 } from '../registry.ts'
-import { GROSE_MODULES_SOURCE_SLUG } from '../mcp-source.ts'
+import { GROSE_MODULES_SOURCE_SLUG } from '../constants.ts'
 
 describe('grose-modules registry', () => {
   it('registers rss (enabled), knowledge (disabled), workflows (enabled), sites (enabled)', () => {

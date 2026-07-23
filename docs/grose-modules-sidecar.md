@@ -212,6 +212,7 @@ Renderer continues to use existing preload/RPC paths — **no new IPC style** fo
 | `rss_rename_feed` / `rss_delete_feed` | Manage subscriptions |
 | `rss_import_opml` / `rss_export_opml` | Bulk import / export OPML |
 | `rss_get_*_articles` / `rss_toggle_star` / `rss_refresh_feeds` | Articles + star + refresh |
+| `rss_get_article` | One stored article by id (title/link/summary/content) |
 | `rss_fetch_article_content` | Readability full text for a URL |
 
 Prefix tools with `rss_` so Knowledge / Sites / Workflows can add `kb_*` / `sites_*` / `wf_*` in the same MCP server without collision.

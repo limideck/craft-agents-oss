@@ -74,9 +74,6 @@ const EXPECTED_CHANNELS: string[] = [
   'copilot:getAuthStatus',
   'copilot:logout',
   'copilot:startOAuth',
-  'groseModules:getConfig',
-  'groseModules:getStatus',
-  'groseModules:restart',
   'credentials:healthCheck',
   'debug:log',
   'deeplink:navigate',
@@ -103,9 +100,15 @@ const EXPECTED_CHANNELS: string[] = [
   'fs:search',
   'fs:writeFile',
   'git:getBranch',
+  'git:getDiff',
+  'git:getFileContents',
+  'git:getStatus',
   'gitbash:browse',
   'gitbash:check',
   'gitbash:setPath',
+  'groseModules:getConfig',
+  'groseModules:getStatus',
+  'groseModules:restart',
   'input:getAutoCapitalisation',
   'input:getSendMessageKey',
   'input:getSpellCheck',
@@ -177,6 +180,7 @@ const EXPECTED_CHANNELS: string[] = [
   'messaging:wa:status',
   'messaging:wa:submitPhone',
   'messaging:wa:uiEvent',
+  'moduleActions:run',
   'notification:getEnabled',
   'notification:navigate',
   'notification:setEnabled',
@@ -276,6 +280,7 @@ const EXPECTED_CHANNELS: string[] = [
   'sessions:unreadSummaryChanged',
   'sessions:unwatchFiles',
   'sessions:watchFiles',
+  'settings:fetchCustomEndpointModels',
   'settings:getDefaultThinkingLevel',
   'settings:getNetworkProxy',
   'settings:getServerConfig',
@@ -287,6 +292,7 @@ const EXPECTED_CHANNELS: string[] = [
   'settings:testLlmConnectionSetup',
   'shell:openFile',
   'shell:openUrl',
+  'shell:runCommand',
   'shell:showInFolder',
   'sites:bindSession',
   'sites:create',
@@ -412,6 +418,7 @@ const EXPECTED_CHANNELS: string[] = [
 ]
 
 const EXPECTED_COUNT = EXPECTED_CHANNELS.length
+
 // End auto-generated
 
 describe('RPC_CHANNELS wire-format stability', () => {

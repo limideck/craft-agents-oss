@@ -30,6 +30,10 @@ mock.module('electron', () => ({
     openPath: async () => '',
     showItemInFolder: () => {},
   },
+  systemPreferences: {
+    getMediaAccessStatus: () => 'granted',
+    askForMediaAccess: async () => true,
+  },
   BrowserWindow: {
     fromWebContents: () => null,
     getFocusedWindow: () => null,
@@ -203,6 +207,15 @@ describe('RPC handler registration', () => {
       .sort()
 
     expect(duplicates).toEqual([])
+  })
+
+  it('registers settings:fetchCustomEndpointModels via llm-connections handlers', async () => {
+    const { RPC_CHANNELS } = await import('@grose-agent/shared/protocol')
+    const { registerAllRpcHandlers } = await import('../index')
+
+    registerAllRpcHandlers(createMockServer(), createMockDeps())
+
+    expect(registeredChannels).toContain(RPC_CHANNELS.settings.FETCH_CUSTOM_ENDPOINT_MODELS)
   })
 
   it('keeps onboarding channels in registration coverage', async () => {

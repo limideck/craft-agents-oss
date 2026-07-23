@@ -316,6 +316,14 @@ export const mockElectronAPI = {
     { key: 'deepseek', label: 'DeepSeek', placeholder: 'sk-...' },
   ],
   getPiProviderBaseUrl: async () => '',
+  fetchCustomEndpointModels: async () => ({
+    success: true,
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o' },
+      { id: 'o3-mini', name: 'o3-mini' },
+      { id: 'free-model', name: 'Free Model' },
+    ],
+  }),
   getPiProviderModels: async (provider: string) => {
     const MOCK_MODELS: Record<string, Array<{ id: string; name: string; costInput: number; costOutput: number; contextWindow: number; reasoning: boolean }>> = {
       'openrouter': [

@@ -15,8 +15,8 @@ import { createWorkspaceAtPath, loadWorkspaceConfig } from '../../workspaces/sto
 import {
   ensureGroseModulesInWorkspaceDefaults,
   ensureGroseModulesMcpSource,
-  GROSE_MODULES_SOURCE_SLUG,
 } from '../../grose-modules/mcp-source.ts'
+import { GROSE_MODULES_SOURCE_SLUG } from '../../grose-modules/constants.ts'
 import { loadSourceConfig } from '../storage.ts'
 
 describe('preferred builtin source merge', () => {
